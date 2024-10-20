@@ -36,3 +36,10 @@ pip3 install docopt==0.6.2
 
 EOF
 echo "Done installing PIP packages"
+
+# Extra hack for pi5
+on_chroot << EOF
+sudo apt-get -y remove python3-rpi.gpio
+sudo apt-get -y install python3-rpi-lgpio
+sudo apt install python3-rpi-lgpio
+EOF
