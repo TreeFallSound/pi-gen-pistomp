@@ -13,9 +13,9 @@ sudo cp /home/pistomp/pi-stomp/setup/audio/iqaudiocodec.state /var/lib/alsa/asou
 logger --priority info --tag firstboot.sh "Modify pistomp version"
 # Lame assumption that pi3 implies pistomp v2
 if $(cat /proc/cpuinfo | grep Model | grep -q 'Pi 3'); then
-  runuser -u pistomp -- /home/pistomp/pi-stomp/setup/pi-stomp-tweaks/modify_version.sh 2.0
+  runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh 2.0
 else
-  runuser -u pistomp -- /home/pistomp/pi-stomp/setup/pi-stomp-tweaks/modify_version.sh 3.0
+  runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh 3.0
 fi
 
 logger --priority info --tag firstboot.sh "Disable unnecessary services"
