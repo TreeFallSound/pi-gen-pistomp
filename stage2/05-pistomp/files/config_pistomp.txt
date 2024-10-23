@@ -48,11 +48,20 @@ kernel=vmlinuz-6.1.54-rt15-v8+
 # initramfs initrd.img-6.1.54-rt15-v8+
 os_prefix=6.1.54-rt15-v8+/
 overlay_prefix=o/
+# Hack for spi0, cs0_pin should be unused
+dtoverlay=spi0-2cs,cs0_pin=14,cs1_pin=7
 
 [pi4]
 kernel=vmlinuz-6.1.54-rt15-v8+
 # initramfs initrd.img-6.1.54-rt15-v8+
 os_prefix=6.1.54-rt15-v8+/
 overlay_prefix=o/
+# Hack for spi0, cs0_pin should be unused
+dtoverlay=spi0-2cs,cs0_pin=0,cs1_pin=7
+
+[pi5]
+# Original kernel for now
+# Hack for spi0, cs0_pin should be unused
+dtoverlay=spi0-2cs,cs0_pin=0,cs1_pin=7
 
 [all]
