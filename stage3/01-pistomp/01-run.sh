@@ -43,6 +43,12 @@ ln -sf /usr/lib/systemd/system/mod-ala-pi-stomp.service /etc/systemd/system/mult
 
 install -m 755 /home/${FIRST_USER_NAME}/pi-stomp/setup/mod-tweaks/start_touchosc2midi.sh /usr/mod/scripts/
 
+pushd $(mktemp -d) && git clone https://github.com/moddevices/mod-ttymidi.git
+pushd mod-ttymidi
+sudo make install
+install -m 755 /home/${FIRST_USER_NAME}/pi-stomp/setup/services/ttymidi.service /usr/lib/systemd/system
+ln -sf /usr/lib/systemd/system/ttymidi.service /etc/systemd/system/multi-user.target.wants
+
 mkdir -p /usr/lib/pistomp-wifi
 install -m 755 /home/${FIRST_USER_NAME}/pi-stomp/setup/services/hotspot/usr/lib/pistomp-wifi/disable_wifi_hotspot.sh /usr/lib/pistomp-wifi
 install -m 755 /home/${FIRST_USER_NAME}/pi-stomp/setup/services/hotspot/usr/lib/pistomp-wifi/enable_wifi_hotspot.sh /usr/lib/pistomp-wifi
