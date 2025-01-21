@@ -60,7 +60,10 @@ overlay_prefix=o/
 dtoverlay=spi0-2cs,cs0_pin=0,cs1_pin=7
 
 [pi5]
-# Original kernel for now
+kernel=vmlinuz-6.12.9-v8-16k+
+# initramfs initrd.img-6.12.9-v8-16k+
+os_prefix=6.12.9-v8-16k+/
+overlay_prefix=o/
 # Hack for spi0, cs0_pin should be unused
 dtoverlay=spi0-2cs,cs0_pin=0,cs1_pin=7
 

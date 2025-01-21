@@ -18,6 +18,10 @@ else
   runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh 3.0
 fi
 
+if $(cat /proc/cpuinfo | grep Model | grep -q 'Pi 5'); then
+  runuser -u pistomp -- /home/pistomp/pi-stomp/util/pi5_eeprom_update.sh
+fi
+
 logger --priority info --tag firstboot.sh "Disable unnecessary services"
 sudo systemctl disable --now dnsmasq.service
 sudo systemctl disable --now hciuart.service
