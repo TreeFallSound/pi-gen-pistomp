@@ -1,0 +1,67 @@
+# For more options and information see
+# http://rptl.io/configtxt
+# Some settings may impact device functionality. See link above for details
+
+# Uncomment some or all of these to enable the optional hardware interfaces
+dtparam=i2c_arm=on
+dtparam=i2s=on
+dtparam=spi=on
+
+# Additional overlays and parameters are documented
+# /boot/firmware/overlays/README
+
+# Automatically load initramfs files, if found
+auto_initramfs=1
+
+# Run in 64-bit mode
+arm_64bit=1
+
+# Run as fast as firmware / board allows
+arm_boost=1
+
+[cm4]
+# Enable host mode on the 2711 built-in XHCI USB controller.
+# This line should be removed if the legacy DWC2 controller is required
+# (e.g. for USB device mode) or if USB support is not required.
+otg_mode=1
+
+[all]
+# Enable the sound card (uncomment only one)
+#dtoverlay=audioinjector-wm8731-audio
+dtoverlay=iqaudio-codec
+#dtoverlay=hifiberry-dacplusadc
+
+# pi-stomp additions to allow DIN Midi, disables bluetooth however
+enable_uart=1
+dtoverlay=pi3-disable-bt
+dtoverlay=pi3-miniuart-bt
+dtoverlay=midi-uart0
+dtoverlay=dwc2,dr_mode=host
+
+# optimize performance
+gpu_mem=16
+disable_overscan=1
+disable_splash=1
+
+[pi3]
+kernel=vmlinuz-6.1.54-rt15-v8+
+# initramfs initrd.img-6.1.54-rt15-v8+
+os_prefix=6.1.54-rt15-v8+/
+overlay_prefix=o/
+# Hack for spi0, cs0_pin should be unused
+dtoverlay=spi0-2cs,cs0_pin=14,cs1_pin=7
+
+[pi4]
+kernel=vmlinuz-6.1.54-rt15-v8+
+# initramfs initrd.img-6.1.54-rt15-v8+
+os_prefix=6.1.54-rt15-v8+/
+overlay_prefix=o/
+# Hack for spi0, cs0_pin should be unused
+dtoverlay=spi0-2cs,cs0_pin=0,cs1_pin=7
+
+[pi5]
+# Original kernel for now
+# Hack for spi0, cs0_pin should be unused
+dtoverlay=spi0-2cs,cs0_pin=0,cs1_pin=7
+
+[all]

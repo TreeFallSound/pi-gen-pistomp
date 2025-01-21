@@ -1,0 +1,8 @@
+--- NetworkManager.conf	2024-09-29 23:21:21.457609569 -0700
++++ NetworkManager.conf2	2024-09-29 23:22:13.784564843 -0700
+@@ -1,4 +1,5 @@
+ [main]
++dns=dnsmasq
+ plugins=ifupdown,keyfile
+ 
+ [ifupdown]
