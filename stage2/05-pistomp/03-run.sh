@@ -21,8 +21,6 @@ dpkg -i linux-headers-6.1.54-rt15-v8+_6.1.54-rt15-v8+-2_arm64.deb
 dpkg -i linux-libc-dev_6.1.54-rt15-v8+-2_arm64.deb
 dpkg -i linux-image-6.1.54-rt15-v8+_6.1.54-rt15-v8+-2_arm64.deb
 
-rm -rf /home/${FIRST_USER_NAME}/tmp
-
 KERN1=6.1.54-rt15-v8+
 mkdir -p /boot/firmware/6.1.54-rt15-v8+/o/
 cp -d /usr/lib/linux-image-6.1.54-rt15-v8+/overlays/* /boot/firmware/6.1.54-rt15-v8+/o/
@@ -46,6 +44,8 @@ mv /boot/vmlinuz-6.12.9-v8-16k+ /boot/firmware/6.12.9-v8-16k+/
 mv /boot/initrd.img-6.12.9-v8-16k+ /boot/firmware/6.12.9-v8-16k+/
 mv /boot/System.map-6.12.9-v8-16k+ /boot/firmware/6.12.9-v8-16k+/
 cp /boot/config-6.12.9-v8-16k+ /boot/firmware/6.12.9-v8-16k+/
+
+rm -rf /home/${FIRST_USER_NAME}/tmp
 
 EOF
 
