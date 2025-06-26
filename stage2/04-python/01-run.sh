@@ -21,6 +21,7 @@ pip3 install adafruit-circuitpython-mcp3xxx
 pip3 install matplotlib
 pip3 install rpi_ws281x
 pip3 install adafruit-circuitpython-neopixel
+pip3 install Adafruit-Blinka-Raspberry-Pi5-Neopixel
 pip3 install jsonschema
 pip3 install flask
 pip3 install unicategories
