@@ -31,7 +31,7 @@ make
 make install
 cd ..
 
-git clone https://github.com/micahvdm/mod-ui.git
+git clone https://github.com/TreeFallSound/mod-ui.git
 cd mod-ui
 chmod +x setup.py
 cd utils
