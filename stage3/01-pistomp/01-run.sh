@@ -9,7 +9,7 @@ chmod +x ${ROOTFS_DIR}/etc/update-motd.d/display-pistomp-logo
 on_chroot << EOF
 
 # pi-Stomp code
-git clone -b beta-bookworm-dev https://github.com/treefallsound/pi-stomp.git /home/${FIRST_USER_NAME}/pi-stomp
+git clone -b pistomp-v3 https://github.com/treefallsound/pi-stomp.git /home/${FIRST_USER_NAME}/pi-stomp
 
 # data dir
 mkdir -p /home/${FIRST_USER_NAME}/data/config
