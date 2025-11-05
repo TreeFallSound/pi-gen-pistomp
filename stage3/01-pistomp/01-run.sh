@@ -9,6 +9,9 @@ chmod +x ${ROOTFS_DIR}/etc/update-motd.d/display-pistomp-logo
 # banks default
 install -m 644 files/banks.json ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/
 
+# Insure IQAudio card is pegged to hw:0 for jack
+install -m 644 files/alsa-base.conf ${ROOTFS_DIR}/etc/modprobe.d
+
 on_chroot << EOF
 
 # pi-Stomp code
