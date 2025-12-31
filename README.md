@@ -24,9 +24,9 @@ A convience script is available to make the 3 main actions easy:
 ./image.sh build <stage>
 ```
 This builds stages from the specified level and up.
-0 will build everything (0, 1, 2, 3, export-image).  Start with that.
-3 will (re)build just pi-stomp and the final image
-2 should be used if the supporting software needs rebuilding
+* 0 will build everything (0, 1, 2, 3, export-image).  Start with that.
+* 3 will (re)build just pi-stomp and the final image
+* 2 should be used if the supporting software needs rebuilding
  
 ```bash
 ./image.sh clean <stage>
