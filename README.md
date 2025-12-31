@@ -6,6 +6,11 @@ This is based on https://github.com/RPi-Distro/pi-gen,
 then modified to build the unique pi-Stomp dependencies (JACK, MOD, etc.)
 and finally the pi-Stomp software itself.
 
+If building on a pi, a disk of at least 20GB is required so choose a 32GB or 64GB if
+you plan to keep multiple images
+
+On a pi5, expect a full build with compression to take about an hour.
+
 ## Quick Start
 The build process currently has 5 stages.  Each stage builds upon the previous
 stage0 : The base OS
