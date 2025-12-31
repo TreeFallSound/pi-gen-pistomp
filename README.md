@@ -1,4 +1,4 @@
-# pi-gen-pipstomp
+# pi-gen-pistomp
 
 Tool used to create pi-Stomp OS images.
 
