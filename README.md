@@ -53,7 +53,15 @@ This builds stages from the specified level and up.
 * 0 will build everything (0, 1, 2, 3, export-image).  Start with that.
 * 3 will (re)build just pi-stomp and the final image
 * 2 should be used if the supporting software needs rebuilding
- 
+
+```bash
+./image.sh compress
+```
+This creates a compressed (.xz) version of the image making it easier to transfer.
+
+For a first build, that's all you need.
+
+If re-building, you'll need
 ```bash
 ./image.sh clean <stage>
 ```
@@ -61,11 +69,6 @@ This cleans up the work output directory before a re-build.  The stage specified
 typically match the stage(s) you're building.
 
 Tip: Only clean/rebuild the stages you are modifying.  If just pi-Stomp specific code: 3, if supporting software: 2, if firmware: 1.
-
-```bash
-./image.sh compress
-```
-This creates a compressed (.xz) version of the image making it easier to transfer.
 
 ## Dependencies
 
