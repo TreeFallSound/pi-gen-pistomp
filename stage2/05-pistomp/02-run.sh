@@ -20,6 +20,16 @@ cd jack2
 ./waf install
 cd ..
 
+# debian 13 will include python3-lilv liblilv-dev
+[ ! -d lilv-0.24.12 ] && \
+  wget http://download.drobilla.net/lilv-0.24.12.tar.bz2 && \
+  tar xvf lilv-0.24.12.tar.bz2
+cd lilv-0.24.12
+./waf configure --prefix=/usr/local --no-utils --no-bash-completion --pythondir=/usr/local/lib/python3.11/dist-packages
+./waf build
+./waf install
+cd ..
+
 git clone https://github.com/micahvdm/browsepy.git
 cd browsepy
 pip3 install ./
@@ -64,15 +74,6 @@ cd ..
 git clone https://github.com/moddevices/mod-ttymidi.git
 cd mod-ttymidi
 make install
-cd ..
-
-wget http://download.drobilla.net/lilv-0.24.12.tar.bz2
-tar xvf lilv-0.24.12.tar.bz2
-cd lilv-0.24.12
-
-./waf configure --prefix=/usr/local  --static --static-progs --no-shared --no-utils --no-bash-completion --pythondir=/usr/local/lib/python3.11/dist-packages
-./waf build
-./waf install
 cd ..
 
 EOF
