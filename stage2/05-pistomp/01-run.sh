@@ -2,6 +2,7 @@
 
 install -m 644 files/services/*.service ${ROOTFS_DIR}/usr/lib/systemd/system/
 install -m 644 files/jackdrc ${ROOTFS_DIR}/etc/
+install -m 644 files/jack-env.sh ${ROOTFS_DIR}/etc/profile.d/
 install -m 500 files/80 ${ROOTFS_DIR}/etc/authbind/byport/
 
 mkdir -p "${ROOTFS_DIR}/etc/systemd/system/alsa-restore.service.d"
