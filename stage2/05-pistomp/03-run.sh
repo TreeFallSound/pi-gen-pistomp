@@ -15,7 +15,7 @@ cd /home/${FIRST_USER_NAME}/tmp
 
 #patch -b -N -u /usr/local/lib/python3.11/dist-packages/touchosc2midi/advertise.py -i advertise.diff
 
-patch -b -N -u /etc/NetworkManager/NetworkManager.conf -i NetworkManager.conf.diff
+[ ! -f /etc/NetworkManager/NetworkManager.conf.orig ] && patch -b -N -u /etc/NetworkManager/NetworkManager.conf -i NetworkManager.conf.diff
 
 dpkg -i linux-headers-6.1.54-rt15-v8+_6.1.54-rt15-v8+-2_arm64.deb
 dpkg -i linux-libc-dev_6.1.54-rt15-v8+-2_arm64.deb
