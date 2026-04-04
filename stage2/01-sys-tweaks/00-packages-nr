@@ -1,6 +1,8 @@
 cifs-utils
 rpicam-apps-lite
 mkvtoolnix
+meson
+ninja-build
 libserd-dev
 libsord-dev
 libsratom-dev
