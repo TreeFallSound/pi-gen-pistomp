@@ -60,7 +60,7 @@ kernel=vmlinuz-6.1.54-rt15-v8+
 os_prefix=6.1.54-rt15-v8+/
 overlay_prefix=o/
 # Hack for spi0, cs0_pin should be unused
-dtoverlay=spi0-2cs,cs0_pin=0,cs1_pin=7
+dtoverlay=spi0-2cs,cs0_pin=46,cs1_pin=7
 
 [pi5]
 kernel=vmlinuz-6.12.9-v8-16k+
@@ -68,6 +68,6 @@ kernel=vmlinuz-6.12.9-v8-16k+
 os_prefix=6.12.9-v8-16k+/
 overlay_prefix=o/
 # Hack for spi0, cs0_pin should be unused
-dtoverlay=spi0-2cs,cs0_pin=0,cs1_pin=7
+dtoverlay=spi0-2cs,cs0_pin=46,cs1_pin=7
 
 [all]
