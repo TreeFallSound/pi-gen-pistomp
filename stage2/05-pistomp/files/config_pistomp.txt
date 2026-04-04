@@ -43,6 +43,9 @@ gpu_mem=16
 disable_overscan=1
 disable_splash=1
 
+# enable high usb port power for booting from thumb drive for development
+usb_max_current_enable=1
+
 [pi3]
 kernel=vmlinuz-6.1.54-rt15-v8+
 # initramfs initrd.img-6.1.54-rt15-v8+
