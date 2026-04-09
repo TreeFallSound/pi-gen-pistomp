@@ -61,20 +61,19 @@ build_stage() {
   local start_stage="$1"
 
   echo "Configuring SKIP files..."
-
-  # Mark earlier stages as skipped
   for stage_dir in "$ROOT_DIR"/stage*; do
     [[ -d "$stage_dir" ]] || continue
     stage_num="${stage_dir##*stage}"
-    if [[ "$stage_num" =~ ^[0-9]+$ && "$stage_num" -lt "$start_stage" ]]; then
-      touch "$stage_dir/SKIP"
-    fi
-  done
 
-  # Unskip requested stage and later stages
-  for stage_dir in "$ROOT_DIR"/stage* "$ROOT_DIR/export-image"; do
-    [[ -d "$stage_dir" ]] || continue
-    rm -f "$stage_dir/SKIP"
+    if [[ "$stage_num" =~ ^[0-9]+$ ]]; then
+      if (( stage_num < start_stage )); then
+        touch "$stage_dir/SKIP"
+        echo "Skip $stage_dir"
+      else
+        rm -f "$stage_dir/SKIP"
+        echo "Unskip $stage_dir"
+      fi
+    fi
   done
 
   local ts
