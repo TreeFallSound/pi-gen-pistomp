@@ -45,6 +45,9 @@ mv /boot/initrd.img-6.12.9-v8-16k+ /boot/firmware/6.12.9-v8-16k+/
 mv /boot/System.map-6.12.9-v8-16k+ /boot/firmware/6.12.9-v8-16k+/
 cp /boot/config-6.12.9-v8-16k+ /boot/firmware/6.12.9-v8-16k+/
 
+# This is a fix for ttymidi on pi5.  Can remove once it's been added to the kernel
+sudo wget https://github.com/raspberrypi/firmware/raw/master/boot/overlays/midi-uart0-pi5.dtbo -O /boot/firmware/6.12.9-v8-16k+/o/midi-uart0-pi5.dtbo
+
 rm -rf /home/${FIRST_USER_NAME}/tmp
 
 EOF
