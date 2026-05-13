@@ -23,6 +23,9 @@ pip3 install rpi_ws281x
 pip3 install adafruit-circuitpython-neopixel
 pip3 install Adafruit-Blinka-Raspberry-Pi5-Neopixel
 pip3 install jsonschema
+pip3 install websockets
+pip3 install JACK-Client
+pip3 install numpy
 pip3 install flask
 pip3 install unicategories
 pip3 install scandir
