@@ -48,7 +48,7 @@ install -m 644 /home/${FIRST_USER_NAME}/pi-stomp/setup/services/hotspot/usr/lib/
 chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /usr/lib/pistomp-wifi
 
 # USB automounter
-sudo dpkg -i /home/${FIRST_USER_NAME}/pi-stomp/setup/services/usbmount.deb
+dpkg -i /home/${FIRST_USER_NAME}/pi-stomp/setup/services/usbmount.deb
 
 # Plugins
 mkdir -p /home/${FIRST_USER_NAME}/tmp
@@ -72,7 +72,10 @@ exit 0
 EOF
 
 # Version info
-software_version=$(sudo git --work-tree ${ROOTFS_DIR}/home/pistomp/pi-stomp --git-dir ${ROOTFS_DIR}/home/pistomp/pi-stomp/.git describe --dirty="*" --always)
+software_version=$(on_chroot <<EOF
+git --work-tree /home/${FIRST_USER_NAME}/pi-stomp --git-dir /home/${FIRST_USER_NAME}/pi-stomp/.git describe --dirty="*" --always
+EOF
+)
 build_tag=$(git --work-tree $BASE_DIR --git-dir $BASE_DIR/.git describe --dirty="*" --always)
 build_date=$(date +"%y%m%d")
 printf '{"build-tag": "%s", "build-date": "%s", "software-version": "%s"}' $build_tag $build_date $software_version > ${ROOTFS_DIR}/home/pistomp/.osbuild
