@@ -4,10 +4,12 @@ After=mod-ui.service
 Requires=mod-ui.service
 
 [Service]
+Environment="JACK_PROMISCUOUS_SERVER=jack"
 ExecStart=/opt/pistomp/venvs/pi-stomp/bin/python /home/pistomp/pi-stomp/modalapistomp.py
 Restart=always
 RestartSec=2
 LimitMEMLOCK=infinity
+LimitRTPRIO=64
 
 [Install]
 WantedBy=multi-user.target
