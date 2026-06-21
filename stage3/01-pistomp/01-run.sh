@@ -40,15 +40,9 @@ ln -sf /usr/lib/systemd/system/mod-ala-pi-stomp.service /etc/systemd/system/mult
 
 install -m 755 /home/${FIRST_USER_NAME}/pi-stomp/setup/mod-tweaks/start_touchosc2midi.sh /usr/mod/scripts/
 
-mkdir -p /usr/lib/pistomp-wifi
-install -m 755 /home/${FIRST_USER_NAME}/pi-stomp/setup/services/hotspot/usr/lib/pistomp-wifi/disable_wifi_hotspot.sh /usr/lib/pistomp-wifi
-install -m 755 /home/${FIRST_USER_NAME}/pi-stomp/setup/services/hotspot/usr/lib/pistomp-wifi/enable_wifi_hotspot.sh /usr/lib/pistomp-wifi
-install -m 755 /home/${FIRST_USER_NAME}/pi-stomp/setup/services/wifi_check.sh /usr/lib/pistomp-wifi
-install -m 644 /home/${FIRST_USER_NAME}/pi-stomp/setup/services/hotspot/usr/lib/systemd/system/wifi-hotspot.service /usr/lib/systemd/system
-chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /usr/lib/pistomp-wifi
-
-# USB automounter
-dpkg -i /home/${FIRST_USER_NAME}/pi-stomp/setup/services/usbmount.deb
+# NOTE: wifi-hotspot.service, enable/disable_wifi_hotspot.sh, and wifi-check.sh
+# are shipped from stage2/05-pistomp/files/ so networking behaviour is controlled
+# here, not by whatever the pi-stomp repo happens to have checked in.
 
 # Plugins
 mkdir -p /home/${FIRST_USER_NAME}/tmp
@@ -61,16 +55,6 @@ rm -rf /home/${FIRST_USER_NAME}/tmp
 
 EOF
 
-# rc.local
-bash -c "sed -i 's/exit 0//' ${ROOTFS_DIR}/etc/rc.local"
-cat >> ${ROOTFS_DIR}/etc/rc.local <<EOF
-logger --priority info --tag rc.local "rc.local start..."
-sudo iw dev wlan0 set power_save off
-(sleep 10;/usr/lib/pistomp-wifi/wifi_check.sh) &
-logger --priority info --tag rc.local "rc.local completed successfully"
-exit 0
-EOF
-
 # Version info
 software_version=$(on_chroot <<EOF
 git --work-tree /home/${FIRST_USER_NAME}/pi-stomp --git-dir /home/${FIRST_USER_NAME}/pi-stomp/.git describe --dirty="*" --always
@@ -79,4 +63,3 @@ EOF
 build_tag=$(git --work-tree $BASE_DIR --git-dir $BASE_DIR/.git describe --dirty="*" --always)
 build_date=$(date +"%y%m%d")
 printf '{"build-tag": "%s", "build-date": "%s", "software-version": "%s"}' $build_tag $build_date $software_version > ${ROOTFS_DIR}/home/pistomp/.osbuild
-

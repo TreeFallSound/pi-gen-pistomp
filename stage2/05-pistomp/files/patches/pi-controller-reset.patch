@@ -1,0 +1,35 @@
+From: pi-stomp/JackBridge
+Subject: netadapter: clear PI controller integrator on ringbuffer reset
+
+JackAudioAdapterInterface::ResetRingBuffers() re-centers the slip-ring to
+half-full and clears libsamplerate's filter state, but never touches the
+PI controller's offset_integral. Across many ring failures the integral
+accumulates without bound (Ki=1e-9, integration step = error in frames,
+no anti-windup on the integral itself — only the output ratio is clamped
+to [0.25, 4.0]). The accumulated windup biases the resample ratio further
+off the true static factor with each cycle, which sails the ring toward
+one wall, which triggers another failure sooner, which adds more error
+to the integral. Net effect: failure rate ramps monotonically from
+jackd start, end-to-end audio latency stays roughly constant (ring fill
+position is decoupled from pipeline latency), and only a full netadapter
+reload — which destroys and reconstructs JackPIControler — restores
+clean operation.
+
+JackPIControler::OurOfBounds() exists for precisely this purpose
+(JackFilters.h:333) but has zero callsites in 1.9.22. Wire it up from
+ResetRingBuffers().
+
+--- a/common/JackAudioAdapterInterface.cpp
++++ b/common/JackAudioAdapterInterface.cpp
+@@ -177,6 +177,11 @@
+         for (int i = 0; i < fPlaybackChannels; i++) {
+             fPlaybackRingBuffer[i]->Reset(fRingbufferCurSize);
+         }
++        // pi-stomp: clear PI controller integrator windup. Upstream's
++        // OurOfBounds() exists for this but has no callers in 1.9.22,
++        // so the integral grows unbounded across resets and biases the
++        // ratio further off true on each cycle.
++        fPIControler.OurOfBounds();
+     }
+
+     void JackAudioAdapterInterface::Reset()

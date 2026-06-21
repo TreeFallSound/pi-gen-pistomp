@@ -5,18 +5,49 @@ install -m 644 files/sys/linux-image-6.1.54-rt15-v8+_6.1.54-rt15-v8+-2_arm64.deb
 install -m 644 files/sys/linux-headers-6.1.54-rt15-v8+_6.1.54-rt15-v8+-2_arm64.deb ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/tmp/
 install -m 644 files/sys/linux-libc-dev_6.1.54-rt15-v8+-2_arm64.deb ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/tmp/
 install -m 644 files/sys/linux-image-6.12.9-v8-16k+_6.12.9-ga20d400dff3d-3_arm64.deb ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/tmp/
-install -m 644 files/advertise.diff ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/tmp/
-install -m 644 files/NetworkManager.conf.diff ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/tmp/
-install -Dm 644 files/wifi-powersave.conf ${ROOTFS_DIR}/etc/NetworkManager/conf.d/wifi-powersave.conf
+
+# NetworkManager: direct write of complete config (not a patch) so there's no
+# fragile diff to maintain. Uses keyfile-only plugin; drops deprecated ifupdown.
+cat > "${ROOTFS_DIR}/etc/NetworkManager/NetworkManager.conf" <<'EOF'
+[main]
+dns=dnsmasq
+plugins=keyfile
+
+[keyfile]
+unmanaged-devices=none
+EOF
+
+# NM drop-in: wifi power save + MAC address behavior
+install -Dm 644 files/wifi-powersave.conf \
+    "${ROOTFS_DIR}/etc/NetworkManager/conf.d/wifi-powersave.conf"
+install -Dm 644 files/wifi-mac.conf \
+    "${ROOTFS_DIR}/etc/NetworkManager/conf.d/wifi-mac.conf"
+
+# Wired connection profile: DHCP first, link-local fallback (169.254.x.x) for
+# direct laptop connection, 15s DHCP timeout, metric 100 (preferred over wifi).
+install -d -m 700 "${ROOTFS_DIR}/etc/NetworkManager/system-connections"
+install -m 600 files/wired-eth0.nmconnection \
+    "${ROOTFS_DIR}/etc/NetworkManager/system-connections/"
+
+# Hotspot scripts (ship from here so they're independent of pi-stomp repo state)
+install -d "${ROOTFS_DIR}/usr/lib/pistomp-wifi"
+install -m 755 files/enable_wifi_hotspot.sh \
+    "${ROOTFS_DIR}/usr/lib/pistomp-wifi/enable_wifi_hotspot.sh"
+install -m 755 files/disable_wifi_hotspot.sh \
+    "${ROOTFS_DIR}/usr/lib/pistomp-wifi/disable_wifi_hotspot.sh"
+install -m 755 files/wifi-check.sh \
+    "${ROOTFS_DIR}/usr/lib/pistomp-wifi/wifi-check.sh"
+
+# Multihome: source-based policy routing dispatcher + sysctl (eth0 variant)
+install -Dm 755 files/nm-dispatcher-multihome \
+    "${ROOTFS_DIR}/etc/NetworkManager/dispatcher.d/90-multihome"
+install -Dm 644 files/99-multihome.conf \
+    "${ROOTFS_DIR}/etc/sysctl.d/99-multihome.conf"
 
 echo "Installing Kernel and boot files"
 on_chroot << EOF
 
 cd /home/${FIRST_USER_NAME}/tmp
-
-#patch -b -N -u /usr/local/lib/python3.11/dist-packages/touchosc2midi/advertise.py -i advertise.diff
-
-patch -b -N -u /etc/NetworkManager/NetworkManager.conf -i NetworkManager.conf.diff
 
 dpkg -i linux-headers-6.1.54-rt15-v8+_6.1.54-rt15-v8+-2_arm64.deb
 dpkg -i linux-libc-dev_6.1.54-rt15-v8+-2_arm64.deb
@@ -46,8 +77,12 @@ mv /boot/initrd.img-6.12.9-v8-16k+ /boot/firmware/6.12.9-v8-16k+/
 mv /boot/System.map-6.12.9-v8-16k+ /boot/firmware/6.12.9-v8-16k+/
 cp /boot/config-6.12.9-v8-16k+ /boot/firmware/6.12.9-v8-16k+/
 
-# This is a fix for ttymidi on pi5.  Can remove once it's been added to the kernel
-sudo wget https://github.com/raspberrypi/firmware/raw/master/boot/overlays/midi-uart0-pi5.dtbo -O /boot/firmware/6.12.9-v8-16k+/o/midi-uart0-pi5.dtbo
+# Fix for ttymidi on pi5 — remove once it's been added to the upstream kernel
+wget https://github.com/raspberrypi/firmware/raw/master/boot/overlays/midi-uart0-pi5.dtbo -O /boot/firmware/6.12.9-v8-16k+/o/midi-uart0-pi5.dtbo
+
+# NM dispatcher requires its own D-Bus activation alias to work
+ln -sf /usr/lib/systemd/system/NetworkManager-dispatcher.service \
+    /etc/systemd/system/dbus-org.freedesktop.nm-dispatcher.service
 
 rm -rf /home/${FIRST_USER_NAME}/tmp
 

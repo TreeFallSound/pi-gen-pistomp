@@ -1,0 +1,11 @@
+[Unit]
+Description=Check WiFi and start hotspot if disconnected
+After=NetworkManager-wait-online.service
+Wants=NetworkManager-wait-online.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/pistomp-wifi/wifi-check.sh
+
+[Install]
+WantedBy=multi-user.target

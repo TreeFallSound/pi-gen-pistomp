@@ -1,0 +1,14 @@
+[connection]
+id=wired-eth0
+type=ethernet
+interface-name=eth0
+autoconnect=true
+
+[ipv4]
+method=auto
+link-local=4
+route-metric=100
+dhcp-timeout=15
+
+[ipv6]
+method=link-local

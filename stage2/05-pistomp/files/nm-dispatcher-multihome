@@ -1,0 +1,56 @@
+#!/bin/bash
+# NetworkManager dispatcher: source-based policy routing for a multi-homed host.
+#
+# When eth0 (ethernet) and wlan0 (wifi) are both up on the SAME subnet, the
+# lower-metric interface owns the subnet route, so replies for connections that
+# arrived on the other interface egress the wrong NIC and get dropped — that
+# interface's IP becomes unreachable for inbound traffic (e.g. wifi goes dark
+# the moment ethernet is also plugged into the router). Per-interface routing
+# tables + a `from <addr>` rule make each interface reply out of itself.
+#
+# Only acts on interfaces with a global (DHCP/static) address. Link-local-only
+# direct-cable mode (169.254.x, scope link) has no subnet conflict and is
+# skipped.
+
+IFACE="$1"
+ACTION="$2"
+
+case "$IFACE" in
+    eth0)  TABLE=100 ;;
+    wlan0) TABLE=200 ;;
+    *)     exit 0 ;;
+esac
+
+flush_rules() {
+    while ip rule show | grep -q "lookup $TABLE"; do
+        ip rule del table "$TABLE" 2>/dev/null || break
+    done
+}
+
+case "$ACTION" in
+    up|dhcp4-change)
+        CIDR=$(ip -4 -o addr show dev "$IFACE" scope global | awk '{print $4; exit}')
+        if [ -z "$CIDR" ]; then
+            flush_rules
+            ip route flush table "$TABLE" 2>/dev/null
+            ip route flush cache
+            exit 0
+        fi
+        ADDR=${CIDR%/*}
+        SUBNET=$(ip route show dev "$IFACE" scope link proto kernel | awk '{print $1; exit}')
+        GW=$(ip route show default dev "$IFACE" | awk '{print $3; exit}')
+
+        flush_rules
+        ip route flush table "$TABLE" 2>/dev/null
+        [ -n "$SUBNET" ] && ip route add "$SUBNET" dev "$IFACE" src "$ADDR" table "$TABLE"
+        [ -n "$GW" ]     && ip route add default via "$GW" dev "$IFACE" table "$TABLE"
+        ip rule add from "$ADDR" lookup "$TABLE"
+        ip route flush cache
+        ;;
+    down)
+        flush_rules
+        ip route flush table "$TABLE" 2>/dev/null
+        ip route flush cache
+        ;;
+esac
+exit 0
