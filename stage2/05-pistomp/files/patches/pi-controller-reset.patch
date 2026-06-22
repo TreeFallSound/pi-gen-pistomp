@@ -22,14 +22,14 @@ ResetRingBuffers().
 --- a/common/JackAudioAdapterInterface.cpp
 +++ b/common/JackAudioAdapterInterface.cpp
 @@ -177,6 +177,11 @@
- 	for (int i = 0; i < fPlaybackChannels; i++) {
- 		fPlaybackRingBuffer[i]->Reset(fRingbufferCurSize);
- 	}
-+	// pi-stomp: clear PI controller integrator windup. Upstream's
-+	// OurOfBounds() exists for this but has no callers in 1.9.22,
-+	// so the integral grows unbounded across resets and biases the
-+	// ratio further off true on each cycle.
-+	fPIControler.OurOfBounds();
- }
+         for (int i = 0; i < fPlaybackChannels; i++) {
+             fPlaybackRingBuffer[i]->Reset(fRingbufferCurSize);
+         }
++        // pi-stomp: clear PI controller integrator windup. Upstream's
++        // OurOfBounds() exists for this but has no callers in 1.9.22,
++        // so the integral grows unbounded across resets and biases the
++        // ratio further off true on each cycle.
++        fPIControler.OurOfBounds();
+     }
 
- void JackAudioAdapterInterface::Reset()
+     void JackAudioAdapterInterface::Reset()
