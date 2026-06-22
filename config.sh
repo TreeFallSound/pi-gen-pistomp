@@ -11,10 +11,6 @@ LINUX_RPI_COMMIT="954341c412dd48b7c7f8125d81212ec4c0e42ed3"
 JACK2_REPO="https://github.com/jackaudio/jack2.git"
 JACK2_TAG="v1.9.22"
 
-# --- jack-example-tools ---
-JACK_EXAMPLE_TOOLS_REPO="https://salsa.debian.org/multimedia-team/jack-example-tools.git"
-JACK_EXAMPLE_TOOLS_REF="debian/4-4"
-
 # --- Hylia ---
 HYLIA_REPO="https://github.com/falkTX/Hylia.git"
 HYLIA_REF="master"                                     # no stable tag; pin by commit when needed

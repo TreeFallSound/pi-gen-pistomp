@@ -12,15 +12,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# --- Version config ---
-# Pinned to rpi-6.18.y HEAD as of 2026-06-19
-LINUX_RPI_COMMIT="954341c412dd48b7c7f8125d81212ec4c0e42ed3"
-KERNEL_VERSION="6.18.36"
-# LOCALVERSION becomes the suffix after the upstream version in the kernel
-# release string.  Keep it short: it appears in /proc/version and uname -r.
-LOCALVERSION="-rt-v8+"
+# Source version pins from config.sh (single source of truth)
+# shellcheck source=config.sh
+source "${SCRIPT_DIR}/config.sh"
+
 # Full kernel release string used by the bootloader and .deb file names
-KERNEL_RELEASE="${KERNEL_VERSION}${LOCALVERSION}"
+KERNEL_RELEASE="${KERNEL_VERSION}${KERNEL_LOCALVERSION}"
 
 CACHE_DIR="${SCRIPT_DIR}/stage2/05-pistomp/files/sys"
 SOURCE_CACHE_DIR="${SCRIPT_DIR}/.kernel-cache"
@@ -88,7 +85,7 @@ docker run --name "${CONTAINER_NAME}" \
 
         echo '==> Building .deb packages (this takes a while)...'
         make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
-             LOCALVERSION=${LOCALVERSION} \
+              LOCALVERSION=${KERNEL_LOCALVERSION} \
              -j\$(nproc) bindeb-pkg
 
         echo '==> Copying packages to output...'

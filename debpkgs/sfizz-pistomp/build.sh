@@ -22,8 +22,8 @@ if ls "${CACHE_DIR}/${PKG}_${VERSION}"*_arm64.deb &>/dev/null && [[ -z "${FORCE_
 fi
 
 [ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "1.2.3" --recurse-submodules \
-        "https://github.com/sfztools/sfizz-ui.git" "${UPSTREAM_DIR}"
+    git clone --branch "${SFIZZ_TAG}" --recurse-submodules \
+        "${SFIZZ_REPO}" "${UPSTREAM_DIR}"
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"
 cd "${UPSTREAM_DIR}"
