@@ -14,7 +14,7 @@ RUN dpkg --add-architecture arm64 && \
         binfmt-support ca-certificates fdisk gpg pigz arch-test \
         dpkg-dev devscripts debhelper-compat \
         build-essential crossbuild-essential-arm64 pkg-config \
-        cmake meson ninja-build swig \
+        cmake meson ninja-build swig nasm \
         kbd \
     && rm -rf /var/lib/apt/lists/*
 
@@ -33,6 +33,7 @@ RUN apt-get -y update && \
         libjack-jackd2-dev:arm64 libjpeg-dev:arm64 \
         liblilv-dev:arm64 liblo-dev:arm64 \
         libmp3lame-dev:arm64 libopus-dev:arm64 \
+        libogg-dev:arm64 libvorbis-dev:arm64 libx264-dev:arm64 \
         libpng-dev:arm64 libportmidi-dev:arm64 libpulse-dev:arm64 \
         libreadline-dev:arm64 libsamplerate0-dev:arm64 \
         libsdl2-dev:arm64 libsndfile1-dev:arm64 libsystemd-dev:arm64 \

@@ -6,12 +6,16 @@ PKG=ffmpeg-pistomp
 %:
 	dh $@
 
+override_dh_auto_clean:
+	# Upstream distclean fails before configure; ignore it.
+	true
+
 override_dh_auto_configure:
 	./configure \
 		--prefix=/usr \
-		--libdir=/usr/lib/aarch64-linux-gnu \
-		--shlibdir=/usr/lib/aarch64-linux-gnu \
-		--incdir=/usr/include/aarch64-linux-gnu \
+		--extra-version="pistomp" \
+		--toolchain=hardened \
+		--disable-stripping \
 		--enable-gpl \
 		--enable-version3 \
 		--disable-static \
@@ -23,50 +27,80 @@ override_dh_auto_configure:
 		--disable-manpages \
 		--disable-podpages \
 		--disable-txtpages \
-		--disable-ffplay \
-		--disable-ffprobe \
-		--disable-avdevice \
-		--disable-avfilter \
-		--disable-postproc \
-		--disable-swresample \
+		--disable-autodetect \
+		--disable-everything \
 		--disable-network \
-		--disable-bzlib \
-		--disable-libopenjpeg \
-		--disable-iconv \
-		--disable-zlib \
+		--disable-protocols \
+		--disable-indevs \
+		--disable-outdevs \
+		--disable-alsa \
 		--disable-sdl2 \
 		--disable-xlib \
 		--disable-libxcb \
 		--disable-libxcb-shm \
-		--disable-libxcb-xfixes \
 		--disable-libxcb-shape \
+		--disable-libxcb-xfixes \
 		--disable-libpulse \
-		--disable-alsa \
-		--disable-libopus \
-		--disable-libvorbis \
-		--disable-libmp3lame \
-		--disable-libtheora \
-		--disable-libass \
-		--disable-libfreetype \
-		--disable-libfontconfig \
-		--disable-libfribidi \
-		--disable-libharfbuzz \
-		--disable-gnutls \
-		--disable-openssl \
-		--disable-libx264 \
-		--disable-libx265 \
-		--disable-libvpx \
-		--enable-libx264 \
+		--disable-opengl \
+		--disable-openal \
+		--disable-libjack \
+		--disable-libplacebo \
+		--disable-vaapi \
+		--disable-vdpau \
+		--disable-vulkan \
+		--disable-libdrm \
+		--disable-hwaccels \
+		--enable-v4l2-m2m \
+		--enable-encoder=h264_v4l2m2m \
+		--enable-decoder=h264_v4l2m2m \
+		--enable-encoder=hevc_v4l2m2m \
+		--enable-decoder=hevc_v4l2m2m \
+		--enable-encoder=rawvideo \
 		--enable-encoder=libx264 \
+		--enable-encoder=libx264rgb \
+		--enable-decoder=rawvideo \
+		--enable-decoder=h264 \
+		--enable-decoder=hevc \
+		--enable-decoder=vp8 \
+		--enable-decoder=vp9 \
+		--enable-decoder=mjpeg \
+		--enable-decoder=png \
+		--enable-decoder=mpeg4 \
+		--enable-decoder=aac \
+		--enable-decoder=mp3float \
+		--enable-decoder=flac \
+		--enable-decoder=libvorbis \
+		--enable-muxer=rawvideo \
+		--enable-muxer=mov \
 		--enable-muxer=mp4 \
+		--enable-muxer=matroska \
+		--enable-muxer=webm \
+		--enable-muxer=avi \
+		--enable-muxer=flv \
+		--enable-muxer=ogg \
 		--enable-demuxer=rawvideo \
-		--enable-parser=h264 \
-		--enable-protocol=file,pipe \
-		--enable-filter=scale,format \
-		--enable-avcodec \
-		--enable-avformat \
-		--enable-swscale \
-		--enable-avutil
+		--enable-demuxer=mov \
+		--enable-demuxer=mp4 \
+		--enable-demuxer=matroska \
+		--enable-demuxer=webm \
+		--enable-demuxer=avi \
+		--enable-demuxer=flv \
+		--enable-demuxer=ogg \
+		--enable-demuxer=wav \
+		--enable-demuxer=flac \
+		--enable-demuxer=mp3 \
+		--enable-filter=scale \
+		--enable-filter=format \
+		--enable-filter=fps \
+		--enable-filter=null \
+		--enable-filter=crop \
+		--enable-filter=buffer \
+		--enable-filter=buffersink \
+		--enable-libx264 \
+		--enable-libvorbis \
+		--enable-ffmpeg \
+		--disable-ffplay \
+		--disable-ffprobe
 
 override_dh_auto_build:
 	$(MAKE) -j$$(nproc)

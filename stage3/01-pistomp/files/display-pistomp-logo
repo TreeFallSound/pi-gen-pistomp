@@ -28,6 +28,7 @@ echo -e "                    -%+------------------=#+                           
 echo -e "                      :------------------:.                                    "
 echo -e "                                                                               "   
 echo ""
+
 OSBUILD="/home/pistomp/.osbuild"
 if [ -f "$OSBUILD" ]; then
     BUILD_DATE=$(python3 -c "import json; print(json.load(open('$OSBUILD')).get('build-date',''))" 2>/dev/null)
@@ -36,6 +37,7 @@ if [ -f "$OSBUILD" ]; then
     [ -n "$BUILD_DATE" ] && echo "  Build date:    ${BUILD_DATE}"
     [ -n "$SW_VER" ]    && echo "  Version:       ${SW_VER} (${BUILD_TAG})"
 fi
+
 echo "  Kernel:        $(uname -r)"
 echo "  Extras:        ~/extras"
 echo ""

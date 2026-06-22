@@ -2,11 +2,8 @@ Source: ffmpeg-pistomp
 Section: video
 Priority: optional
 Maintainer: pistomp <pistomp@example.com>
-Build-Depends: debhelper-compat (= 13), nasm,
- libx264-dev, libx265-dev, libvpx-dev, libopus-dev, libvorbis-dev,
- libmp3lame-dev, libtheora-dev, libass-dev, libfreetype6-dev,
- libfontconfig1-dev, libfribidi-dev, libharfbuzz-dev,
- libgnutls28-dev, zlib1g-dev, libbz2-dev
+Build-Depends: debhelper-compat (= 13), nasm, pkgconf,
+ libx264-dev, libvorbis-dev, libogg-dev
 Standards-Version: 4.6.2
 
 Package: ffmpeg-pistomp
@@ -17,6 +14,7 @@ Conflicts: ffmpeg
 Replaces: ffmpeg
 Description: Minimal ffmpeg build for pi-Stomp
  A stripped-down ffmpeg build intended for pi-Stomp's ps-record-lcd
- utility. Supports rawvideo input and common codecs (H.264, VP8/9,
- Opus, MP3, Vorbis) without any SDL2, X11, OpenGL, PulseAudio, or
- other display/audio-output device dependencies.
+ utility. Supports rawvideo input and H.264 (libx264) output to MP4,
+ plus Vorbis decoding, without any SDL2, X11, OpenGL, PulseAudio,
+ ALSA, network protocols, or other display/audio-output device
+ dependencies.

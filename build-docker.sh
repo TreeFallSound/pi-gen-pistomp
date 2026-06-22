@@ -82,8 +82,20 @@ start_apt_cache() {
   ${DOCKER} run -d \
     --name ${APT_CACHER_CONTAINER} \
     --network ${APT_CACHER_NET} \
+    --health-cmd='curl -sf http://localhost:3142/acng-report.html' \
+    --health-interval=1s \
+    --health-retries=10 \
     --volume "${APT_CACHER_DIR}":/var/cache/apt-cacher-ng \
     ${APT_CACHER_IMAGE}
+  echo "Waiting for apt-cacher-ng to become healthy..."
+  for i in $(seq 1 15); do
+    if ${DOCKER} inspect --format='{{.State.Health.Status}}' ${APT_CACHER_CONTAINER} 2>/dev/null | grep -q healthy; then
+      echo "apt-cacher-ng is ready."
+      return 0
+    fi
+    sleep 1
+  done
+  echo "WARNING: apt-cacher-ng did not become healthy within 15s, continuing anyway."
 }
 
 stop_apt_cache() {

@@ -23,13 +23,12 @@ if ls "${CACHE_DIR}/${PKG}_${VERSION}"*_arm64.deb &>/dev/null && [[ -z "${FORCE_
 fi
 
 # Download and extract tarball if not already present
-if [ ! -d "${UPSTREAM_DIR}" ]; then
-    TARBALL="${WORKDIR:-/tmp}/ffmpeg-${FFMPEG_VERSION}.tar.xz"
-    if [ ! -f "${TARBALL}" ]; then
-        curl -fsSL -o "${TARBALL}" "${FFMPEG_URL}"
-    fi
-    tar xf "${TARBALL}" -C "$(dirname "${UPSTREAM_DIR}")"
+rm -rf "${UPSTREAM_DIR}"
+TARBALL="${WORKDIR:-/tmp}/ffmpeg-${FFMPEG_VERSION}.tar.xz"
+if [ ! -f "${TARBALL}" ]; then
+    curl -fsSL -o "${TARBALL}" "${FFMPEG_URL}"
 fi
+tar xf "${TARBALL}" -C "$(dirname "${UPSTREAM_DIR}")"
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"
 cd "${UPSTREAM_DIR}"

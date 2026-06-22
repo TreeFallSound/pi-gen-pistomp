@@ -82,6 +82,7 @@ PACKAGES=(
     pi-stomp
     pistomp-recovery
     jackbridge
+    ffmpeg-pistomp
 )
 
 for pkg in "${PACKAGES[@]}"; do

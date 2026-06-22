@@ -1,6 +1,11 @@
 # RT-specific kernel options for low-latency audio
 # Applied on top of bcm2711_defconfig via `cat diffconfig >> .config && make olddefconfig`
 # Sourced from pistomp-arch archarm-rt.diffconfig
+#
+# Despite the name, bcm2711_defconfig is the Raspberry Pi fork's unified arm64
+# defconfig: it enables ARCH_BCM2835 + ARCH_BRCMSTB and builds DTBs/drivers for
+# Pi 3 (bcm2837), Pi 4 (bcm2711), and Pi 5 (bcm2712). One 4K-page kernel covers
+# all three boards. See stage2/05-pistomp/03-run.sh for the flat-layout install.
 
 # Override bcm2711_defconfig's CONFIG_LOCALVERSION="-v8" so that the make
 # LOCALVERSION="-rt-v8+" argument is the only suffix — giving "6.18.36-rt-v8+".

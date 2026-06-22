@@ -29,18 +29,19 @@ dpkg -i \
     /pistomp-cache/mod-ui.deb \
     /pistomp-cache/pi-stomp.deb \
     /pistomp-cache/pistomp-recovery.deb \
-    /pistomp-cache/jackbridge.deb
+    /pistomp-cache/jackbridge.deb \
+    /pistomp-cache/ffmpeg-pistomp.deb
 apt-get install -f -y -qq
 
 # ps-record-lcd: convenience symlink so record_lcd.py is on PATH.
 # pi-stomp.deb postinst creates /home/pistomp/pi-stomp → /opt/pistomp/pi-stomp.
-ln -sf /home/${FIRST_USER_NAME}/pi-stomp/util/record_lcd.py /usr/local/bin/ps-record-lcd
+ln -sf /home/\${FIRST_USER_NAME}/pi-stomp/util/record_lcd.py /usr/local/bin/ps-record-lcd
 
 # jack-example-tools comes from Trixie apt (not a custom deb)
 apt-get install -y jack-example-tools
 
-# ffmpeg is installed without recommends to avoid pulling in SDL2/X11/GL.
-apt-get install -y --no-install-recommends ffmpeg
+# ffmpeg is vendored as ffmpeg-pistomp to avoid SDL2/X11/GL/PulseAudio deps.
+# No additional apt ffmpeg package needed.
 
 # python3-lilv and liblilv-dev are available via apt on trixie (>=0.24.26).
 # No source build needed — installed via 00-packages.
