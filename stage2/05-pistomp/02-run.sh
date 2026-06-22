@@ -31,9 +31,9 @@ cd jack2
 # reset. Without this, failure rate ramps monotonically from jackd start.
 # See stage2/05-pistomp/files/patches/pi-controller-reset.patch for the diagnosis.
 git apply /tmp/pi-controller-reset.patch
-# Drop the bundled waflib so we use system waf, which supports Python 3.12+
-# (the bundled waf uses the imp module removed in 3.12).
-rm -rf waflib
+# Remove the bundled waf entry point (uses removed imp module), but keep
+# waflib/Tools/ so project-specific tools like autooptions are available.
+rm -f waf
 waf configure
 waf build
 waf install
