@@ -103,6 +103,7 @@ PRESERVE_CONTAINER=1 ./build-docker.sh
 | `CONTINUE` | `0` | Resume existing container instead of failing |
 | `PRESERVE_CONTAINER` | `0` | Don't delete the container after build |
 | `CONTAINER_NAME` | `pigen_work` | Override container name |
+| `FORCE_REBUILD` | `0` | Rebuild all custom `.deb` packages from source, ignoring cache |
 
 ## Configuration
 
@@ -129,6 +130,8 @@ dch -v <new-version> "Description of change."
 ```
 
 `build.sh` reads the version from the changelog via `dpkg-parsechangelog` — no other files need updating.
+
+**Stable symlinks**: `scripts/fetch-packages.sh` creates a `<pkg>.deb` symlink in `cache/` pointing to the latest versioned `.deb` (e.g. `mod-host-pistomp.deb → mod-host-pistomp_1.0.5-1_arm64.deb`). Stage scripts reference the unversioned symlink so version bumps don't require script edits.
 
 Packages using `dpkg-deb --build` instead of `dpkg-buildpackage` (currently `lcd-splash` and `libfluidsynth2-compat`) derive their version from `debian/control`'s `Version:` field.
 

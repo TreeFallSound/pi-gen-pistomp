@@ -2,9 +2,8 @@ Package: libfluidsynth2-compat
 Version: 2.3.4-1
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Depends: libfluidsynth3
+Depends: fluidsynth-headless
 Description: FluidSynth .so.2 compatibility shim for prebuilt LV2 plugins
  Creates a libfluidsynth.so.2 symlink pointing to the real .so.3 library
- so that prebuilt LV2 plugins compiled against libfluidsynth.so.2 can load
- on Trixie (which ships .so.3). The ABI break is minor enough that the
- plugins work.
+ (shipped by fluidsynth-headless) so that prebuilt LV2 plugins compiled
+ against libfluidsynth.so.2 can load on Trixie.

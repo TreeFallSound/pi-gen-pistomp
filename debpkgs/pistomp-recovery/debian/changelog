@@ -1,3 +1,10 @@
+pistomp-recovery (0.1.0-3) trixie; urgency=medium
+
+  * Drop system libsdl2-2.0-0 and libsdl2-dev dependencies; pygame-ce wheels
+    bundle SDL2 and the service runs headless with SDL_VIDEODRIVER=dummy.
+
+ -- pistomp <pistomp@example.com>  Mon, 22 Jun 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-2) trixie; urgency=medium
 
   * Add lg and python3-dev to Build-Depends so the lgpio Python wheel can

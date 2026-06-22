@@ -28,11 +28,10 @@ ntfs-3g
 pciutils
 rpi-eeprom
 raspi-utils
-udisks2
 unzip zip p7zip-full
 file git
 kms++-utils
 python3-venv
 python3-pip python3-zeroconf
 dnsmasq iptables python3-smbus python3-liblo lockfile-progs
-libfluidsynth3 python3-lilv
+python3-lilv

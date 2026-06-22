@@ -5,6 +5,12 @@ install -m 644 files/50raspi		"${ROOTFS_DIR}/etc/apt/apt.conf.d/"
 install -Dm 644 files/rpi-resize-lcd-splash.conf \
     "${ROOTFS_DIR}/etc/systemd/system/rpi-resize.service.d/rpi-resize-lcd-splash.conf"
 
+# Install lightweight USB auto-mount (replaces udisks2, no X11/GL deps).
+install -Dm 755 files/pistomp-usb-mount \
+    "${ROOTFS_DIR}/usr/local/libexec/pistomp-usb-mount"
+install -m 644 files/99-pistomp-usb-automount.rules \
+    "${ROOTFS_DIR}/etc/udev/rules.d/99-pistomp-usb-automount.rules"
+
 install -m 644 files/console-setup   	"${ROOTFS_DIR}/etc/default/"
 
 install -m 755 files/rc.local		"${ROOTFS_DIR}/etc/"

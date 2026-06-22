@@ -7,14 +7,13 @@ override_dh_auto_test:
 
 override_dh_auto_configure:
 	dh_auto_configure -- \
-		-Denable-sdl2=OFF \
 		-Denable-sdl3=OFF \
 		-Denable-jack=ON \
 		-Denable-alsa=ON \
-		-Denable-pulseaudio=ON \
+		-Denable-pulseaudio=OFF \
 		-Denable-libsndfile=ON \
 		-Denable-dbus=ON \
 		-Denable-ladspa=ON \
-		-Denable-portaudio=ON \
+		-Denable-portaudio=OFF \
 		-Denable-readline=ON \
 		-DLIB_SUFFIX=""

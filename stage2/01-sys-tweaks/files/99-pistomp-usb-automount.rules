@@ -1,0 +1,7 @@
+# Lightweight USB auto-mount for pi-Stomp (replaces udisks2).
+# Mounts USB mass-storage partitions under /media/<label> when inserted,
+# and unmounts them on removal.
+
+# Block partition devices on USB buses
+SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", ACTION=="add", ENV{ID_BUS}=="usb", ENV{ID_FS_USAGE}=="filesystem", RUN{program}+="/usr/local/libexec/pistomp-usb-mount add %k"
+SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", ACTION=="remove", ENV{ID_BUS}=="usb", RUN{program}+="/usr/local/libexec/pistomp-usb-mount remove %k"

@@ -39,6 +39,9 @@ ln -sf /home/${FIRST_USER_NAME}/pi-stomp/util/record_lcd.py /usr/local/bin/ps-re
 # jack-example-tools comes from Trixie apt (not a custom deb)
 apt-get install -y jack-example-tools
 
+# ffmpeg is installed without recommends to avoid pulling in SDL2/X11/GL.
+apt-get install -y --no-install-recommends ffmpeg
+
 # python3-lilv and liblilv-dev are available via apt on trixie (>=0.24.26).
 # No source build needed — installed via 00-packages.
 

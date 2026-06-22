@@ -70,6 +70,10 @@ PEDALBOARDS_BRANCH="master"
 USERFILES_REPO="https://github.com/TreeFallSound/pi-stomp-user-files.git"
 USERFILES_BRANCH="main"
 
+# --- ffmpeg-pistomp ---
+FFMPEG_VERSION="7.1.1"
+FFMPEG_URL="https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz"
+
 # --- sfizz ---
 SFIZZ_REPO="https://github.com/sfztools/sfizz-ui.git"
 SFIZZ_TAG="1.2.3"

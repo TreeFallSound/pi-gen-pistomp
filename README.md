@@ -31,6 +31,16 @@ This is a no-op if cached packages already exist in `stage2/05-pistomp/files/sys
 
 `-f` removes any stale build container and clears `deploy/` before starting. `build-docker.sh` leaves the uncompressed `.img` in `deploy/`; run `./compress-img.sh` to produce the dated `.img.xz`.
 
+### Rebuild all custom packages from source
+
+Custom `.deb` packages (`debpkgs/`) are cached in `cache/` and only rebuilt when missing. To force a full rebuild (e.g. after changing a `debian/control` dependency):
+
+```bash
+FORCE_REBUILD=1 ./build-docker.sh -f
+```
+
+To rebuild a single package, delete its `.deb` from `cache/` first.
+
 ### Resume an interrupted build
 
 ```bash

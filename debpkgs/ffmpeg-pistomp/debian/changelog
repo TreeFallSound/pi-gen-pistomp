@@ -1,0 +1,5 @@
+ffmpeg-pistomp (7.1.1-1) trixie; urgency=medium
+
+  * Initial package. Minimal ffmpeg build for pi-Stomp ps-record-lcd.
+
+ -- pistomp <pistomp@example.com>  Mon, 22 Jun 2026 00:00:00 +0000
