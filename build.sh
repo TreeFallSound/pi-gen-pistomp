@@ -68,6 +68,8 @@ EOF
 			log "Begin ${SUB_STAGE_DIR}/${i}-run.sh"
 			./${i}-run.sh
 			log "End ${SUB_STAGE_DIR}/${i}-run.sh"
+		elif [ -f ${i}-run.sh ]; then
+			log "Skip ${SUB_STAGE_DIR}/${i}-run.sh (not executable)"
 		fi
 		if [ -f ${i}-run-chroot.sh ]; then
 			log "Begin ${SUB_STAGE_DIR}/${i}-run-chroot.sh"
@@ -178,7 +180,7 @@ export PI_GEN_REPO=${PI_GEN_REPO:-https://github.com/RPi-Distro/pi-gen}
 export PI_GEN_RELEASE=${PI_GEN_RELEASE:-Raspberry Pi reference}
 
 export ARCH=arm64
-export RELEASE=${RELEASE:-bookworm} # Don't forget to update stage0/prerun.sh
+export RELEASE=${RELEASE:-trixie} # Don't forget to update stage0/prerun.sh
 export IMG_NAME="${IMG_NAME:-raspios-$RELEASE-$ARCH}"
 
 export USE_QEMU="${USE_QEMU:-0}"
@@ -207,6 +209,7 @@ export TARGET_HOSTNAME=${TARGET_HOSTNAME:-raspberrypi}
 export FIRST_USER_NAME=${FIRST_USER_NAME:-pi}
 export FIRST_USER_PASS
 export DISABLE_FIRST_BOOT_USER_RENAME=${DISABLE_FIRST_BOOT_USER_RENAME:-0}
+export PASSWORDLESS_SUDO="${PASSWORDLESS_SUDO:-0}"
 export WPA_COUNTRY
 export ENABLE_SSH="${ENABLE_SSH:-0}"
 export PUBKEY_ONLY_SSH="${PUBKEY_ONLY_SSH:-0}"
@@ -224,6 +227,7 @@ export PUBKEY_SSH_FIRST_USER
 
 export CLEAN
 export APT_PROXY
+export TEMP_REPO
 
 export STAGE
 export STAGE_DIR
@@ -242,6 +246,8 @@ export QUILT_PATCHES
 export QUILT_NO_DIFF_INDEX=1
 export QUILT_NO_DIFF_TIMESTAMPS=1
 export QUILT_REFRESH_ARGS="-p ab"
+
+export ENABLE_CLOUD_INIT=${ENABLE_CLOUD_INIT:-1}
 
 # shellcheck source=scripts/common
 source "${SCRIPT_DIR}/common"
@@ -301,6 +307,13 @@ log "Begin ${BASE_DIR}"
 STAGE_LIST=${STAGE_LIST:-${BASE_DIR}/stage*}
 export STAGE_LIST
 
+EXPORT_CONFIG_DIR=$(realpath "${EXPORT_CONFIG_DIR:-"${BASE_DIR}/export-image"}")
+if [ ! -d "${EXPORT_CONFIG_DIR}" ]; then
+	echo "EXPORT_CONFIG_DIR invalid: ${EXPORT_CONFIG_DIR} does not exist"
+	exit 1
+fi
+export EXPORT_CONFIG_DIR
+
 for STAGE_DIR in $STAGE_LIST; do
 	STAGE_DIR=$(realpath "${STAGE_DIR}")
 	run_stage
@@ -308,7 +321,7 @@ done
 
 CLEAN=1
 for EXPORT_DIR in ${EXPORT_DIRS}; do
-	STAGE_DIR=${BASE_DIR}/export-image
+	STAGE_DIR=${EXPORT_CONFIG_DIR}
 	# shellcheck source=/dev/null
 	source "${EXPORT_DIR}/EXPORT_IMAGE"
 	EXPORT_ROOTFS_DIR=${WORK_DIR}/$(basename "${EXPORT_DIR}")/rootfs

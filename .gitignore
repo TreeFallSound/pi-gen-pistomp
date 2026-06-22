@@ -6,3 +6,5 @@ SKIP
 SKIP_IMAGES
 .pc
 *-pc
+
+stage2/05-pistomp/files/sys/linux-*_arm64.deb

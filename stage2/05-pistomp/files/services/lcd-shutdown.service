@@ -1,0 +1,12 @@
+[Unit]
+Description=LCD shutdown splash
+DefaultDependencies=no
+After=shutdown.target
+Before=systemd-poweroff.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/lcd-splash /usr/share/pistomp/splash.rgb565 "Shutting down..."
+
+[Install]
+WantedBy=poweroff.target

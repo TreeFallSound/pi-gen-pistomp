@@ -26,6 +26,7 @@ Environment=PATCHSTORAGE_API_URL=https://patchstorage.com/api/beta/patches
 Environment=PATCHSTORAGE_PLATFORM_ID=8046
 Environment=PATCHSTORAGE_TARGET_ID=8280
 
+ExecStartPre=/usr/local/bin/wait-for-mod-host.sh
 ExecStart=/usr/bin/authbind /opt/mod-ui-venv/bin/mod-ui
 User=pistomp
 Group=pistomp

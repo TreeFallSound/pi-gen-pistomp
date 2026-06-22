@@ -5,6 +5,7 @@ set -eu
 DIR="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 
 BUILD_OPTS="$*"
+FORCE=0
 
 # Allow user to override docker command
 DOCKER=${DOCKER:-docker}
@@ -27,11 +28,21 @@ if [ -f "${DIR}/config" ]; then
 	CONFIG_FILE="${DIR}/config"
 fi
 
-while getopts "c:" flag
+# Handle --force before getopts (getopts does not support long options)
+for arg in "$@"; do
+	if [ "$arg" = "--force" ]; then
+		FORCE=1
+	fi
+done
+
+while getopts "c:f" flag
 do
 	case "${flag}" in
 		c)
 			CONFIG_FILE="${OPTARG}"
+			;;
+		f)
+			FORCE=1
 			;;
 		*)
 			;;
@@ -72,7 +83,15 @@ if [ "${CONTAINER_RUNNING}" != "" ]; then
 	echo "The build is already running in container ${CONTAINER_NAME}. Aborting."
 	exit 1
 fi
-if [ "${CONTAINER_EXISTS}" != "" ] && [ "${CONTINUE}" != "1" ]; then
+if [ "${FORCE}" = "1" ]; then
+	if [ "${CONTAINER_EXISTS}" != "" ]; then
+		echo "Removing existing container ${CONTAINER_NAME}..."
+		${DOCKER} rm -v "${CONTAINER_NAME}"
+		CONTAINER_EXISTS=""
+	fi
+	echo "Clearing deploy/..."
+	rm -rf "${DIR}/deploy"/*
+elif [ "${CONTAINER_EXISTS}" != "" ] && [ "${CONTINUE}" != "1" ]; then
 	echo "Container ${CONTAINER_NAME} already exists and you did not specify CONTINUE=1. Aborting."
 	echo "You can delete the existing container like this:"
 	echo "  ${DOCKER} rm -v ${CONTAINER_NAME}"
@@ -80,9 +99,9 @@ if [ "${CONTAINER_EXISTS}" != "" ] && [ "${CONTINUE}" != "1" ]; then
 fi
 
 # Modify original build-options to allow config file to be mounted in the docker container
-BUILD_OPTS="$(echo "${BUILD_OPTS:-}" | sed -E 's@\-c\s?([^ ]+)@-c /config@')"
+BUILD_OPTS="$(echo "${BUILD_OPTS:-}" | sed -E 's@\-c\s?([^ ]+)@-c /config@; s/--force//g; s/-f\b//g')"
 
-${DOCKER} build --build-arg BASE_IMAGE=debian:bullseye -t pi-gen "${DIR}"
+${DOCKER} build --build-arg BASE_IMAGE=debian:trixie -t pi-gen "${DIR}"
 
 if [ "${CONTAINER_EXISTS}" != "" ]; then
   DOCKER_CMDLINE_NAME="${CONTAINER_NAME}_cont"
@@ -141,8 +160,8 @@ time ${DOCKER} run \
   $DOCKER_CMDLINE_POST \
   pi-gen \
   bash -e -o pipefail -c "
-    dpkg-reconfigure qemu-user-static &&
-    # binfmt_misc is sometimes not mounted with debian bullseye image
+    dpkg-reconfigure qemu-user-binfmt &&
+    # binfmt_misc is sometimes not mounted with debian trixie image
     (mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc || true) &&
     cd /pi-gen; ./build.sh ${BUILD_OPTS} &&
     rsync -av work/*/build.log deploy/

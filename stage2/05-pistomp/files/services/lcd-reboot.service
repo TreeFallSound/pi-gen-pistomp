@@ -1,0 +1,12 @@
+[Unit]
+Description=LCD reboot splash
+DefaultDependencies=no
+After=shutdown.target
+Before=systemd-reboot.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/lcd-splash /usr/share/pistomp/splash.rgb565 "Rebooting..."
+
+[Install]
+WantedBy=reboot.target

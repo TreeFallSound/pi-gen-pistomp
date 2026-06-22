@@ -70,12 +70,10 @@ build and exits immediately if cached packages already exist.
 ### Step 2 — Build the image
 
 ```bash
-# Remove any previous output and stale container
-rm -rf deploy/*
-docker rm -v pigen_work 2>/dev/null || true
-
-./build-docker.sh
+./build-docker.sh -f
 ```
+
+The `-f`/`--force` flag removes any existing build container and clears `deploy/` automatically. Omit it if you want the default behaviour (abort when a stale container exists).
 
 Output: `deploy/*pistompOS-lite.img.xz`
 

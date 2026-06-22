@@ -345,8 +345,7 @@ vi config         # Edit your config file. See above.
 If everything goes well, your finished image will be in the `deploy/` folder.
 You can then remove the build container with `docker rm -v pigen_work`
 
-If you encounter errors during the build, you can edit the corresponding scripts, and
-continue:
+If you encounter errors during the build, you can edit the corresponding scripts, and continue:
 
 ```bash
 CONTINUE=1 ./build-docker.sh
@@ -356,6 +355,12 @@ To examine the container after a failure you can enter a shell within it using:
 
 ```bash
 sudo docker run -it --privileged --volumes-from=pigen_work pi-gen /bin/bash
+```
+
+To throw away a failed build and restart:
+
+```bash
+./build-docker.sh --force
 ```
 
 After successful build, the build container is by default removed. This may be undesired when making incremental changes to a customized build. To prevent the build script from remove the container add

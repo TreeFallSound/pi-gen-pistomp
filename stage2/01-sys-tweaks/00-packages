@@ -9,11 +9,11 @@ python3-rpi-lgpio python3-spidev
 python3-smbus2
 avahi-daemon
 ca-certificates curl
-fake-hwclock nfs-common usbutils
+usbutils
 dosfstools
-dphys-swapfile
+rpi-swap rpi-loop-utils
 raspberrypi-sys-mods
-pi-bluetooth
+bluez bluez-firmware
 apt-listchanges
 usb-modeswitch
 libpam-chksshpwd

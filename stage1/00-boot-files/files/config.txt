@@ -48,5 +48,11 @@ usb_max_current_enable=1
 # (e.g. for USB device mode) or if USB support is not required.
 otg_mode=1
 
+[cm5]
+dtoverlay=dwc2,dr_mode=host
+
+[pi5]
+dtoverlay=nospi10
+
 [all]
 
