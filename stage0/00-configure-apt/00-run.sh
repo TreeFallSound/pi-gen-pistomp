@@ -10,9 +10,11 @@ if ! command -v gpgv > /dev/null 2>&1; then
 fi
 EOF
 
-# Switch to RPi sources (DEB822 format)
+# Switch to DEB822 sources (Debian base + RPi overlay)
 true > "${ROOTFS_DIR}/etc/apt/sources.list"
+install -m 644 files/debian.sources "${ROOTFS_DIR}/etc/apt/sources.list.d/"
 install -m 644 files/raspi.sources "${ROOTFS_DIR}/etc/apt/sources.list.d/"
+sed -i "s/RELEASE/${RELEASE}/g" "${ROOTFS_DIR}/etc/apt/sources.list.d/debian.sources"
 sed -i "s/RELEASE/${RELEASE}/g" "${ROOTFS_DIR}/etc/apt/sources.list.d/raspi.sources"
 
 if [ -n "$APT_PROXY" ]; then

@@ -1,12 +1,13 @@
 [Unit]
-Description=FirstBoot
-After=network.target apt-daily.service apt-daily-upgrade.service rc-local.service
-ConditionFileNotEmpty=/boot/firmware/firstboot.sh
+Description=First Boot Initialization
+After=NetworkManager.service
+Wants=NetworkManager.service
+Before=jack.service
+ConditionPathExists=/boot/firmware/firstboot.sh
 
 [Service]
-ExecStart=/boot/firmware/firstboot.sh
 Type=oneshot
-RemainAfterExit=no
+ExecStart=/boot/firmware/firstboot.sh
 
 [Install]
 WantedBy=multi-user.target

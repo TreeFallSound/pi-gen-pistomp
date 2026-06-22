@@ -9,6 +9,13 @@ on_chroot << EOF
 mkdir -p /home/${FIRST_USER_NAME}/tmp
 cd /home/${FIRST_USER_NAME}/tmp
 
+# uv: Python version manager (installs Python 3.11 for mod-ui) + also used in stage3
+# waf: build tool removed from Debian Trixie, needed for JACK2
+pip3 install uv waf
+
+# Python 3.11 goes to /opt/mod-ui-python so the venv symlink is valid on the Pi
+UV_PYTHON_INSTALL_DIR=/opt/mod-ui-python uv python install 3.11
+
 export NOOPT=true
 [ ! -d Hylia ] && git clone --recursive https://github.com/falkTX/Hylia.git
 cd Hylia
@@ -60,7 +67,7 @@ chmod +x setup.py
 cd utils
 make
 cd ..
-python3.11 -m venv /opt/mod-ui-venv
+UV_PYTHON_INSTALL_DIR=/opt/mod-ui-python uv venv --python 3.11 /opt/mod-ui-venv
 /opt/mod-ui-venv/bin/pip install tornado==4.3
 # tornado 4.x uses collections.MutableMapping, removed in Python 3.10+.
 sed -i -e 's/collections\.MutableMapping/collections.abc.MutableMapping/g' \

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-install -m 755 files/firstboot.sh ${ROOTFS_DIR}/boot/firmware/
+install -m 755 files/firstboot.sh  ${ROOTFS_DIR}/boot/firmware/
+install -m 644 files/pistomp.conf  ${ROOTFS_DIR}/boot/firmware/
 
 on_chroot << EOF
 
