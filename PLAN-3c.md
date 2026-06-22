@@ -164,6 +164,8 @@ the PLAN-3a contract.
 
 ## Changes to `02-run.sh`
 
+**Approach:** modify `02-run.sh` incrementally as each debpkg is completed and confirmed working — do not defer all changes to 3e. Only remove a source-build block once its replacement (.deb in `cache/` or Trixie apt package) is ready. **Exception: jack-example-tools** is a plain Trixie apt install with no build step — its source-build block can be removed and `00-packages` updated right now, independently of any debpkg work.
+
 ### Blocks to delete (replaced by `apt install` from the custom apt repo)
 
 Remove the following source-build blocks entirely from the `on_chroot` block:
@@ -172,7 +174,7 @@ Remove the following source-build blocks entirely from the `on_chroot` block:
 | :--- | :--- | :--- |
 | Hylia clone + make + make install | `[ ! -d Hylia ] && git clone ... ; cd Hylia ; make ; make install` | `apt-get install -y hylia` |
 | jack2 clone + patch + waf | `[ ! -d jack2 ] && git clone ... ; cd jack2 ; git apply ... ; rm -rf waflib ; waf configure ; waf build ; waf install` | `apt-get install -y jack2-pistomp` |
-| jack-example-tools clone + meson | `[ ! -d jack-example-tools ] && git clone ... ; meson setup ... ; ninja ... ; meson install` | `apt-get install -y jack-example-tools` (from Trixie, per PLAN-3b) |
+| jack-example-tools clone + meson | `[ ! -d jack-example-tools ] && git clone ... ; meson setup ... ; ninja ... ; meson install` | add `jack-example-tools` to `stage2/05-pistomp/00-packages` — plain Trixie apt, no custom deb, no apt-get call in `02-run.sh` |
 | amidithru clone + make install | `[ ! -d amidithru ] && git clone ... ; sed -i ... ; make install` | `apt-get install -y amidithru` |
 | mod-host clone + make + make install | `[ ! -d mod-host ] && git clone ... ; make ; make install` | `apt-get install -y mod-host-pistomp` |
 | mod-midi-merger clone + cmake | `[ ! -d mod-midi-merger ] && git clone ... ; sed -i ... ; mkdir build ; cmake ... ; make ; make install` | `apt-get install -y mod-midi-merger` |
@@ -186,7 +188,6 @@ After adding the pistomp apt repo source (e.g., in `01-run.sh` or at the top of 
 apt-get install -y \
     hylia \
     jack2-pistomp \
-    jack-example-tools \
     amidithru \
     mod-host-pistomp \
     mod-midi-merger \
@@ -195,6 +196,8 @@ apt-get install -y \
     fluidsynth-headless \
     lcd-splash
 ```
+
+(`jack-example-tools` is absent — it comes from Trixie apt via `00-packages`, not the custom repo.)
 
 ### Also remove from `02-run.sh` / prerequisites
 

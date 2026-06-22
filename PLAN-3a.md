@@ -419,12 +419,16 @@ install -m 440 files/pistomp-nopasswd.sudoers \
 
 ## Implementation order
 
+Steps 1–4 are in scope for 3a. Steps 5–9 are deferred.
+
 1. Create `config.sh` (§1) — unblocks everything else.
 2. Add `cache/` to `.gitignore` (§3).
-3. Create `debpkgs/` skeleton (§2) — directory + README stub.
+3. Create `debpkgs/` skeleton (§2) — directory + README stub + template `build.sh` + template `build.yml` (under `debpkgs/template/`, not under `.github/workflows/`).
 4. Create `stage2/05-pistomp/files/pistomp-nopasswd.sudoers` and add install line to `03-run.sh` (§6).
-5. Wire `02-run.sh` to source `config.sh` and replace hardcoded values (§7).
-6. Wire `build-rt-kernel-docker.sh` to source `config.sh`.
-7. Create `gh-pages` branch with empty `pool/main/` and placeholder `dists/` (§5).
-8. Create `.github/workflows/publish-apt-repo.yml` (§5).
-9. Create first debpkg (`jack2-pistomp`) with its workflow (§4).
+5. _(deferred to 3e)_ Wire `02-run.sh` to source `config.sh` and replace hardcoded values (§7).
+6. _(deferred to 3e)_ Wire `build-rt-kernel-docker.sh` to source `config.sh`.
+7. _(deferred to 3e)_ Create `gh-pages` branch with empty `pool/main/` and placeholder `dists/` (§5).
+8. _(deferred to 3e)_ Create `.github/workflows/publish-apt-repo.yml` (§5).
+9. _(deferred to 3c)_ Create first debpkg — that is 3c work, not 3a.
+
+**`scripts/fetch-packages.sh`:** Create as a Phase 1 skeleton alongside step 1. Phase 2 download logic (`_DEB_REPO`/`_DEB_VERSION`) is a `# TODO` stub only.
