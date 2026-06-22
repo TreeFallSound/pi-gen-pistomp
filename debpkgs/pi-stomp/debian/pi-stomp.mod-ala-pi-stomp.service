@@ -2,6 +2,9 @@
 Description=MOD-ALA-PI-STOMP
 After=mod-ui.service
 Requires=mod-ui.service
+OnFailure=pistomp-recovery.service
+StartLimitBurst=3
+StartLimitIntervalSec=180
 
 [Service]
 Environment="JACK_PROMISCUOUS_SERVER=jack"

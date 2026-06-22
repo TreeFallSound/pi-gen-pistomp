@@ -11,3 +11,8 @@ stage2/05-pistomp/files/sys/linux-*_arm64.deb
 
 # Built .deb cache (populated by debpkgs/*/build.sh and build-rt-kernel-docker.sh)
 cache/
+
+# Binary-only .deb staging trees (created by build.sh, not source)
+# Matches debpkgs/<pkg>/debian/<pkg>/ — the staging subdir named after the package
+debpkgs/*/debian/*/usr/
+debpkgs/*/debian/*/DEBIAN/

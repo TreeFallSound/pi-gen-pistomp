@@ -1,0 +1,3 @@
+#!/bin/bash
+# Stop the pi-stomp application service
+exec sudo systemctl stop mod-ala-pi-stomp

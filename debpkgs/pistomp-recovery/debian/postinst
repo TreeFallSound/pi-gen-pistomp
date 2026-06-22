@@ -1,0 +1,12 @@
+#!/bin/bash
+# pistomp-recovery postinst — patch venv shebangs
+set -e
+
+VENV=/opt/pistomp/venvs/pistomp-recovery
+
+find "$VENV/bin" -type f -executable \
+    -exec sed -i "1s|^#!.*python.*|#!$VENV/bin/python|" {} \; 2>/dev/null || true
+
+chown -R pistomp:pistomp "$VENV" 2>/dev/null || true
+
+#DEBHELPER#

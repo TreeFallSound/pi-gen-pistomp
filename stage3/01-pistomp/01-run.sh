@@ -12,10 +12,16 @@ install -m 644 files/banks.json ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/
 # Insure IQAudio card is pegged to hw:0 for jack
 install -m 644 files/alsa-base.conf ${ROOTFS_DIR}/etc/modprobe.d
 
+# Extras: utility scripts for the user (expression pedal toggle, instrument
+# downloads, pedalboard repo swap, CPU mitigation tuning)
+install -d ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/extras
+install -m 755 files/extras/*.sh ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/extras/
+
 on_chroot << EOF
 
 # pi-stomp installed as .deb in stage2; postinst creates /home/pistomp/pi-stomp
-# symlink pointing to /opt/pistomp/pi-stomp/ and enables mod-ala-pi-stomp.service.
+# symlink pointing to /opt/pistomp/pi-stomp/. Service enablement is in
+# stage2/05-pistomp/01-run.sh (not in the .deb postinst).
 
 # data dir (still needed for user data that lives outside the package)
 mkdir -p /home/${FIRST_USER_NAME}/data/config
@@ -51,6 +57,10 @@ ln -s /home/${FIRST_USER_NAME}/.lv2 /home/${FIRST_USER_NAME}/data/.lv2
 popd
 rm -rf /home/${FIRST_USER_NAME}/tmp
 
+# NAM reamp signal (from cache/, bind-mounted at /pistomp-cache)
+mkdir -p /opt/pistomp/pi-stomp/setup/nam
+cp /pistomp-cache/T3K-sweep-v3.wav /opt/pistomp/pi-stomp/setup/nam/T3K-sweep-v3.wav
+
 # Factory package versions for pistomp-recovery baseline
 mkdir -p /etc/pistomp
 dpkg-query -W -f='{"${Package}": "${Version}"}\n' \
@@ -66,6 +76,8 @@ dpkg-query -W -f='{"${Package}": "${Version}"}\n' \
     jack-capture \
     pi-stomp \
     mod-ui \
+    pistomp-recovery \
+    jackbridge \
     browsepy \
     touchosc2midi \
     jack-example-tools \
@@ -78,6 +90,45 @@ for line in sys.stdin:
         pkgs.update(json.loads(line))
 print(json.dumps(pkgs, indent=2))
 " > /etc/pistomp/factory-packages.list
+
+# ---------- pistomp-recovery factory state ----------
+# Create the recovery directory so pistomp-recovery can write its package
+# stamp and initialize its git repos at runtime.
+mkdir -p /home/${FIRST_USER_NAME}/.pistomp-recovery
+
+# Initial packages stamp — starts identical to factory. pi-stomp will
+# update it when it successfully loads a pedalboard.
+cp /etc/pistomp/factory-packages.list /home/${FIRST_USER_NAME}/.pistomp-recovery/packages.stamp
+
+# Initialize pedalboards git repo with a factory branch so pistomp-recovery
+# can diff/rollback pedalboard changes.
+cd /home/${FIRST_USER_NAME}/data/.pedalboards
+git init --initial-branch device
+git config user.email "recovery@pistomp.local"
+git config user.name "pistomp-recovery"
+git add -A
+git commit -m "factory pedalboards state"
+git branch factory
+cd - > /dev/null
+
+# ---------- last.json ----------
+# Tell pi-stomp which pedalboard to load on first boot.
+DATA_DIR=/home/${FIRST_USER_NAME}/data
+PEDALBOARDS_DIR=\${DATA_DIR}/.pedalboards
+if [ -d "\${PEDALBOARDS_DIR}/default.pedalboard" ]; then
+    FIRST_PB="\${PEDALBOARDS_DIR}/default.pedalboard"
+else
+    FIRST_PB=\$(find "\${PEDALBOARDS_DIR}" -maxdepth 1 -name '*.pedalboard' -type d | head -n 1 || true)
+fi
+if [ -n "\${FIRST_PB}" ]; then
+    echo "{\"bank\": -2, \"pedalboard\": \"\${FIRST_PB}\", \"supportsDividers\": true}" > \${DATA_DIR}/last.json
+else
+    echo '{"bank": -2, "pedalboard": "", "supportsDividers": true}' > \${DATA_DIR}/last.json
+fi
+
+# ---------- ownership ----------
+chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/.pistomp-recovery
+chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/data/.pedalboards
 
 EOF
 

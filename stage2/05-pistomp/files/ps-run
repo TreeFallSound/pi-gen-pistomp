@@ -1,0 +1,3 @@
+#!/bin/bash
+# Run the pi-stomp application directly in the foreground
+exec sudo /opt/pistomp/venvs/pi-stomp/bin/python /home/pistomp/pi-stomp/modalapistomp.py

@@ -56,7 +56,7 @@ fi
 cat > /etc/jackdrc <<EOF
 #!/bin/sh
 #
-exec env JACK_DRIVER_DIR=/usr/local/lib/jack /usr/local/bin/jackd -t 2000 -R -P 95 -d alsa -d hw:0 -r ${JACK_SAMPLE_RATE:-48000} -p ${JACK_PERIOD:-64} -n 2 -X seq -s
+exec env JACK_DRIVER_DIR=/usr/lib/jack /usr/bin/jackd -t 2000 -R -P 95 -d alsa -d hw:0 -r ${JACK_SAMPLE_RATE:-48000} -p ${JACK_PERIOD:-64} -n 2 -X seq -s
 EOF
 
 # ---------- hardware setup ----------

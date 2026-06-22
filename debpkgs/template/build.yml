@@ -1,55 +1,30 @@
-# GitHub Actions workflow template (Phase 2 — not yet active)
+# Per-package workflow template.
 #
-# When a debpkg is ready for CI, copy this to
-# .github/workflows/build-<pkg>.yml and adapt.
+# Copy this to .github/workflows/build-<pkg>.yml and change <pkg> to the
+# package name (matching the debpkgs/<pkg>/ directory). That's it — the
+# build logic lives in .github/workflows/build-deb.yml (reusable workflow).
 #
-# Trigger: push to debpkgs/<pkg>/** or config.sh.
-# Runner: ubuntu-24.04-arm (native arm64, no QEMU).
+# The only per-package variation is the path filter (so only the changed
+# package rebuilds). Build dependencies are parsed automatically from
+# debian/control at runtime.
 
-# name: build-<pkg>
-#
-# on:
-#   push:
-#     branches: [pistomp-v3]
-#     paths:
-#       - 'debpkgs/<pkg>/**'
-#       - 'config.sh'
-#   workflow_dispatch:
-#
-# jobs:
-#   build:
-#     runs-on: ubuntu-24.04-arm
-#     steps:
-#       - uses: actions/checkout@v4
-#
-#       - name: Install build dependencies
-#         run: |
-#           sudo apt-get update
-#           sudo apt-get install -y --no-install-recommends \
-#             dpkg-dev devscripts debhelper-compat \
-#             <build-deps>
-#
-#       - name: Build .deb
-#         run: |
-#           source config.sh
-#           WORKDIR=/tmp CACHE_DIR=${{ github.workspace }}/cache \
-#             bash debpkgs/<pkg>/build.sh
-#
-#       - name: Upload artifact
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: <pkg>-deb
-#           path: cache/*.deb
-#           if-no-files-found: error
-#
-#       - name: Publish to GitHub Releases
-#         if: github.event_name == 'push'
-#         uses: softprops/action-gh-release@v2
-#         with:
-#           tag_name: debpkg/<pkg>/${{ env.PKG_VERSION }}
-#           name: "<pkg> ${{ env.PKG_VERSION }}"
-#           files: cache/*.deb
-#           draft: false
-#           prerelease: false
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+name: build-<pkg>
+
+on:
+  push:
+    branches: [pistomp-v3]
+    paths:
+      - 'debpkgs/<pkg>/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/<pkg>/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: <pkg>
+    secrets: inherit

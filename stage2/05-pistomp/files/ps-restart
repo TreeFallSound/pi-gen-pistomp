@@ -1,0 +1,3 @@
+#!/bin/bash
+# Restart the pi-stomp application service
+exec sudo systemctl restart mod-ala-pi-stomp

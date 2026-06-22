@@ -1,7 +1,5 @@
 #!/bin/bash -e
 
-install -m 644 files/sys/.bash_aliases ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/
-
 # Copy all kernel .deb files into the chroot staging area.
 # Globs here so version bumps in files/sys/ don't require script edits.
 mkdir -p "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/tmp"
@@ -46,6 +44,10 @@ install -Dm 755 files/nm-dispatcher-multihome \
     "${ROOTFS_DIR}/etc/NetworkManager/dispatcher.d/90-multihome"
 install -Dm 644 files/99-multihome.conf \
     "${ROOTFS_DIR}/etc/sysctl.d/99-multihome.conf"
+
+# Audio/realtime sysctl tuning (swap, dirty pages, timer migration, inotify)
+install -Dm 644 files/90-audio.conf \
+    "${ROOTFS_DIR}/etc/sysctl.d/90-audio.conf"
 
 echo "Installing Kernel and boot files"
 on_chroot << EOF

@@ -47,6 +47,15 @@ MOD_TTYMIDI_REF="master"
 PISTOMP_REPO="https://github.com/TreeFallSound/pi-stomp.git"
 PISTOMP_BRANCH="pistomp-v3"
 
+# --- pistomp-recovery ---
+PISTOMP_RECOVERY_REPO="https://github.com/sastraxi/pistomp-recovery.git"
+PISTOMP_RECOVERY_BRANCH="main"
+PISTOMP_RECOVERY_VERSION="0.1.0"
+
+# --- JackBridge (netJACK2 DAW recording over Ethernet) ---
+JACKROUTER_REPO="https://github.com/sastraxi/JackRouter.git"
+JACKROUTER_REF="master"
+
 # --- Pedalboards / user files ---
 PEDALBOARDS_REPO="https://github.com/TreeFallSound/pi-stomp-pedalboards.git"
 PEDALBOARDS_BRANCH="master"
@@ -64,11 +73,16 @@ FLUIDSYNTH_URL="https://github.com/FluidSynth/fluidsynth/archive/v${FLUIDSYNTH_V
 
 # --- jack-capture ---
 JACK_CAPTURE_REPO="https://github.com/kmatheussen/jack_capture.git"
-JACK_CAPTURE_TAG="0.9.73"
+# Upstream master (commit a539d444, 2023-01-04) contains all post-0.9.73 fixes.
+# The tag 0.9.73 (2017) is missing ARM build fixes, C99 compatibility, and more.
+JACK_CAPTURE_REF="a539d444d388c4cfed7279e385830e7767d59c41"
 
 # --- LV2 plugins tarball ---
 LV2_PLUGINS_URL="https://www.treefallsound.com/downloads/lv2plugins.tar.gz"
 LV2_PLUGINS_SHA256=""
+
+# --- NAM reamp signal (tone3000 redirects to S3; stable canonical URL) ---
+NAM_REAMP_URL="https://www.tone3000.com/T3K-sweep-v3.wav"
 
 # --- Python (uv-managed, for mod-ui venv only) ---
 MOD_UI_PYTHON_VERSION="3.11"

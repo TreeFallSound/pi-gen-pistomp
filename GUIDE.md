@@ -19,8 +19,8 @@ Build process executes ordered stages.
 | Stage | Description | Key Contents |
 | :--- | :--- | :--- |
 | **0–1** | Bootstrap | Base Debian system, bootloader. |
-| **2** | System/Audio | RT kernel, JACK2, MOD services, networking, system tweaks. |
-| **3** | Application | `pi-stomp` repo, pedalboards, LV2 plugins, uv venv. |
+| **2** | System/Audio | RT kernel, custom `.deb` packages (JACK2, MOD-Host, MOD-UI, etc.), networking, system tweaks. |
+| **3** | Application | `pi-stomp` repo (via `.deb`), pedalboards, LV2 plugins, `factory-packages.list`. |
 
 ### Key stage2 substages
 
@@ -30,12 +30,12 @@ Build process executes ordered stages.
 | `02-net-tweaks` | WiFi country, rfkill defaults. |
 | `03-set-timezone` | Timezone. |
 | `04-python` | System pip packages (pyliblo3, netifaces2, JACK-Client, …). |
-| `05-pistomp` | JACK2, MOD-Host, MOD-UI venv, networking configs, RT kernel, services. |
+| `05-pistomp` | Custom `.deb` installs (JACK2, MOD-Host, MOD-UI, pi-stomp, pistomp-recovery), networking configs, RT kernel, services. |
 
 ### Notable design decisions
 
-- **mod-ui runs in a Python 3.11 venv** (`/opt/mod-ui-venv`) because it requires `tornado==4.3`, which is incompatible with Python 3.13. All other pi-stomp code runs under the system Python 3.13.
-- **JACK2 is built from source** with the `pi-controller-reset.patch` applied (fixes PI integrator windup that causes monotonically increasing audio failures). System `waf` is used instead of the bundled waflib (which uses the removed `imp` module).
+- **mod-ui runs in a Python 3.11 venv** (`/opt/pistomp/venvs/mod-ui`) because it requires `tornado==4.3`, which is incompatible with Python 3.13. All other pi-stomp code runs under the system Python 3.13.
+- **JACK2 is built from source** as a `.deb` with the `pi-controller-reset.patch` applied (fixes PI integrator windup that causes monotonically increasing audio failures). System `waf` is used instead of the bundled waflib (which uses the removed `imp` module).
 - **lilv is installed via apt** (`python3-lilv liblilv-dev`) — no source build needed on Trixie.
 - **Networking** matches pistomp-arch exactly: wired NM profile with 15 s DHCP timeout + link-local fallback (`eth0`), wifi power-save off, MAC randomization off, multihome policy routing dispatcher.
 - **WiFi hotspot** is started on demand by `wifi-check.service` (after NM settles), not via rc.local. It only starts if neither WiFi nor ethernet is connected.

@@ -23,8 +23,13 @@ STAGE_DIR="${ROOT_DIR}/stage2/05-pistomp/files"
 
 # Stage files into the debian package tree
 DEB_DIR="${SCRIPT_DIR}/debian/${PKG}"
+rm -rf "${DEB_DIR}"
+mkdir -p "${DEB_DIR}/DEBIAN"
 mkdir -p "${DEB_DIR}/usr/bin"
 mkdir -p "${DEB_DIR}/usr/share/pistomp"
+
+# DEBIAN/control (binary package metadata for dpkg-deb)
+cp "${SCRIPT_DIR}/debian/control" "${DEB_DIR}/DEBIAN/control"
 
 cp "${STAGE_DIR}/sys/lcd-splash" "${DEB_DIR}/usr/bin/lcd-splash"
 cp "${STAGE_DIR}/splash.rgb565"  "${DEB_DIR}/usr/share/pistomp/splash.rgb565"

@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+export DH_VERBOSE=1
+
+PKG=pistomp-recovery
+RECOVERY_SRC_DIR=$(CURDIR)/../pistomp-recovery-src
+VENV_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/venvs/pistomp-recovery
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	# Clone pistomp-recovery source if not already present
+	if [ ! -d "$(RECOVERY_SRC_DIR)" ]; then \
+		git clone --branch main --depth 1 \
+			https://github.com/sastraxi/pistomp-recovery.git \
+			"$(RECOVERY_SRC_DIR)"; \
+	fi
+
+override_dh_auto_build:
+	# Create a relocatable uv venv with --system-site-packages
+	uv venv --copies --python /usr/bin/python3 --system-site-packages "$(VENV_DIR)"
+	# Sync dependencies (non-editable so the wheel lands in site-packages)
+	UV_PROJECT_ENVIRONMENT="$(VENV_DIR)" \
+		uv sync --frozen --no-dev --no-editable --extra hardware \
+		--project "$(RECOVERY_SRC_DIR)"
+
+override_dh_auto_install:
+	# Install systemd service file
+	install -Dm 644 debian/pistomp-recovery.pistomp-recovery.service \
+		$(CURDIR)/debian/pistomp-recovery/lib/systemd/system/pistomp-recovery.service
+
+override_dh_installsystemd:
+	# Service enablement is handled by stage2/05-pistomp/01-run.sh ln -sf,
+	# not by deb-systemd-helper. The unit file is installed manually above.

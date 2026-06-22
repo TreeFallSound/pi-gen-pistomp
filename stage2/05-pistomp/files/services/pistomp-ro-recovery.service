@@ -1,0 +1,15 @@
+[Unit]
+Description=pi-Stomp read-only rootfs recovery
+DefaultDependencies=no
+After=local-fs.target systemd-remount-fs.service
+Before=jack.service mod-host.service mod-ui.service browsepy.service mod-ala-pi-stomp.service mod-amidithru.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+ExecStart=/usr/lib/pistomp/pistomp-ro-recovery.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=sysinit.target

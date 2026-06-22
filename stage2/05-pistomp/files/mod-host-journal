@@ -1,0 +1,8 @@
+#!/bin/bash
+# Follow the mod-host service journal.
+# Defaults to following (-f); pass any args through to journalctl.
+if [ $# -eq 0 ]; then
+    exec sudo journalctl -f -u mod-host
+else
+    exec sudo journalctl -u mod-host "$@"
+fi

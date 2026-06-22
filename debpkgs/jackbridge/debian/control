@@ -1,0 +1,16 @@
+Source: jackbridge
+Section: sound
+Priority: optional
+Maintainer: pistomp <pistomp@example.com>
+Build-Depends: debhelper-compat (= 13), git
+Standards-Version: 4.6.2
+
+Package: jackbridge
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}, jack2-pistomp,
+ jack-example-tools, iproute2
+Description: netJACK2 client for DAW recording over Ethernet
+ Installs the pi-side JackBridge service: 6 helper scripts under
+ /usr/local/libexec/jackbridge/ plus pi-stomp-jackbridge.service.
+ The service is on-demand only (not enabled at boot); the LCD UI
+ starts/stops it via systemctl.

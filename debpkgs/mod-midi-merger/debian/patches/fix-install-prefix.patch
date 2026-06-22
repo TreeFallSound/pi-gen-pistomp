@@ -8,8 +8,10 @@ Last-Update: 2026-06-22
 
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1,4 +1,4 @@
+@@ -55,7 +55,7 @@
+ target_link_libraries(mod-midi-broadcaster-standalone ${LIBS})
+ 
 -set(CMAKE_INSTALL_PREFIX /usr)
 +# set(CMAKE_INSTALL_PREFIX /usr)
-```
-
+ install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/jack)
+ install(TARGETS mod-midi-broadcaster LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/jack)

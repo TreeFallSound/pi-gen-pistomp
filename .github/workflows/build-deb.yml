@@ -1,0 +1,113 @@
+# Reusable build workflow — called by .github/workflows/build-<pkg>.yml
+#
+# Usage in a per-package workflow:
+#
+#   name: build-jack2-pistomp
+#   on:
+#     push:
+#       branches: [pistomp-v3]
+#       paths: ['debpkgs/jack2-pistomp/**', 'config.sh']
+#     pull_request:
+#       paths: ['debpkgs/jack2-pistomp/**', 'config.sh']
+#     workflow_dispatch:
+#   jobs:
+#     build:
+#       uses: ./.github/workflows/build-deb.yml
+#       with:
+#         pkg: jack2-pistomp
+#       secrets: inherit
+
+name: build-deb
+
+on:
+  workflow_call:
+    inputs:
+      pkg:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          source config.sh
+          PKG="${{ inputs.pkg }}"
+          # Try changelog first (dpkg-buildpackage packages), then config.sh pins
+          if [ -f "debpkgs/${PKG}/debian/changelog" ]; then
+            VERSION=$(dpkg-parsechangelog --show-field Version \
+              --file "debpkgs/${PKG}/debian/changelog")
+          else
+            # Binary-only packages: version is in debian/control
+            VERSION=$(grep '^Version:' "debpkgs/${PKG}/debian/control" | awk '{print $2}')
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Check version not already published (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          if gh release view "debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}" \
+               --repo ${{ github.repository }} >/dev/null 2>&1; then
+            echo "ERROR: version ${{ steps.version.outputs.version }} is already published." >&2
+            echo "Bump the version in debpkgs/${{ inputs.pkg }}/debian/changelog" >&2
+            echo "(or config.sh for pinned packages)." >&2
+            exit 1
+          fi
+          echo "Version ${{ steps.version.outputs.version }} is new, OK."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends dpkg-dev devscripts debhelper-compat
+          PKG="${{ inputs.pkg }}"
+          CONTROL="debpkgs/${PKG}/debian/control"
+          if [ ! -f "$CONTROL" ]; then
+            echo "No debian/control (binary-only package), skipping build-deps"
+            exit 0
+          fi
+          # dpkg-checkbuilddeps reads Build-Depends from debian/control and
+          # prints what's missing. Parse its output and install those packages.
+          cd "debpkgs/${PKG}"
+          MISSING=$(dpkg-checkbuilddeps 2>&1 || true)
+          if [ -n "$MISSING" ]; then
+            # Output looks like:
+            #   dpkg-checkbuilddeps: error: Unmet build dependencies: foo bar (>= 1.0) baz
+            echo "$MISSING" \
+              | sed 's/.*Unmet build dependencies: //' \
+              | sed 's/([^)]*)//g' \
+              | tr ' ' '\n' \
+              | grep -v '^$' \
+              | sort -u \
+              | xargs -r sudo apt-get install -y --no-install-recommends
+          fi
+
+      - name: Build .deb
+        run: |
+          source config.sh
+          WORKDIR=/tmp CACHE_DIR=${{ github.workspace }}/cache \
+            bash debpkgs/${{ inputs.pkg }}/build.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.pkg }}-deb
+          path: cache/*.deb
+          if-no-files-found: error
+
+      - name: Publish to GitHub Releases
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}
+          name: "${{ inputs.pkg }} ${{ steps.version.outputs.version }}"
+          files: cache/*.deb
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

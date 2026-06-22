@@ -1,0 +1,3 @@
+#!/bin/bash
+# Enable and start the ttymidi service
+exec sudo systemctl enable --now ttymidi

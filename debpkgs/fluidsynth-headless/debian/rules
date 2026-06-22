@@ -2,6 +2,9 @@
 %:
 	dh $@ --buildsystem=cmake
 
+override_dh_auto_test:
+	$(MAKE) -C obj-aarch64-linux-gnu check
+
 override_dh_auto_configure:
 	dh_auto_configure -- \
 		-Denable-sdl2=OFF \

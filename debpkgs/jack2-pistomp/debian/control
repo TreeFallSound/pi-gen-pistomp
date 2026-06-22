@@ -2,9 +2,10 @@ Source: jack2-pistomp
 Section: sound
 Priority: optional
 Maintainer: pistomp <pistomp@example.com>
-Build-Depends: debhelper-compat (= 13), python3, waf | python3-waf,
+Build-Depends: debhelper-compat (= 13), python3,
  libasound2-dev, libdb5.3-dev, libdbus-1-dev, libsamplerate0-dev,
- libopus-dev, pkg-config, quilt
+ libopus-dev, libexpat1-dev, libsystemd-dev,
+ pkg-config, quilt
 Standards-Version: 4.6.2
 
 Package: jack2-pistomp

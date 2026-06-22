@@ -5,12 +5,10 @@ export DH_VERBOSE=1
 	dh $@ --with quilt
 
 override_dh_auto_configure:
-	# Remove bundled waflib entry point (uses removed imp module)
-	rm -f waf
-	# Use system waf
+	# Use bundled waf with patched waflib (imp → types for Python 3.12+)
 	CXXFLAGS="$(CXXFLAGS) -I/usr/include/db5.3" \
 	LDFLAGS="$(LDFLAGS) -ldb-5.3" \
-	waf configure \
+	./waf configure \
 		--prefix=/usr \
 		--autostart=none \
 		--systemd-unit \
@@ -18,7 +16,7 @@ override_dh_auto_configure:
 		--dbus
 
 override_dh_auto_build:
-	waf build
+	./waf build
 
 override_dh_auto_install:
-	waf --destdir=$(CURDIR)/debian/jack2-pistomp install
+	./waf --destdir=$(CURDIR)/debian/jack2-pistomp install

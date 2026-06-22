@@ -8,6 +8,16 @@ VENV_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/venvs/touchosc2midi
 %:
 	dh $@
 
+override_dh_auto_clean:
+	# Upstream has setup.py which triggers python-distutils build system,
+	# removed in compat 12+. We don't need to clean anything.
+	true
+
+override_dh_auto_test:
+	# Same reason as dh_auto_clean — python-distutils test runner removed
+	# in compat 12+. No tests to run.
+	true
+
 override_dh_auto_configure:
 	if [ ! -d "$(SRC_DIR)" ]; then \
 		git clone --depth 1 \
@@ -17,12 +27,17 @@ override_dh_auto_configure:
 
 override_dh_auto_build:
 	# Create a relocatable venv and install touchosc2midi
-	uv venv --copies --python /usr/bin/python3 "$(VENV_DIR)"
+	python3 -m venv --copies --system-site-packages "$(VENV_DIR)"
 	# Install pyliblo3 and pin Cython<3.1 before touchosc2midi pulls in broken pyliblo
-	"$(VENV_DIR)/bin/pip" install 'Cython<3.1' pyliblo3
+	"$(VENV_DIR)/bin/pip" install 'Cython<3.1'
+	"$(VENV_DIR)/bin/pip" install --no-build-isolation pyliblo3
 	"$(VENV_DIR)/bin/pip" install --no-deps "$(SRC_DIR)"
 
 override_dh_auto_install:
 	# Install systemd service file
 	install -Dm 644 debian/touchosc2midi.mod-touchosc2midi.service \
 		$(CURDIR)/debian/touchosc2midi/lib/systemd/system/mod-touchosc2midi.service
+
+override_dh_installsystemd:
+	# Service enablement is handled by stage2/05-pistomp/01-run.sh ln -sf,
+	# not by deb-systemd-helper. The unit file is installed manually above.

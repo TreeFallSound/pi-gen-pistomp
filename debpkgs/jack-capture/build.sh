@@ -9,7 +9,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${ROOT_DIR}/config.sh"
 
 PKG="jack-capture"
-VERSION="${JACK_CAPTURE_TAG}-1"
+VERSION="0.9.73+master-1"
 CACHE_DIR="${CACHE_DIR:-${ROOT_DIR}/cache}"
 UPSTREAM_DIR="${WORKDIR:-/tmp}/${PKG}-src"
 
@@ -22,8 +22,10 @@ if ls "${CACHE_DIR}/${PKG}_${VERSION}"*_arm64.deb &>/dev/null && [[ -z "${FORCE_
 fi
 
 [ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${JACK_CAPTURE_TAG}" --depth 1 \
-        "${JACK_CAPTURE_REPO}" "${UPSTREAM_DIR}"
+    git clone --depth 100 "${JACK_CAPTURE_REPO}" "${UPSTREAM_DIR}"
+
+# Ensure we are at the pinned commit (master containing post-0.9.73 fixes)
+git -C "${UPSTREAM_DIR}" checkout "${JACK_CAPTURE_REF}"
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"
 cd "${UPSTREAM_DIR}"

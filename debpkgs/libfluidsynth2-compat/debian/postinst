@@ -1,0 +1,9 @@
+#!/bin/bash
+# Create libfluidsynth.so.2 symlink → real .so.3 library
+set -e
+LIBDIR=/usr/lib/aarch64-linux-gnu
+REAL_LIB=$(readlink -f "${LIBDIR}/libfluidsynth.so.3")
+REAL_NAME=$(basename "${REAL_LIB}")
+ln -sf "${REAL_NAME}" "${LIBDIR}/libfluidsynth.so.2"
+
+#DEBHELPER#

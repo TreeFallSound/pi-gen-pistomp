@@ -1,0 +1,24 @@
+Description: Use pkg-config to detect libsystemd
+ In Debian Trixie libsystemd-dev only ships libsystemd.so via the
+ pkg-config file; a bare -lsystemd link check fails because the
+ unversioned .so symlink is not guaranteed to exist. Switch the
+ systemd auto-option to use pkg-config so the resulting uselib is
+ named SYSTEMD, matching what jackd uses.
+Author: pistomp <pistomp@example.com>
+Forwarded: not-needed
+Last-Update: 2026-06-22
+
+--- a/wscript
++++ b/wscript
+@@ -195,7 +195,10 @@ def options(opt):
+             'systemd',
+             help='Use systemd notify')
+     sd.check(header_name='systemd/sd-daemon.h')
+-    sd.check(lib='systemd')
++    sd.check_cfg(
++            package='libsystemd',
++            args='--cflags --libs',
++            uselib_store='SYSTEMD')
+     db = opt.add_auto_option(
+             'db',
+             help='Use Berkeley DB (metadata)')

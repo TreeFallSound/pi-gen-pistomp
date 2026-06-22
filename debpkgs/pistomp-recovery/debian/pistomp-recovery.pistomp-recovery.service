@@ -1,0 +1,18 @@
+[Unit]
+Description=pi-Stomp Recovery Service
+After=mod-ala-pi-stomp.service
+Conflicts=mod-ala-pi-stomp.service mod-ui.service
+
+[Service]
+Type=simple
+User=pistomp
+Group=pistomp
+Environment=JACK_PROMISCUOUS_SERVER=jack
+WorkingDirectory=/home/pistomp
+ExecStart=/opt/pistomp/venvs/pistomp-recovery/bin/python -m pistomp_recovery
+Restart=no
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

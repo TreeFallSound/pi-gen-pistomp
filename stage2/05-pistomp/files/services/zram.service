@@ -1,0 +1,13 @@
+[Unit]
+Description=ZRAM compressed swap
+DefaultDependencies=no
+Before=jack.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/pistomp/zram-start.sh
+ExecStop=/usr/lib/pistomp/zram-stop.sh
+
+[Install]
+WantedBy=multi-user.target

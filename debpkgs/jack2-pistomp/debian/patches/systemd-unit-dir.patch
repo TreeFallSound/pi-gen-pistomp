@@ -1,0 +1,24 @@
+Description: Make systemd user unit dir detection non-fatal
+ Debian Trixie no longer ships a systemd.pc pkg-config file, so
+ jack2's configure fails when --systemd-unit is enabled. Make the
+ pkg-config check optional and fall back to the standard Debian
+ user unit directory.
+Author: pistomp <pistomp@example.com>
+Forwarded: not-needed
+Last-Update: 2026-06-22
+
+--- a/systemd/wscript
++++ b/systemd/wscript
+@@ -10,9 +10,10 @@ def set_systemd_user_unit_dir(conf):
+             package='systemd',
+             args='--variable=systemduserunitdir',
+             okmsg='Successfully detected systemd user unit dir.',
+-            errormsg='Could not detect systemd user unit dir. Skipping...')
++            errormsg='Could not detect systemd user unit dir. Skipping...',
++            mandatory=False)
+     if not systemd_user_unit_dir:
+-        conf.env['SYSTEMD_USER_UNIT_DIR'] = None
++        conf.env['SYSTEMD_USER_UNIT_DIR'] = '/usr/lib/systemd/user'
+     else:
+         conf.env['SYSTEMD_USER_UNIT_DIR'] = \
+                 systemd_user_unit_dir.replace("\n", "")

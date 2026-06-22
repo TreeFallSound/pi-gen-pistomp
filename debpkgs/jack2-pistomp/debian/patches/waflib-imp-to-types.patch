@@ -1,0 +1,27 @@
+Description: Replace removed imp module with types in bundled waflib
+ Python 3.12 removed the imp module. The bundled waflib in jack2 v1.9.22
+ uses imp.new_module() which is equivalent to types.ModuleType().
+Author: pistomp <pistomp@example.com>
+Forwarded: not-needed
+Last-Update: 2026-06-22
+
+--- a/waflib/Context.py
++++ b/waflib/Context.py
+@@ -6,7 +6,7 @@
+ Classes and functions enabling the command system
+ """
+ 
+-import os, re, imp, sys
++import os, re, sys, types
+ from waflib import Utils, Errors, Logs
+ import waflib.Node
+ 
+@@ -660,7 +660,7 @@ def load_tool(tool, tooldir=None, with_sys_path=False):
+ 	except KeyError:
+ 		pass
+ 
+-	module = imp.new_module(WSCRIPT_FILE)
++	module = types.ModuleType(WSCRIPT_FILE)
+ 	try:
+ 		code = Utils.readf(path, m='r', encoding=encoding)
+ 	except EnvironmentError:

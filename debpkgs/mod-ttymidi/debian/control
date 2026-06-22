@@ -2,7 +2,7 @@ Source: mod-ttymidi
 Section: sound
 Priority: optional
 Maintainer: pistomp <pistomp@example.com>
-Build-Depends: debhelper-compat (= 13), libjack-jackd2-dev | libjack-dev, libasound2-dev
+Build-Depends: debhelper-compat (= 13), libjack-jackd2-dev | libjack-dev
 Standards-Version: 4.6.2
 
 Package: mod-ttymidi

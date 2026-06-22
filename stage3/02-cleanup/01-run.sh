@@ -36,18 +36,23 @@ sudo rm -rf "${ROOTFS_DIR}/var/cache/"* || true
 sudo rm -rf "${ROOTFS_DIR}/home/"*/.cache || true
 sudo rm -rf "${ROOTFS_DIR}/root/.cache" || true
 
-# 7. Zero out free space inside the staged filesystem to help xz
-#echo "→ Zero-filling free space for better compression..."
-#MNT=$(mktemp -d)
-#sudo mount -o loop,offset=$(( $(fdisk -l "${ROOTFS_DIR}/../image.img" | awk '/^Device/{getline; print $2}') * 512 )) \
-#  "${ROOTFS_DIR}/../image.img" "$MNT" 2>/dev/null || true
-#if mountpoint -q "$MNT"; then
-#  sudo dd if=/dev/zero of="$MNT/zero.fill" bs=1M || true
-#  sudo rm "$MNT/zero.fill"
-#  sudo umount "$MNT"
-#else
-#  echo " (skipping zero-fill, no image mounted yet)"
-#fi
-#rmdir "$MNT" 2>/dev/null || true
+# 7. Remove Python __pycache__ directories
+echo "→ Removing Python __pycache__..."
+sudo find "${ROOTFS_DIR}/opt" -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
+sudo find "${ROOTFS_DIR}/usr" -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
+sudo find "${ROOTFS_DIR}/home" -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
+
+# 8. Remove pip caches
+echo "→ Removing pip caches..."
+sudo rm -rf "${ROOTFS_DIR}/root/.cache/pip" || true
+sudo rm -rf "${ROOTFS_DIR}/home/"*/.cache/pip || true
+
+# 9. Remove man pages (saves ~50 MB; reinstall with: apt-get install man-db)
+echo "→ Removing man pages..."
+sudo rm -rf "${ROOTFS_DIR}/usr/share/man/"* || true
+
+# 10. Remove downloaded source tarballs from debpkg builds
+echo "→ Removing build artifacts..."
+sudo rm -rf "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/tmp/"* || true
 
 echo "=== Rootfs cleanup complete ==="

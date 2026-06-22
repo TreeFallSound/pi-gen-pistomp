@@ -1,0 +1,43 @@
+[Unit]
+Description=JackBridge — netJACK2 client for DAW recording over Ethernet
+Documentation=https://github.com/sastraxi/JackRouter
+# Attaches as a client to the stock pi-stomp jack stack. We don't replace it.
+Requires=jack.service
+After=jack.service mod-host.service
+# Not WantedBy anything — the LCD UI enables/disables on demand.
+
+[Service]
+Type=simple
+User=pistomp
+Group=audio
+Environment=JACK_PROMISCUOUS_SERVER=jack
+Environment=JACK_NO_AUDIO_RESERVATION=1
+
+# Optional operator override: JACKBRIDGE_IFACE=eth1 (or similar) to pin
+# netJACK2 to a specific wired NIC. Unset = auto-detect (wired-only; prefers
+# direct-cable 169.254.x). Missing file is fine.
+EnvironmentFile=-/etc/default/jackbridge
+
+# JACK client lib calls mlockall(2) on every jack_client_open — without this
+# our `jack_load` / `jack_connect` invocations log "Cannot lock down N byte
+# memory area" and run unlocked. Matches stock jack.service / mod-host.service.
+LimitMEMLOCK=infinity
+LimitRTPRIO=infinity
+
+# Pin the netJACK2 multicast group (225.3.19.154) to a wired interface so
+# discovery doesn't follow the default route out wlan0. Auto-detects the
+# right NIC; respects $JACKBRIDGE_IFACE. Needs CAP_NET_ADMIN — the `+` prefix
+# runs the command as root regardless of User=. Fails the unit start if no
+# wired iface is available, which is the correct loud failure mode.
+ExecStartPre=+/usr/local/libexec/jackbridge/jackbridge-pin-route
+
+# Loads netadapter into the stock jackd, wires the graph, then execs the
+# xrun watcher as the long-running foreground process.
+ExecStart=/usr/local/libexec/jackbridge/jackbridge-pi-up
+
+# Best-effort unload on stop; the watcher is killed by systemd's normal SIGTERM.
+ExecStop=/usr/local/libexec/jackbridge/jackbridge-pi-down
+ExecStopPost=+/usr/local/libexec/jackbridge/jackbridge-unpin-route
+
+TimeoutStartSec=10
+Restart=no

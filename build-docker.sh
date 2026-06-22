@@ -166,7 +166,7 @@ time ${DOCKER} run \
     (mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc || true) &&
     cd /pi-gen &&
     echo '==> Fetching/building custom .deb packages...' &&
-    bash scripts/fetch-packages.sh &&
+    CACHE_DIR=/pistomp-cache bash scripts/fetch-packages.sh &&
     ./build.sh ${BUILD_OPTS} &&
     rsync -av work/*/build.log deploy/
   " &

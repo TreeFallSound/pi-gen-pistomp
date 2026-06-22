@@ -5,7 +5,7 @@ Maintainer: pistomp <pistomp@example.com>
 Build-Depends: debhelper-compat (= 13), cmake,
  libasound2-dev, libdbus-1-dev, libglib2.0-dev,
  libjack-jackd2-dev | libjack-dev, libpulse-dev,
- libreadline-dev, libsndfile1-dev, libfluidsynth-dev,
+ libreadline-dev, libsndfile1-dev,
  portaudio19-dev
 Standards-Version: 4.6.2
 

@@ -48,3 +48,7 @@ override_dh_auto_install:
 		$(CURDIR)/debian/mod-ui/lib/systemd/system/mod-ui.service
 	# Remove the standalone Python installation (only the venv is needed)
 	rm -rf $(CURDIR)/debian/$(PKG)/opt/mod-ui-python
+
+override_dh_installsystemd:
+	# Service enablement is handled by stage2/05-pistomp/01-run.sh ln -sf,
+	# not by deb-systemd-helper. The unit file is installed manually above.

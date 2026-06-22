@@ -32,7 +32,7 @@ dpkg -i "${CACHE_DIR}/hylia_"*.deb 2>/dev/null || true
 apt-get install -f -y -qq
 
 cd "${UPSTREAM_DIR}"
-dpkg-buildpackage -b -us -uc
+DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b -us -uc
 
 # Move output debs to cache
 find "$(dirname "${UPSTREAM_DIR}")" -maxdepth 1 -name "${PKG}_*.deb" \

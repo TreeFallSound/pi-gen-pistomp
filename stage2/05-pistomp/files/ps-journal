@@ -1,0 +1,8 @@
+#!/bin/bash
+# Follow the pi-stomp application service journal.
+# Defaults to following (-f); pass any args through to journalctl.
+if [ $# -eq 0 ]; then
+    exec sudo journalctl -f -u mod-ala-pi-stomp
+else
+    exec sudo journalctl -u mod-ala-pi-stomp "$@"
+fi

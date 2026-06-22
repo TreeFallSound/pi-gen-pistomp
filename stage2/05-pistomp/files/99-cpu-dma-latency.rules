@@ -1,0 +1,2 @@
+# Grant audio group access to CPU DMA latency control
+KERNEL=="cpu_dma_latency", GROUP="audio", MODE="0660"

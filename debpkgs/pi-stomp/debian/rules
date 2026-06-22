@@ -36,4 +36,5 @@ override_dh_auto_install:
 		$(CURDIR)/debian/pi-stomp/lib/systemd/system/mod-ala-pi-stomp.service
 
 override_dh_installsystemd:
-	dh_installsystemd --name=mod-ala-pi-stomp
+	# Service enablement is handled by stage2/05-pistomp/01-run.sh ln -sf,
+	# not by deb-systemd-helper. The unit file is installed manually above.

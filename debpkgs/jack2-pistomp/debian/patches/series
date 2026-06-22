@@ -1,2 +1,5 @@
 pi-controller-reset.patch
 jack2-1.9.22-db-5.3.patch
+waflib-imp-to-types.patch
+systemd-pkgconfig.patch
+systemd-unit-dir.patch

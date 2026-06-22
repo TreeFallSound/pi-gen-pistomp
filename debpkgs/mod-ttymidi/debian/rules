@@ -3,4 +3,7 @@
 	dh $@
 
 override_dh_auto_install:
+	install -d $(CURDIR)/debian/mod-ttymidi/usr/bin
+	install -d $(CURDIR)/debian/mod-ttymidi/usr/lib/jack
+	install -d $(CURDIR)/debian/mod-ttymidi/usr/lib/aarch64-linux-gnu/jack
 	$(MAKE) PREFIX=/usr DESTDIR=$(CURDIR)/debian/mod-ttymidi install

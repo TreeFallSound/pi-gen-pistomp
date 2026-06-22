@@ -1,0 +1,3 @@
+#!/bin/bash
+# Restart the MOD audio services (mod-host + mod-ui)
+exec sudo systemctl restart mod-host mod-ui

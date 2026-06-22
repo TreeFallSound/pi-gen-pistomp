@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+export DH_VERBOSE=1
+
+PKG=jackbridge
+JACKROUTER_SRC_DIR=$(CURDIR)/../jackbridge-src
+LIBEXEC_DIR=$(CURDIR)/debian/$(PKG)/usr/local/libexec/jackbridge
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	# Clone JackRouter source if not already present
+	if [ ! -d "$(JACKROUTER_SRC_DIR)" ]; then \
+		git clone --branch master --depth 1 \
+			https://github.com/sastraxi/JackRouter.git \
+			"$(JACKROUTER_SRC_DIR)"; \
+	fi
+
+override_dh_auto_build:
+	# No compilation — all scripts are shell.
+
+override_dh_auto_install:
+	# Install the 6 helper scripts to /usr/local/libexec/jackbridge/
+	install -d "$(LIBEXEC_DIR)"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-pi-up"        "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-pi-down"      "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-xrun-watcher" "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jb-detect-net-iface"     "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-pin-route"    "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-unpin-route"  "$(LIBEXEC_DIR)/"
+	# Install systemd service file (on-demand only, no [Install] section)
+	install -Dm 644 debian/jackbridge.pi-stomp-jackbridge.service \
+		$(CURDIR)/debian/jackbridge/lib/systemd/system/pi-stomp-jackbridge.service
+
+override_dh_installsystemd:
+	# No auto-enable — this service is on-demand only (LCD UI starts/stops it).
+	# No [Install] section in the unit file, so deb-systemd-helper would be a no-op anyway.

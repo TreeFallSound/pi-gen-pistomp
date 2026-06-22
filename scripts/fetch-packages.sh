@@ -74,15 +74,34 @@ PACKAGES=(
     fluidsynth-headless
     lcd-splash
     jack-capture
+    libfluidsynth2-compat
     browsepy
     touchosc2midi
     mod-ui
     pi-stomp
+    pistomp-recovery
+    jackbridge
 )
 
 for pkg in "${PACKAGES[@]}"; do
     fetch_or_build "${pkg}"
 done
 
+# ---------- Non-.deb assets ----------
+# Download static assets (NAM reamp signal) into cache/ so they're available
+# inside the Docker build via the /pistomp-cache bind-mount.
+fetch_asset() {
+    local url="$1"
+    local filename="$2"
+    if [[ -f "${CACHE_DIR}/${filename}" && -z "${FORCE_REBUILD:-}" ]]; then
+        echo "==> ${filename}: already in cache, skipping."
+        return 0
+    fi
+    echo "==> ${filename}: downloading..."
+    curl -fsSL -o "${CACHE_DIR}/${filename}" "${url}"
+}
+
+fetch_asset "${NAM_REAMP_URL}" "T3K-sweep-v3.wav"
+
 echo "==> fetch-packages.sh complete. Cache contents:"
-ls "${CACHE_DIR}/"*.deb 2>/dev/null || echo "  (none)"
+ls "${CACHE_DIR}/" 2>/dev/null || echo "  (none)"
