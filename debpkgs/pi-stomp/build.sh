@@ -12,6 +12,7 @@ PKG="pi-stomp"
 VERSION="$(dpkg-parsechangelog -l "${SCRIPT_DIR}/debian/changelog" -S Version)"
 CACHE_DIR="${CACHE_DIR:-${ROOT_DIR}/cache}"
 UPSTREAM_DIR="${WORKDIR:-/tmp}/${PKG}-src"
+BUILD_DIR="${WORKDIR:-/tmp}/${PKG}-build"
 
 mkdir -p "${CACHE_DIR}"
 
@@ -26,12 +27,21 @@ fi
     git clone --branch "${PISTOMP_BRANCH}" --depth 1 \
         "${PISTOMP_REPO}" "${UPSTREAM_DIR}"
 
-cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"
-cd "${UPSTREAM_DIR}"
+# Install lg from cache (build-time dep for liblgpio headers/library)
+dpkg -i "${CACHE_DIR}/lg_"*"_arm64.deb" 2>/dev/null || true
+apt-get install -f -y -qq
+
+# Keep packaging metadata separate from the upstream source tree to avoid
+# copying debian/ into itself during dh_auto_install.
+rm -rf "${BUILD_DIR}"
+mkdir -p "${BUILD_DIR}"
+cp -r "${SCRIPT_DIR}/debian" "${BUILD_DIR}/"
+
+cd "${BUILD_DIR}"
 dpkg-buildpackage -b -us -uc
 
 # Move output debs to cache
-find "$(dirname "${UPSTREAM_DIR}")" -maxdepth 1 -name "${PKG}_*.deb" \
+find "$(dirname "${BUILD_DIR}")" -maxdepth 1 -name "${PKG}_*.deb" \
     -exec mv {} "${CACHE_DIR}/" \;
 
 echo "==> Built ${PKG} → ${CACHE_DIR}"

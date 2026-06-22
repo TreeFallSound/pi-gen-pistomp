@@ -1,3 +1,13 @@
+pi-stomp (3.0-2) trixie; urgency=medium
+
+  * Add lg, swig, python3-dev to Build-Depends so the lgpio Python wheel
+    can link against liblgpio during the build.
+  * Install the cached lg .deb in build.sh before invoking dpkg-buildpackage.
+  * Build in a separate pi-stomp-build directory so debian/ is not copied into
+    the installed source tree.
+
+ -- pistomp <pistomp@example.com>  Mon, 22 Jun 2026 00:00:00 +0000
+
 pi-stomp (3.0-1) trixie; urgency=medium
 
   * Initial package. Ships source tree, uv venv, and systemd service.
