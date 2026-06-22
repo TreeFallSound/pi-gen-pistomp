@@ -6,54 +6,31 @@ on_chroot << EOF
 mkdir -p /home/${FIRST_USER_NAME}/tmp
 cd /home/${FIRST_USER_NAME}/tmp
 
-# uv: Python version manager (installs Python 3.11 for mod-ui) + also used in stage3
+# uv: Python version manager — used by stage3 and available for debugging
 pip3 install uv
 
-# Python 3.11 goes to /opt/mod-ui-python so the venv symlink is valid on the Pi
-UV_PYTHON_INSTALL_DIR=/opt/mod-ui-python uv python install 3.11
+# Install custom .deb packages from cache/ (bind-mounted at /pistomp-cache).
+# Each package has a stable <pkg>.deb symlink pointing to the latest version.
+dpkg -i /pistomp-cache/hylia.deb
+dpkg -i /pistomp-cache/jack2-pistomp.deb
+dpkg -i /pistomp-cache/mod-host-pistomp.deb
+dpkg -i /pistomp-cache/amidithru.deb
+dpkg -i /pistomp-cache/mod-midi-merger.deb
+dpkg -i /pistomp-cache/mod-ttymidi.deb
+dpkg -i /pistomp-cache/sfizz-pistomp.deb
+dpkg -i /pistomp-cache/fluidsynth-headless.deb
+dpkg -i /pistomp-cache/lcd-splash.deb
+dpkg -i /pistomp-cache/jack-capture.deb
+dpkg -i /pistomp-cache/browsepy.deb
+dpkg -i /pistomp-cache/touchosc2midi.deb
+dpkg -i /pistomp-cache/mod-ui.deb
+dpkg -i /pistomp-cache/pi-stomp.deb
+apt-get install -f -y -qq
 
-# Install custom .deb packages (built by debpkgs/*/build.sh, served from
-# the pistomp apt repo or cached locally during image build).
-apt-get install -y \
-    hylia \
-    jack2-pistomp \
-    amidithru \
-    mod-host-pistomp \
-    mod-midi-merger \
-    mod-ttymidi \
-    sfizz-pistomp \
-    fluidsynth-headless \
-    lcd-splash \
-    jack-capture
+# jack-example-tools comes from Trixie apt (not a custom deb)
+apt-get install -y jack-example-tools
 
 # python3-lilv and liblilv-dev are available via apt on trixie (>=0.24.26).
 # No source build needed — installed via 00-packages.
-
-[ ! -d browsepy ] && git clone https://github.com/micahvdm/browsepy.git
-cd browsepy
-pip3 install ./
-cd ..
-
-# mod-ui requires tornado==4.3 which is incompatible with Python 3.13.
-# Run it in an isolated Python 3.11 venv, the same pattern as pistomp-arch.
-[ ! -d mod-ui ] && git clone https://github.com/TreeFallSound/mod-ui.git
-cd mod-ui
-chmod +x setup.py
-cd utils
-make
-cd ..
-UV_PYTHON_INSTALL_DIR=/opt/mod-ui-python uv venv --python 3.11 /opt/mod-ui-venv
-/opt/mod-ui-venv/bin/pip install tornado==4.3
-# tornado 4.x uses collections.MutableMapping, removed in Python 3.10+.
-sed -i -e 's/collections\.MutableMapping/collections.abc.MutableMapping/g' \
-    /opt/mod-ui-venv/lib/python3.11/site-packages/tornado/httputil.py
-/opt/mod-ui-venv/bin/python setup.py install
-cp -r default.pedalboard /home/${FIRST_USER_NAME}/data/.pedalboards
-cd ..
-
-[ ! -d touchosc2midi ] && git clone https://github.com/BlokasLabs/touchosc2midi.git
-cd touchosc2midi
-pip3 install ./
-cd ..
 
 EOF

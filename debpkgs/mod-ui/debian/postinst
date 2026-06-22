@@ -1,0 +1,15 @@
+#!/bin/bash
+# mod-ui postinst — patch venv shebangs
+set -e
+
+VENV=/opt/pistomp/venvs/mod-ui
+
+# Patch shebangs in the venv so it works from its installed location
+find "$VENV/bin" -type f -executable \
+    -exec sed -i "1s|^#!.*python.*|#!$VENV/bin/python|" {} \; 2>/dev/null || true
+
+# Ensure ownership
+chown -R pistomp:pistomp /opt/pistomp/mod-ui 2>/dev/null || true
+chown -R pistomp:pistomp "$VENV" 2>/dev/null || true
+
+#DEBHELPER#

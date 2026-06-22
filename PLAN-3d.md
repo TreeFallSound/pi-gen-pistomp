@@ -186,17 +186,16 @@ inside a venv tree.
 
 Package pi-stomp and mod-ui exactly as pistomp-arch does. The `.deb` installs:
 - `/opt/pistomp/pi-stomp/` — source tree (package-owned)
-- `/opt/pistomp/venvs/pi-stomp/` — relocatable uv venv
-- `/opt/pistomp/venvs/mod-ui/` — 3.11 venv
+- `/opt/pistomp/venvs/pi-stomp/` — uv venv (built with `--copies`; shebangs patched in postinst)
+- `/opt/pistomp/venvs/mod-ui/` — 3.11 venv (same approach)
 - `/opt/pistomp/mod-ui/html` — html assets
 
 Update `mod-ala-pi-stomp.service` ExecStart to
 `/opt/pistomp/venvs/pi-stomp/bin/python /opt/pistomp/pi-stomp/modalapistomp.py`.
 
-Update or replace `deploy.sh` to target `/opt/pistomp/pi-stomp/` instead of
-`/home/pistomp/pi-stomp/`. This is a one-line change per scp call. Or adopt
-`deploy-pkg.sh`-style workflow entirely (rsync source to device, rebuild
-package, install).
+The `.deb` `postinst` creates `ln -sf /opt/pistomp/pi-stomp /home/pistomp/pi-stomp`.
+deploy.sh targets `/home/pistomp/pi-stomp/` which resolves through the symlink —
+**zero changes needed in deploy.sh**.
 
 **Pros:**
 - Full OTA via `apt upgrade`. pistomp-recovery works as designed.
@@ -206,17 +205,18 @@ package, install).
   the installation layout coherent.
 
 **Cons:**
-- deploy.sh must be updated (minor — 8 lines of path changes).
+- deploy.sh requires zero changes (symlink in postinst handles path resolution).
 - `/opt/` is package-managed, so any direct file edits are "dirty" from
   dpkg's perspective. `apt upgrade` will clobber them. But: dpkg's conffile
   mechanism only protects `/etc/`; for `/opt/` there is no protection.
 - Developer iterating fast via deploy.sh needs to accept that `apt upgrade`
   will overwrite their changes. Acceptable if upgrade is a deliberate act.
 
-**Verdict on deploy.sh coexistence:** Compatible if deploy.sh target is
-updated to `/opt/pistomp/pi-stomp/`. Files written by deploy.sh will be
-overwritten by the next `apt upgrade pi-stomp`, which is the expected
-behaviour (upgrade replaces the old code).
+**Verdict on deploy.sh coexistence:** Compatible unchanged. The `postinst`
+symlink `/home/pistomp/pi-stomp -> /opt/pistomp/pi-stomp` means deploy.sh
+resolves to the correct path without modification. Files written by deploy.sh
+will be overwritten by the next `apt upgrade pi-stomp`, which is expected
+(upgrade replaces old code).
 
 ---
 
@@ -284,56 +284,63 @@ in-place editing.
 
 The blockers for Option A are all minor:
 
-1. **deploy.sh path** — update 8 `scp` target lines from
-   `/home/pistomp/pi-stomp/` to `/opt/pistomp/pi-stomp/`. The service
-   restart at the end of deploy.sh already works since the service name does
-   not change.
+1. **deploy.sh** — zero changes needed. The `postinst` creates
+   `ln -sf /opt/pistomp/pi-stomp /home/pistomp/pi-stomp`; deploy.sh's scp
+   targets resolve through the symlink unchanged.
 
 2. **Service file** — update `mod-ala-pi-stomp.service` ExecStart to
    `/opt/pistomp/venvs/pi-stomp/bin/python /opt/pistomp/pi-stomp/modalapistomp.py`.
 
 3. **Stage3 run script** — replace the `git clone ... /home/pistomp/pi-stomp`
-   block with `apt-get install pi-stomp` (same pattern as the C packages in
-   PLAN-3c). Remove the `uv sync` step in `02-run.sh`; the venv is built
-   inside the `.deb` build process. Remove the `systemctl enable` call for
-   `mod-ala-pi-stomp.service`; it becomes the `.deb` `postinst`'s job (or a
-   conffile in `/etc/systemd/system/multi-user.target.wants/`).
+   block with `apt-get install -y pi-stomp` installed from `cache/` (same
+   pattern as C packages in PLAN-3c — **no GitHub Pages apt repo required at
+   image build time**). Remove the `uv sync` step; the venv is built inside
+   the `.deb` build process.
 
-4. **mod-ui service** — update `MOD_HTML_DIR` from
+4. **`systemctl enable` in chroot** — `systemctl enable` fails with no running
+   systemd. Use `dh_installsystemd` in `debian/rules`, which generates
+   `postinst` code using `deb-systemd-helper enable` — this creates the
+   correct symlinks in `/etc/systemd/system/` without needing systemd running.
+   Remove the existing `ln -sf mod-ala-pi-stomp.service` from `stage3/01-run.sh`
+   to avoid conflict.
+
+5. **uv venv relocatability** — `uv venv --relocatable` is not a real flag.
+   Use `uv venv --copies` (copies files instead of symlinks so the venv
+   survives being moved) and patch shebangs in `postinst`:
+   ```bash
+   find /opt/pistomp/venvs/pi-stomp/bin -type f \
+       -exec sed -i "1s|^#!.*python.*|#!/opt/pistomp/venvs/pi-stomp/bin/python|" {} \;
+   ```
+
+6. **`default.pedalboard`** — user data; must NOT be written by `postinst`
+   (upgrades would clobber user-modified pedalboards). The `.deb` ships it
+   under `/usr/share/pistomp/default.pedalboard/`. Stage3 copies it to
+   `/home/pistomp/data/.pedalboards/` once at image build time. Firstboot
+   handles fresh devices (same as today).
+
+7. **mod-ui service** — update `MOD_HTML_DIR` from
    `/opt/mod-ui-venv/share/mod/html` to `/opt/pistomp/mod-ui/html` and
    `ExecStart` from `/opt/mod-ui-venv/bin/mod-ui` to
-   `/opt/pistomp/venvs/mod-ui/bin/mod-ui`, aligning with pistomp-arch.
+   `/opt/pistomp/venvs/mod-ui/bin/mod-ui`.
 
 The developer workflow concern is real but manageable. deploy.sh overwrites
 files at the installed path, which `apt upgrade` will later overwrite back.
 That is the correct semantic: deploy.sh is for "try this before packaging",
-not for permanent local state. Any developer who has edited files directly
-on device knows they need to push a branch and run a proper build if they
-want the change to persist through an upgrade. This is standard behaviour
-for any package-managed software.
+not for permanent local state.
 
 The gain — pistomp-recovery can upgrade, rollback, and factory-reset
 `pi-stomp` and `mod-ui` atomically via apt, with full version tracking — is
 substantial and cannot be achieved with Options B or C without bespoke
-complexity that will become a maintenance burden.
+complexity.
 
-The `.deb` build for pi-stomp follows the same pattern as the Arch PKGBUILD:
-build a relocatable uv venv, install both venv and source tree to
-`/opt/pistomp/`. For mod-ui: build the 3.11 venv via uv (using the bundled
-Python, same as the current `uv python install 3.11` in `02-run.sh`), apply
-the `collections.MutableMapping` patch, install the venv to
-`/opt/pistomp/venvs/mod-ui/` and html assets to `/opt/pistomp/mod-ui/html`.
-
-The venv absolute-path problem is handled by building with `uv venv
---relocatable`, which rewrites the shebang and activate scripts to use
-relative symlinks. This is the same approach pistomp-arch uses and it works.
-
-**Summary of path changes required:**
+**Summary of changes required:**
 
 | File | Change |
 | :--- | :--- |
-| `../pi-stomp/deploy.sh` | 8 scp targets: `…/pi-stomp/` → `/opt/pistomp/pi-stomp/` |
-| `stage2/…/services/mod-ala-pi-stomp.service` | ExecStart path: `/home/pistomp/pi-stomp/` → `/opt/pistomp/pi-stomp/` |
-| `stage2/…/services/mod-ui.service` | ExecStart and MOD_HTML_DIR: `/opt/mod-ui-venv/` → `/opt/pistomp/venvs/mod-ui/` and `/opt/pistomp/mod-ui/html` |
-| `stage3/01-pistomp/01-run.sh` | Replace git clone + uv venv block with `apt-get install pi-stomp` |
-| `stage2/05-pistomp/02-run.sh` | Replace mod-ui source build block with `apt-get install mod-ui` |
+| `../pi-stomp/deploy.sh` | No changes — symlink handles path resolution |
+| `stage2/…/services/mod-ala-pi-stomp.service` | ExecStart: `/home/pistomp/pi-stomp/` → `/opt/pistomp/pi-stomp/` |
+| `stage2/…/services/mod-ui.service` | ExecStart + MOD_HTML_DIR: `/opt/mod-ui-venv/` → `/opt/pistomp/venvs/mod-ui/` and `/opt/pistomp/mod-ui/html` |
+| `stage3/01-pistomp/01-run.sh` | Replace git clone + uv venv block with `apt-get install pi-stomp` from `cache/` |
+| `stage2/05-pistomp/02-run.sh` | Replace mod-ui source build block with `apt-get install mod-ui` from `cache/` |
+| `stage3/01-pistomp/01-run.sh` | Remove `ln -sf mod-ala-pi-stomp.service` (moved to deb postinst) |
+| `debpkgs/pi-stomp/debian/rules` | Use `dh_installsystemd` for service enablement |

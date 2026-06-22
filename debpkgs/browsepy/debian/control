@@ -1,0 +1,13 @@
+Source: browsepy
+Section: web
+Priority: optional
+Maintainer: pistomp <pistomp@example.com>
+Build-Depends: debhelper-compat (= 13), python3, pip
+Standards-Version: 4.6.2
+
+Package: browsepy
+Architecture: arm64
+Depends: ${misc:Depends}, python3
+Description: File browser for pi-Stomp user files
+ A simple web-based file browser for browsing and uploading user files
+ on pi-Stomp. Runs on port 8081, serving /home/pistomp/data/user-files.

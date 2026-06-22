@@ -6,8 +6,8 @@ BindsTo=jack.service
 [Service]
 RemainAfterExit=yes
 Environment=JACK_PROMISCUOUS_SERVER=jack
-ExecStart=/usr/local/bin/jack_load mod-midi-broadcaster
-ExecStop=/usr/local/bin/jack_unload mod-midi-broadcaster
+ExecStart=/usr/bin/jack_load mod-midi-broadcaster
+ExecStop=/usr/bin/jack_unload mod-midi-broadcaster
 Restart=always
 RestartSec=2
 [Install]

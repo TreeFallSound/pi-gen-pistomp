@@ -1,0 +1,16 @@
+Source: mod-ui
+Section: web
+Priority: optional
+Maintainer: pistomp <pistomp@example.com>
+Build-Depends: debhelper-compat (= 13), python3, uv, make,
+ libjack-jackd2-dev | libjack-dev
+Standards-Version: 4.6.2
+
+Package: mod-ui
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3, uv,
+ jack2-pistomp, mod-host-pistomp
+Description: MOD Web UI — web-based pedalboard interface for pi-Stomp
+ MOD UI is a web-based interface for managing pedalboards on MOD
+ devices. This build runs in a Python 3.11 venv (required by
+ tornado==4.3) and is configured for pi-Stomp.

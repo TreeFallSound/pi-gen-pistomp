@@ -77,6 +77,10 @@ fi
 # Ensure the Git Hash is recorded before entering the docker container
 GIT_HASH=${GIT_HASH:-"$(git rev-parse HEAD)"}
 
+# Fetch/build custom .deb packages before Docker starts
+echo "==> Fetching/building custom .deb packages..."
+bash "${DIR}/scripts/fetch-packages.sh"
+
 CONTAINER_EXISTS=$(${DOCKER} ps -a --filter name="${CONTAINER_NAME}" -q)
 CONTAINER_RUNNING=$(${DOCKER} ps --filter name="${CONTAINER_NAME}" -q)
 if [ "${CONTAINER_RUNNING}" != "" ]; then
@@ -156,6 +160,7 @@ time ${DOCKER} run \
   --privileged \
   ${PIGEN_DOCKER_OPTS} \
   --volume "${CONFIG_FILE}":/config:ro \
+  --volume "${DIR}/cache":/pistomp-cache:ro \
   -e "GIT_HASH=${GIT_HASH}" \
   $DOCKER_CMDLINE_POST \
   pi-gen \

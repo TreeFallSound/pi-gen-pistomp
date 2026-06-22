@@ -1,0 +1,50 @@
+#!/usr/bin/make -f
+export DH_VERBOSE=1
+
+PKG=mod-ui
+MODUI_SRC_DIR=$(CURDIR)/../mod-ui-src
+VENV_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/venvs/mod-ui
+HTML_INSTALL_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/mod-ui/html
+PEDALBOARD_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/mod-ui/default.pedalboard
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	# Clone mod-ui source if not already present
+	if [ ! -d "$(MODUI_SRC_DIR)" ]; then \
+		git clone --branch master --depth 1 \
+			https://github.com/TreeFallSound/mod-ui.git \
+			"$(MODUI_SRC_DIR)"; \
+	fi
+
+override_dh_auto_build:
+	# Build the C extension (libmod_utils.so)
+	$(MAKE) -C "$(MODUI_SRC_DIR)/utils"
+	# Install Python 3.11 for the venv
+	UV_PYTHON_INSTALL_DIR=$(CURDIR)/debian/$(PKG)/opt/mod-ui-python \
+		uv python install 3.11
+	# Create a relocatable Python 3.11 venv with --copies
+	UV_PYTHON_INSTALL_DIR=$(CURDIR)/debian/$(PKG)/opt/mod-ui-python \
+		uv venv --copies --python 3.11 "$(VENV_DIR)"
+	# Install tornado==4.3
+	"$(VENV_DIR)/bin/pip" install tornado==4.3
+	# Patch tornado for Python 3.10+ compatibility
+	sed -i -e 's/collections\.MutableMapping/collections.abc.MutableMapping/g' \
+		"$(VENV_DIR)/lib/python3.11/site-packages/tornado/httputil.py"
+	# Install mod-ui into the venv
+	cd "$(MODUI_SRC_DIR)" && \
+		"$(VENV_DIR)/bin/python" setup.py install
+
+override_dh_auto_install:
+	# Install HTML assets
+	mkdir -p "$(HTML_INSTALL_DIR)"
+	cp -a "$(MODUI_SRC_DIR)/html/"* "$(HTML_INSTALL_DIR)/"
+	# Install default.pedalboard
+	mkdir -p "$(PEDALBOARD_DIR)"
+	cp -a "$(MODUI_SRC_DIR)/default.pedalboard/"* "$(PEDALBOARD_DIR)/"
+	# Install systemd service file
+	install -Dm 644 debian/mod-ui.mod-ui.service \
+		$(CURDIR)/debian/mod-ui/lib/systemd/system/mod-ui.service
+	# Remove the standalone Python installation (only the venv is needed)
+	rm -rf $(CURDIR)/debian/$(PKG)/opt/mod-ui-python

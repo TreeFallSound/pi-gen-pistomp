@@ -1,0 +1,23 @@
+#!/bin/bash
+# pi-stomp postinst — patch venv shebangs and create compatibility symlink
+set -e
+
+VENV=/opt/pistomp/venvs/pi-stomp
+PISTOMP_SRC=/opt/pistomp/pi-stomp
+SYMLINK_TARGET=/home/pistomp/pi-stomp
+
+# Patch shebangs in the venv so it works from its installed location
+find "$VENV/bin" -type f -executable \
+    -exec sed -i "1s|^#!.*python.*|#!$VENV/bin/python|" {} \; 2>/dev/null || true
+
+# Create compatibility symlink for deploy.sh
+if [ ! -L "$SYMLINK_TARGET" ]; then
+    ln -sf "$PISTOMP_SRC" "$SYMLINK_TARGET"
+fi
+
+# Ensure ownership
+chown -R pistomp:pistomp "$PISTOMP_SRC" 2>/dev/null || true
+chown -R pistomp:pistomp "$VENV" 2>/dev/null || true
+chown -h pistomp:pistomp "$SYMLINK_TARGET" 2>/dev/null || true
+
+#DEBHELPER#

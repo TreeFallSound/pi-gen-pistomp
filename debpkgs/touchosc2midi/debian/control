@@ -1,0 +1,13 @@
+Source: touchosc2midi
+Section: sound
+Priority: optional
+Maintainer: pistomp <pistomp@example.com>
+Build-Depends: debhelper-compat (= 13), python3, uv, cython3
+Standards-Version: 4.6.2
+
+Package: touchosc2midi
+Architecture: arm64
+Depends: ${misc:Depends}, python3, pyliblo3
+Description: TouchOSC to MIDI bridge
+ Bridges TouchOSC (iOS/Android) OSC messages to ALSA/JACK MIDI.
+ Installed in an isolated venv at /opt/pistomp/venvs/touchosc2midi.

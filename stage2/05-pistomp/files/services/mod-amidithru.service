@@ -4,7 +4,7 @@ After=sound.target
 Wants=sound.target
 
 [Service]
-ExecStart=/usr/local/bin/amidithru touchosc
+ExecStart=/usr/bin/amidithru touchosc
 Restart=always
 RestartSec=2
 

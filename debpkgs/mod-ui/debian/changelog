@@ -1,0 +1,5 @@
+mod-ui (3.0-1) trixie; urgency=medium
+
+  * Initial package. Python 3.11 venv with tornado==4.3.
+
+ -- pistomp <pistomp@example.com>  Mon, 22 Jun 2026 00:00:00 +0000

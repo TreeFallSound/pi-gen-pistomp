@@ -1,0 +1,10 @@
+#!/bin/bash
+# touchosc2midi postinst — patch venv shebangs
+set -e
+
+VENV=/opt/pistomp/venvs/touchosc2midi
+
+find "$VENV/bin" -type f -executable \
+    -exec sed -i "1s|^#!.*python.*|#!$VENV/bin/python|" {} \; 2>/dev/null || true
+
+#DEBHELPER#

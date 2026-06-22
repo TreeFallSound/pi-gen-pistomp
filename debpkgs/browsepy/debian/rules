@@ -1,0 +1,26 @@
+#!/usr/bin/make -f
+export DH_VERBOSE=1
+
+PKG=browsepy
+BROWSEPY_SRC_DIR=$(CURDIR)/../browsepy-src
+VENV_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/venvs/browsepy
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	if [ ! -d "$(BROWSEPY_SRC_DIR)" ]; then \
+		git clone --depth 1 \
+			https://github.com/micahvdm/browsepy.git \
+			"$(BROWSEPY_SRC_DIR)"; \
+	fi
+
+override_dh_auto_build:
+	# Create a relocatable venv and install browsepy
+	uv venv --copies --python /usr/bin/python3 "$(VENV_DIR)"
+	"$(VENV_DIR)/bin/pip" install "$(BROWSEPY_SRC_DIR)"
+
+override_dh_auto_install:
+	# Install systemd service file
+	install -Dm 644 debian/browsepy.browsepy.service \
+		$(CURDIR)/debian/browsepy/lib/systemd/system/browsepy.service

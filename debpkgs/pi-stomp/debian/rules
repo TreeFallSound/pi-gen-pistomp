@@ -1,0 +1,39 @@
+#!/usr/bin/make -f
+export DH_VERBOSE=1
+
+PKG=pi-stomp
+PISTOMP_SRC_DIR=$(CURDIR)/../pi-stomp-src
+VENV_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/venvs/pi-stomp
+SRC_INSTALL_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/pi-stomp
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	# Clone pi-stomp source if not already present
+	if [ ! -d "$(PISTOMP_SRC_DIR)" ]; then \
+		git clone --branch pistomp-v3 --depth 1 \
+			https://github.com/TreeFallSound/pi-stomp.git \
+			"$(PISTOMP_SRC_DIR)"; \
+	fi
+
+override_dh_auto_build:
+	# Create a relocatable uv venv with --copies
+	uv venv --copies --python /usr/bin/python3 --system-site-packages "$(VENV_DIR)"
+	# Sync dependencies
+	UV_PROJECT_ENVIRONMENT="$(VENV_DIR)" \
+		uv sync --frozen --no-dev --extra hardware \
+		--project "$(PISTOMP_SRC_DIR)"
+
+override_dh_auto_install:
+	# Install source tree
+	mkdir -p "$(SRC_INSTALL_DIR)"
+	cp -a "$(PISTOMP_SRC_DIR)"/* "$(SRC_INSTALL_DIR)/"
+	# Remove git metadata to keep the package clean
+	rm -rf "$(SRC_INSTALL_DIR)"/.git
+	# Install systemd service file
+	install -Dm 644 debian/pi-stomp.mod-ala-pi-stomp.service \
+		$(CURDIR)/debian/pi-stomp/lib/systemd/system/mod-ala-pi-stomp.service
+
+override_dh_installsystemd:
+	dh_installsystemd --name=mod-ala-pi-stomp
