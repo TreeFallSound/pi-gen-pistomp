@@ -34,11 +34,15 @@ Build process executes ordered stages.
 
 ### Notable design decisions
 
-- **mod-ui runs in a Python 3.11 venv** (`/opt/pistomp/venvs/mod-ui`) because it requires `tornado==4.3`, which is incompatible with Python 3.13. All other pi-stomp code runs under the system Python 3.13.
+- **mod-ui runs in a Python 3.11 venv** (`/opt/pistomp/venvs/mod-ui`) because it requires `tornado==4.3`, which is incompatible with Python 3.13. All other pi-stomp code runs under the system Python 3.13. The venv is built in `debpkgs/mod-ui/debian/rules`.
 - **JACK2 is built from source** as a `.deb` with the `pi-controller-reset.patch` applied (fixes PI integrator windup that causes monotonically increasing audio failures). The bundled `waf` is used with a patched waflib that replaces the removed `imp` module with `types`.
+- **JACK configuration**: `jackdrc` is a script that sources `/etc/default/jack` and exits with an error if that file is missing. `firstboot.sh` writes `/etc/default/jack` from `pistomp.conf`. `jack.service` has `After=firstboot.service`, so JACK never starts before its configuration exists. `pistomp.conf` is the single source of truth for `JACK_SAMPLE_RATE` and `JACK_PERIOD`.
 - **lilv is installed via apt** (`python3-lilv liblilv-dev`) — no source build needed on Trixie.
+- **lcd-splash** is a C binary compiled from source in `debpkgs/lcd-splash/src/`. It uses `lgpio` (linked against the extracted `lg.deb` at build time) to drive the ILI9341 SPI LCD directly. The splash image is `stage2/05-pistomp/files/splash.rgb565`.
+- **Realtime IRQ tuning** uses the `rtirq-init` apt package (not `rtirq` — the old name doesn't exist on Trixie). Config is installed to `/etc/default/rtirq`. A custom `rtirq.service` unit wraps the init script.
 - **Networking** matches pistomp-arch exactly: wired NM profile with 15 s DHCP timeout + link-local fallback (`eth0`), wifi power-save off, MAC randomization off, multihome policy routing dispatcher.
 - **WiFi hotspot** is started on demand by `wifi-check.service` (after NM settles), not via rc.local. It only starts if neither WiFi nor ethernet is connected.
+- **QEMU**: not needed. The build runs in a native arm64 Docker container (Apple Silicon, arm64 Linux, arm64 CI). On x86_64 Linux, `dpkg-reconfigure qemu-user-binfmt` inside the container registers QEMU with the `F` flag — no QEMU binary needs to exist inside the rootfs.
 
 ## Hardware Targets
 
@@ -100,20 +104,55 @@ PRESERVE_CONTAINER=1 ./build-docker.sh
 | `PRESERVE_CONTAINER` | `0` | Don't delete the container after build |
 | `CONTAINER_NAME` | `pigen_work` | Override container name |
 
+## Configuration
+
+### `config`
+Build-time settings for the pi-gen image builder: image name, Debian release, compression, locale, keyboard layout, and the `pistomp` user account. Does **not** contain user-facing configuration — that is the old Raspberry Pi Imager 1.x pattern. WiFi, hostname, password, and timezone all live in `pistomp.conf` and are applied by `firstboot.sh` at first boot.
+
+### `config.sh`
+All upstream URLs, branches, and version pins for custom packages. `config.sh` uses `set -a`, so every variable is automatically exported into `build.sh`, `fetch-packages.sh`, and every `debian/rules` make subprocess. This makes `config.sh` the single source of truth for repository URLs and branches.
+
+### `stage2/05-pistomp/files/pistomp.conf`
+Runtime configuration copied to `/boot/pistomp.conf` on the image. Contains `JACK_SAMPLE_RATE` and `JACK_PERIOD`. `firstboot.sh` reads these and writes `/etc/default/jack`. To change the JACK buffer size, edit this file and rebuild.
+
+## Package Management
+
+Custom packages live under `debpkgs/<pkg>/`. Each has:
+- `build.sh` — sources `config.sh`, derives `VERSION` from `debian/changelog`, clones source, calls `dpkg-buildpackage`
+- `debian/` — standard Debian packaging directory; `debian/rules` uses exported config.sh vars for any fallback git clone
+
+**Version source of truth**: `debian/changelog`. To bump a package version:
+
+```bash
+cd debpkgs/<pkg>
+dch -v <new-version> "Description of change."
+```
+
+`build.sh` reads the version from the changelog via `dpkg-parsechangelog` — no other files need updating.
+
+Packages using `dpkg-deb --build` instead of `dpkg-buildpackage` (currently `lcd-splash` and `libfluidsynth2-compat`) derive their version from `debian/control`'s `Version:` field.
+
+### Package build order
+
+`scripts/fetch-packages.sh` processes packages in dependency order (defined in the `PACKAGES` array). `lg` is built before `lcd-splash` because lcd-splash links against lgpio at compile time by extracting the lg `.deb` from cache.
+
 ## Customization
 
 - **Config**: Edit `config` (hostname, password, WiFi country, release).
-- **Packages**: Edit `stage*/00-packages`.
+- **Package pins/URLs**: Edit `config.sh`.
+- **Packages added to image**: Edit `stage*/00-packages`.
 - **Services**: Add/edit files in `stage2/05-pistomp/files/services/`.
+- **JACK tuning**: Edit `JACK_SAMPLE_RATE` / `JACK_PERIOD` in `stage2/05-pistomp/files/pistomp.conf`.
 - **Networking**: Files in `stage2/05-pistomp/files/` — see `NETWORKING.md` for design rationale.
 
 ## Kernel Updates
 
 The RT kernel `.deb` files live in `stage2/05-pistomp/files/sys/`. Updating requires:
 
-1. Place new `.deb` files in `files/sys/`.
-2. Update `stage2/05-pistomp/03-run.sh` — the `dpkg -i` calls and the `cp`/`mv` block that moves kernel files into `/boot/firmware/<version>/`.
-3. Rebuild.
+1. Update `KERNEL_VERSION`, `KERNEL_LOCALVERSION`, and `LINUX_RPI_COMMIT` in `config.sh`.
+2. Run `./build-rt-kernel-docker.sh` to build new `.deb` files.
+3. Update `stage2/05-pistomp/03-run.sh` — the `dpkg -i` calls and the `cp`/`mv` block that moves kernel files into `/boot/firmware/<version>/`.
+4. Rebuild the image.
 
 > **Note**: Kernel `.deb` files must be built against the target Debian release (Trixie). Bookworm kernel `.deb` files will fail on Trixie's initramfs.
 
@@ -121,4 +160,6 @@ The RT kernel `.deb` files live in `stage2/05-pistomp/files/sys/`. Updating requ
 
 1. Push changes to `TreeFallSound/pi-stomp` `pistomp-v3` branch.
 2. Stage 3 clones that branch at build time — no image changes needed.
-3. Run `./build-docker.sh`.
+3. Run `./build-docker.sh -f`.
+
+To test a different branch, set `PISTOMP_BRANCH` in `config.sh`.

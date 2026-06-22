@@ -20,8 +20,8 @@ override_dh_auto_test:
 override_dh_auto_configure:
 	# Clone pistomp-recovery source if not already present
 	if [ ! -d "$(RECOVERY_SRC_DIR)" ]; then \
-		git clone --branch main --depth 1 \
-			https://github.com/sastraxi/pistomp-recovery.git \
+		git clone --branch "$(PISTOMP_RECOVERY_BRANCH)" --depth 1 \
+			"$(PISTOMP_RECOVERY_REPO)" \
 			"$(RECOVERY_SRC_DIR)"; \
 	fi
 

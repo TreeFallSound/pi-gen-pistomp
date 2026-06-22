@@ -1,6 +1,10 @@
 #!/bin/bash
 # pistomp-gen build configuration — source this, do not execute.
 # All upstream URLs, branches, and version pins live here.
+#
+# set -a auto-exports every variable so dpkg-buildpackage's make subprocess
+# can read them directly in debian/rules without explicit export statements.
+set -a
 
 # --- RT Kernel ---
 KERNEL_VERSION="6.18.36"
@@ -10,6 +14,10 @@ LINUX_RPI_COMMIT="954341c412dd48b7c7f8125d81212ec4c0e42ed3"
 # --- JACK2 ---
 JACK2_REPO="https://github.com/jackaudio/jack2.git"
 JACK2_TAG="v1.9.22"
+
+# --- lg (lgpio — GPIO library used by lcd-splash) ---
+LG_REPO="https://github.com/joan2937/lg.git"
+LG_TAG="v0.2.2"
 
 # --- Hylia ---
 HYLIA_REPO="https://github.com/falkTX/Hylia.git"
@@ -50,7 +58,6 @@ PISTOMP_BRANCH="pistomp-v3"
 # --- pistomp-recovery ---
 PISTOMP_RECOVERY_REPO="https://github.com/sastraxi/pistomp-recovery.git"
 PISTOMP_RECOVERY_BRANCH="main"
-PISTOMP_RECOVERY_VERSION="0.1.0"
 
 # --- JackBridge (netJACK2 DAW recording over Ethernet) ---
 JACKROUTER_REPO="https://github.com/sastraxi/JackRouter.git"
@@ -91,3 +98,4 @@ MOD_UI_PYTHON_VERSION="3.11"
 APT_REPO_SUITE="trixie"
 APT_REPO_COMPONENT="main"
 APT_REPO_ARCH="arm64"
+

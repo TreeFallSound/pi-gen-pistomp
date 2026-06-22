@@ -9,7 +9,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${ROOT_DIR}/config.sh"
 
 PKG="mod-host-pistomp"
-VERSION="0.10.6-1"
+VERSION="$(dpkg-parsechangelog -l "${SCRIPT_DIR}/debian/changelog" -S Version)"
 CACHE_DIR="${CACHE_DIR:-${ROOT_DIR}/cache}"
 UPSTREAM_DIR="${WORKDIR:-/tmp}/${PKG}-src"
 

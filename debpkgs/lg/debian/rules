@@ -9,8 +9,8 @@ SRC_DIR=$(CURDIR)/../lg-src
 
 override_dh_auto_configure:
 	if [ ! -d "$(SRC_DIR)" ]; then \
-		git clone --depth 1 --branch v0.2.2 \
-			https://github.com/joan2937/lg.git \
+		git clone --depth 1 --branch "$(LG_TAG)" \
+			"$(LG_REPO)" \
 			"$(SRC_DIR)"; \
 	fi
 

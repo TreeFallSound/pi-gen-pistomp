@@ -9,7 +9,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${ROOT_DIR}/config.sh"
 
 PKG="pistomp-recovery"
-VERSION="${PISTOMP_RECOVERY_VERSION:-0.1.0}"
+VERSION="$(dpkg-parsechangelog -l "${SCRIPT_DIR}/debian/changelog" -S Version)"
 CACHE_DIR="${CACHE_DIR:-${ROOT_DIR}/cache}"
 UPSTREAM_DIR="${WORKDIR:-/tmp}/${PKG}-src"
 

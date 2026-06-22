@@ -7,7 +7,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 CACHE_DIR="${CACHE_DIR:-${ROOT_DIR}/cache}"
 PKG="libfluidsynth2-compat"
-VERSION="2.3.4-1"
+VERSION="$(grep '^Version:' "${SCRIPT_DIR}/debian/control" | awk '{print $2}')"
 DEB="${PKG}_${VERSION}_arm64.deb"
 
 mkdir -p "${CACHE_DIR}"

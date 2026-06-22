@@ -1,13 +1,18 @@
+# pi-gen build-time settings only.
+# User-facing configuration (WiFi, hostname, password, timezone, JACK) lives in
+# stage2/05-pistomp/files/pistomp.conf, which firstboot.sh applies on first boot.
+
 IMG_NAME='pistompOS'
-LOCALE_DEFAULT="en_US.UTF-8"
-TARGET_HOSTNAME="pistomp"
-FIRST_USER_NAME="pistomp"
-FIRST_USER_PASS="pistomp"
-ENABLE_SSH=1
-DISABLE_FIRST_BOOT_USER_RENAME=1
-WPA_COUNTRY=US
 RELEASE=trixie
 DEPLOY_COMPRESSION="none"
-ENABLE_CLOUD_INIT=0
-LOCALE_DEFAULT=en_US.UTF-8
+
+LOCALE_DEFAULT="en_US.UTF-8"
 KEYBOARD_KEYMAP=us
+
+FIRST_USER_NAME="pistomp"
+
+# Account is locked until firstboot.sh sets the password from pistomp.conf.
+# FIRST_USER_PASS is intentionally unset here.
+DISABLE_FIRST_BOOT_USER_RENAME=1
+ENABLE_SSH=1
+ENABLE_CLOUD_INIT=0

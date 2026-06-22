@@ -11,8 +11,8 @@ LIBEXEC_DIR=$(CURDIR)/debian/$(PKG)/usr/local/libexec/jackbridge
 override_dh_auto_configure:
 	# Clone JackRouter source if not already present
 	if [ ! -d "$(JACKROUTER_SRC_DIR)" ]; then \
-		git clone --branch master --depth 1 \
-			https://github.com/sastraxi/JackRouter.git \
+		git clone --branch "$(JACKROUTER_REF)" --depth 1 \
+			"$(JACKROUTER_REPO)" \
 			"$(JACKROUTER_SRC_DIR)"; \
 	fi
 

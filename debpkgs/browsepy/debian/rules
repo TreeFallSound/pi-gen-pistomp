@@ -10,8 +10,8 @@ VENV_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/venvs/browsepy
 
 override_dh_auto_configure:
 	if [ ! -d "$(BROWSEPY_SRC_DIR)" ]; then \
-		git clone --depth 1 \
-			https://github.com/micahvdm/browsepy.git \
+		git clone --branch "$(BROWSEPY_REF)" --depth 1 \
+			"$(BROWSEPY_REPO)" \
 			"$(BROWSEPY_SRC_DIR)"; \
 	fi
 

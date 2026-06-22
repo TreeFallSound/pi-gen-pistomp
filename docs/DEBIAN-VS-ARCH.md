@@ -1,9 +1,42 @@
 # Debian package build vs. pistomp-arch (Arch Linux) — known differences
 
-This document records intentional and structural differences between the `.deb`
-packages built here and the equivalent Arch `PKGBUILD`s in `pistomp-arch`.
-It is a living reference: add entries when a difference is confirmed, update
-them when behaviour converges.
+## Background
+
+pi-gen-pistomp migrates the pi-Stomp OS from Arch Linux ARM (pistomp-arch) to
+Debian (Raspberry Pi OS Trixie). The motivation is platform stability: Arch's
+rolling-release baseline breaks unpredictably for an appliance. Debian/RasPiOS
+provides a stable, well-tested upstream with official RPi integration.
+
+**Guiding principle:** the Arch build is the *runtime reference* — what the
+device should look like and how it should behave. Debian is the *delivery
+vehicle*. When something in Arch is "better," the goal is to port it, not
+leave it behind.
+
+This document records confirmed differences. "Intentional" means we understand
+the divergence and it is correct. "Possible gap" means it may need to be
+ported. "Road-mapped" means we know how to close the gap but haven't done it
+yet.
+
+## Fundamental build model difference
+
+In Arch, the build chroot *is* the target system. All scripts run inside the
+filesystem that becomes the final image via `arch-chroot`, so anything
+installed during the build is automatically present at runtime.
+
+In Debian there are three separate environments:
+
+1. **Docker container** — the build host (native aarch64; no QEMU tax on
+   Apple Silicon or aarch64 Linux). Tools installed here (e.g. `uv`, compiler
+   toolchain) are available for building `.deb` packages but never reach the Pi.
+2. **`.deb` build chroot** — a temporary environment `dpkg-buildpackage` uses
+   to compile each package. Declared in `Build-Depends`; torn down after build.
+3. **`ROOTFS_DIR`** — the target filesystem, built by pi-gen via debootstrap.
+   Only things explicitly installed here (via `on_chroot`, `.deb` installs, or
+   `install` calls in run scripts) reach the Pi.
+
+This separation is why `uv` can't be declared in `Build-Depends` (that only
+populates the `.deb` build chroot) and why a dedicated stage2 run script
+(`05-run.sh`) is needed to install it into the target image.
 
 ---
 
@@ -13,13 +46,32 @@ them when behaviour converges.
 |---|---|---|
 | Base system | Raspberry Pi OS Trixie (debootstrap via pi-gen) | Arch Linux ARM (pacstrap) |
 | Build flow | pi-gen stages 0–2 inside Docker | 10 sequential `run_in_chroot` scripts |
-| Kernel compilation | Cross-compile x86_64 → arm64 | Native aarch64 inside chroot |
+| Kernel compilation | Native aarch64 (no QEMU on Apple Silicon / aarch64 Linux) | Native aarch64 inside chroot |
 | Package format | `.deb` (dpkg/apt) | `.pkg.tar.zst` (pacman) |
 | Custom packages | 17 `.deb` packages | 18 `.pkg.tar.zst` packages |
 | Final compression | xz (configurable: zip/gz/xz/none) | zstd -T0 -3 |
 
 The two-phase approach is the same in both repos: build the RT kernel once
 (cached), then build the OS image consuming it.
+
+---
+
+## uv availability
+
+| | Arch | Debian |
+|---|---|---|
+| Install method | Official curl script during 04-native-pkgs.sh | Same curl script in Dockerfile (build host) and 05-run.sh (target) |
+| Install location on device | `/opt/pistomp/bin/uv` | `/opt/pistomp/bin/uv` (stage2/05-pistomp/05-run.sh) |
+| On target device | **Yes** | **Yes** — via curl script in 05-run.sh |
+| PATH | Not modified by installer; scripts use full path | `/opt/pistomp/bin` added via `/etc/profile.d/pistomp.sh` |
+
+Both use `INSTALLER_NO_MODIFY_PATH=1`. Debian adds `/opt/pistomp/bin` to PATH
+system-wide via `profile.d` so `uv` is available interactively and to any
+process that inherits a login environment. Systemd service units that need uv
+at runtime should add `Environment=PATH=/opt/pistomp/bin:...` explicitly.
+
+`uv` cannot be declared in Debian `Build-Depends` or `Depends` because it is
+not a Debian package — the build-time copy lives only in the Docker image.
 
 ---
 
@@ -88,16 +140,26 @@ pkg-config differently.
 
 ## mod-ui — Python 3.11 isolation
 
+Both builds use Python 3.11 for mod-ui (required by `tornado==4.3`, which is
+incompatible with Python 3.13).
+
 | | Arch | Debian |
 |---|---|---|
 | Python 3.11 source | Separate `pistomp-python311` package at `/opt/pistomp/python311/` | `uv python install 3.11` into uv's build cache |
 | Venv creation | `uv venv --python /opt/pistomp/python311/bin/python3.11 --relocatable` | `uv python find 3.11 \| xargs python -m venv --copies` |
 | Runtime dependency | `pistomp-python311` package must be installed | Python 3.11 binary is copied into the venv; no external dep |
+| Dependency locking | `uv sync --frozen` against `uv.lock` | `pip install tornado==4.3` + `pip install <src>` (unlocked) |
 
-The Debian venv is fully self-contained: the Python 3.11 binary lives at
-`/opt/pistomp/venvs/mod-ui/bin/python3.11`. The Arch approach is more
-modular (Python version is a separate versioned package), but both achieve
-the same isolation from system Python 3.13.
+**Road-mapped:** mod-ui's Debian build does not yet use a `uv.lock`. The path
+to fix this:
+1. Add `pyproject.toml` to the `TreeFallSound/mod-ui` fork declaring
+   `tornado==4.3` and other direct deps, with `requires-python = ">=3.11,<3.12"`.
+2. Run `uv lock` in that repo to generate `uv.lock`.
+3. Change `debpkgs/mod-ui/debian/rules` to use `uv sync --frozen --no-dev
+   --no-editable --project "$(MODUI_SRC_DIR)"` — identical pattern to pi-stomp.
+
+This work lives in the mod-ui fork repo; the deb build rules just consume the
+lock file.
 
 ---
 
@@ -126,7 +188,7 @@ required when the interpreter path is stable across build and target).
 
 `uv sync` is called with `--no-editable` in both repos so the project wheel
 lands in `site-packages` rather than as an editable `.pth` pointing to the
-build tree.
+build tree. Both consume a pinned `uv.lock` from the source repo (`--frozen`).
 
 ---
 
@@ -135,26 +197,20 @@ build tree.
 | Component | Debian | Arch |
 |---|---|---|
 | System Python | 3.13 (`/usr/bin/python3`) | 3.13 (`/usr/bin/python`) |
-| mod-ui | Python 3.11 copied into venv | Python 3.11 via `pistomp-python311` package |
+| mod-ui | Python 3.11 copied into venv (via `--copies`) | Python 3.11 via `pistomp-python311` package |
 | pi-stomp | System Python 3.13 venv + `--system-site-packages` | Same |
 | pistomp-recovery | System Python 3.13 venv + `--system-site-packages` | Same |
 | browsepy | `.deb` with venv | Venv created in 05-python.sh |
 | touchosc2midi | `.deb` with venv | Venv created in 05-python.sh |
-| System-wide pip installs | Yes — stage2/04-python installs pyliblo3, netifaces2, JACK-Client, etc. via pip3 (EXTERNALLY-MANAGED removed) | No — all packages isolated to venvs |
+| System-wide pip installs | Yes — stage2/04-python installs ~10 packages globally via pip3 | No — all packages isolated to venvs |
 
----
-
-## uv availability
-
-`uv` is not a Debian package and cannot be declared in `Build-Depends` or
-`Depends`. It is installed into the Docker build image via
-`pip3 install uv --break-system-packages` (Dockerfile layer 4).
-
-No installed package declares a runtime dependency on `uv` — all venvs are
-pre-built and self-contained.
-
-In Arch, `uv` is installed inside the chroot during 04-native-pkgs.sh via
-the official install script, and is available to all PKGBUILDs.
+**Possible gap:** Debian's `stage2/04-python` removes the `EXTERNALLY-MANAGED`
+marker and installs packages (pyserial, pycryptodomex, aggdraw, flask,
+netifaces2, mido, docopt, pyliblo3, etc.) globally via `pip3`. Arch isolates
+everything to venvs. The global installs are fragile (silently updated,
+invisible to package management). Packages already declared in component
+`pyproject.toml` files should be removed here; the remainder need to be
+traced to their consumer and moved to the appropriate venv.
 
 ---
 
@@ -172,14 +228,20 @@ Both repos use manual `ln -sf` symlinks into `wants/` directories rather than
 | mod-midi-merger-broadcaster | — | ✓ |
 | wifi-check / wifi-hotspot | wifi-check.service | wifi-hotspot.service |
 
-### mod-ala-pi-stomp.service restart policy
+### mod-ala-pi-stomp.service
 
-| | Debian | Arch |
-|---|---|---|
-| `Restart=` | `always` | `on-failure` |
-| `RestartSec=` | 2 s | 5 s |
-| `LimitRTPRIO=` | 64 | 70 |
-| Explicit `Requires=` | mod-ui only | jack + mod-host + mod-ui |
+Ported from Arch. Both now use:
+
+```
+Requires=jack.service mod-host.service mod-ui.service
+After=jack.service mod-host.service mod-ui.service
+Restart=on-failure
+RestartSec=5
+LimitRTPRIO=70
+```
+
+Previously Debian used `Requires=mod-ui.service` only (boot race risk),
+`Restart=always`, `RestartSec=2`, `LimitRTPRIO=64`.
 
 ---
 
@@ -222,16 +284,15 @@ exposes before changing either.
 
 ## Possible gaps (to investigate)
 
-These are things Arch does that have no confirmed equivalent here. They may
-already be handled or may be genuinely missing — not yet verified.
-
+- **uv in systemd units** — `/etc/profile.d/pistomp.sh` only affects login
+  shells. Service units that invoke uv directly need
+  `Environment=PATH=/opt/pistomp/bin:...` in the unit file.
+- **Global pip3 installs** — see Python environment section above.
 - **jackbridge** — present as a `.deb` here but not found in pistomp-arch;
   unclear if it is needed at runtime.
 - **Audio limits** — Debian installs `/etc/security/limits.d/99-audio.conf`
   and a udev rule for CPU DMA latency (`99-cpu-dma-latency.rules`). Arch
   relies on `LimitRTPRIO=70` in the service unit. Verify whether the limits
-  file is actually required.
+  file is still needed alongside the unit directive.
 - **eth0 vs end0** — see Networking section above.
-- **mod-ala-pi-stomp Requires** — Arch explicitly requires jack and mod-host;
-  Debian relies on transitive ordering. Check whether a boot-time race is
-  possible.
+- **mod-midi-merger-broadcaster** — enabled in Arch, not in Debian. Needed?

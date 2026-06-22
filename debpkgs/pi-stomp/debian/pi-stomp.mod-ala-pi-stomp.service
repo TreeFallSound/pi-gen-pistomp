@@ -1,7 +1,7 @@
 [Unit]
 Description=MOD-ALA-PI-STOMP
-After=mod-ui.service
-Requires=mod-ui.service
+After=jack.service mod-host.service mod-ui.service
+Requires=jack.service mod-host.service mod-ui.service
 OnFailure=pistomp-recovery.service
 StartLimitBurst=3
 StartLimitIntervalSec=180
@@ -9,10 +9,10 @@ StartLimitIntervalSec=180
 [Service]
 Environment="JACK_PROMISCUOUS_SERVER=jack"
 ExecStart=/opt/pistomp/venvs/pi-stomp/bin/python /opt/pistomp/pi-stomp/modalapistomp.py
-Restart=always
-RestartSec=2
+Restart=on-failure
+RestartSec=5
 LimitMEMLOCK=infinity
-LimitRTPRIO=64
+LimitRTPRIO=70
 
 [Install]
 WantedBy=multi-user.target

@@ -21,8 +21,8 @@ override_dh_auto_test:
 override_dh_auto_configure:
 	# Clone pi-stomp source if not already present
 	if [ ! -d "$(PISTOMP_SRC_DIR)" ]; then \
-		git clone --branch pistomp-v3 --depth 1 \
-			https://github.com/TreeFallSound/pi-stomp.git \
+		git clone --branch "$(PISTOMP_BRANCH)" --depth 1 \
+			"$(PISTOMP_REPO)" \
 			"$(PISTOMP_SRC_DIR)"; \
 	fi
 

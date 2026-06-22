@@ -40,8 +40,9 @@ RUN apt-get -y update && \
         libv4l-dev:arm64 lv2-dev:arm64 portaudio19-dev:arm64 \
     && rm -rf /var/lib/apt/lists/*
 
-# Layer 4: Python tooling
-RUN pip3 install uv --break-system-packages
+# Layer 4: uv — same curl-based install as the target image (05-run.sh)
+RUN curl -LsSf https://astral.sh/uv/install.sh \
+    | env UV_INSTALL_DIR=/usr/local/bin INSTALLER_NO_MODIFY_PATH=1 sh
 
 COPY . /pi-gen/
 
