@@ -56,7 +56,9 @@ rm -f "${ROOTFS_DIR}"/usr/share/icons/*/icon-theme.cache
 
 rm -f "${ROOTFS_DIR}/var/lib/dbus/machine-id"
 
-echo "uninitialized" > "${ROOTFS_DIR}/etc/machine-id"
+# Remove /etc/machine-id so systemd treats the first real boot as a
+# "first boot" (ConditionFirstBoot=yes).
+rm -f "${ROOTFS_DIR}/etc/machine-id"
 
 ln -nsf /proc/mounts "${ROOTFS_DIR}/etc/mtab"
 

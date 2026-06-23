@@ -30,6 +30,7 @@ fi
 on_chroot << EOF
 if [ "${ENABLE_SSH}" == "1" ]; then
 	systemctl enable ssh
+	systemctl enable sshd-keygen.service
 else
 	systemctl disable ssh
 fi
