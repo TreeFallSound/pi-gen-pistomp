@@ -8,7 +8,7 @@ OnFailure=pistomp-recovery.service
 Type=forking
 User=pistomp
 Group=pistomp
-Environment=LV2_PATH=/home/pistomp/.lv2
+Environment=LV2_PATH=/home/pistomp/.lv2:/usr/lib/lv2
 Environment=JACK_PROMISCUOUS_SERVER=jack
 ExecStartPre=-/usr/bin/lcd-splash /usr/share/pistomp/splash.rgb565 "Starting plugin host"
 ExecStartPre=/usr/local/bin/wait-for-jack.sh

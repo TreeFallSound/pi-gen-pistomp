@@ -5,7 +5,6 @@ After=firstboot.service
 OnFailure=pistomp-recovery.service
 
 [Service]
-Environment=LV2_PATH=/home/pistomp/.lv2
 Environment=JACK_NO_AUDIO_RESERVATION=1
 Environment=JACK_PROMISCUOUS_SERVER=jack
 LimitRTPRIO=infinity

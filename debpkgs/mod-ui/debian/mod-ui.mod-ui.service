@@ -10,7 +10,7 @@ OnFailure=pistomp-recovery.service
 LimitRTPRIO=95
 LimitMEMLOCK=infinity
 Environment=HOME=/home/pistomp/data
-Environment=LV2_PATH=/home/pistomp/.lv2
+Environment=LV2_PATH=/home/pistomp/.lv2:/usr/lib/lv2
 Environment=LV2_PLUGIN_DIR=/home/pistomp/.lv2
 Environment=LV2_PEDALBOARDS_DIR=/home/pistomp/data/.pedalboards
 Environment=MOD_DEV_ENVIRONMENT=0

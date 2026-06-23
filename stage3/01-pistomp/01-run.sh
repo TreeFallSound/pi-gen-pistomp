@@ -17,6 +17,11 @@ install -m 644 files/banks.json ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/data/
 # Insure IQAudio card is pegged to hw:0 for jack
 install -m 644 files/alsa-base.conf ${ROOTFS_DIR}/etc/modprobe.d
 
+# Pre-seed ALSA mixer state so alsa-restore.service has the correct IQAudio
+# DAC gains on first boot, before firstboot.service runs.
+mkdir -p ${ROOTFS_DIR}/var/lib/alsa
+install -m 644 files/iqaudiocodec.state ${ROOTFS_DIR}/var/lib/alsa/asound.state
+
 # Extras: utility scripts for the user (expression pedal toggle, instrument
 # downloads, pedalboard repo swap, CPU mitigation tuning)
 install -d ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/extras
@@ -58,11 +63,6 @@ rm -rf /home/${FIRST_USER_NAME}/.lv2
 rm -f /home/${FIRST_USER_NAME}/data/.lv2
 tar -zxf /pistomp-cache/lv2plugins.tar.gz -C /home/${FIRST_USER_NAME}/
 ln -s /home/${FIRST_USER_NAME}/.lv2 /home/${FIRST_USER_NAME}/data/.lv2
-
-# Pre-seed ALSA mixer state so alsa-restore.service has the correct IQAudio
-# DAC gains on first boot, before firstboot.service runs.
-install -m 644 /opt/pistomp/pi-stomp/setup/audio/iqaudiocodec.state \
-    /var/lib/alsa/asound.state
 
 # NAM reamp signal (from cache/, bind-mounted at /pistomp-cache)
 mkdir -p /opt/pistomp/pi-stomp/setup/nam
