@@ -8,7 +8,9 @@
 # all three boards. See stage2/05-pistomp/03-run.sh for the flat-layout install.
 
 # Override bcm2711_defconfig's CONFIG_LOCALVERSION="-v8" so that the make
-# LOCALVERSION="-rt-v8+" argument is the only suffix — giving "6.18.36-rt-v8+".
+# LOCALVERSION="-rpi-v8-rt" argument is the only suffix — giving "6.18.36-rpi-v8-rt".
+# The -rpi- prefix is required so raspi-firmware's initramfs post-update hook
+# recognises the flavour (v8-rt) and copies the initramfs to /boot/firmware/.
 CONFIG_LOCALVERSION=""
 
 # Full preemptive kernel (RT)

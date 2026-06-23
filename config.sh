@@ -8,7 +8,7 @@ set -a
 
 # --- RT Kernel ---
 KERNEL_VERSION="6.18.36"
-KERNEL_LOCALVERSION="-rt-v8+"  # suffix in uname -r
+KERNEL_LOCALVERSION="-rpi-v8-rt"  # suffix in uname -r; must contain -rpi- so raspi-firmware's initramfs hook recognises the flavour
 LINUX_RPI_COMMIT="954341c412dd48b7c7f8125d81212ec4c0e42ed3"
 
 # --- JACK2 ---

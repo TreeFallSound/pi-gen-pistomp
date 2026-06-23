@@ -1,12 +1,14 @@
 #!/bin/bash -e
 
-# Copy all kernel .deb files into the chroot staging area.
-# Globs here so version bumps in files/sys/ don't require script edits.
+# Copy all kernel .deb files from cache/kernel/ (mounted at /pistomp-cache/kernel/
+# in the build container) into the chroot staging area.
+# Globs here so version bumps in config.sh don't require script edits.
+KERNEL_DIR="/pistomp-cache/kernel"
 mkdir -p "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/tmp"
-install -m 644 files/sys/linux-image-*-rt-v8+_*_arm64.deb   "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/tmp/"
+install -m 644 ${KERNEL_DIR}/linux-image-*-rpi-v8-rt_*_arm64.deb   "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/tmp/"
 # Headers and libc-dev are optional (not always built), but if a file IS present
 # its copy must succeed — don't mask a real install failure.
-for f in files/sys/linux-headers-*-rt-v8+_*_arm64.deb files/sys/linux-libc-dev_*.deb; do
+for f in ${KERNEL_DIR}/linux-headers-*-rpi-v8-rt_*_arm64.deb ${KERNEL_DIR}/linux-libc-dev_*.deb; do
     if [ -e "$f" ]; then
         install -m 644 "$f" "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/tmp/"
     fi
@@ -60,27 +62,39 @@ set -o pipefail
 
 cd /home/${FIRST_USER_NAME}/tmp
 
-# --- RT kernel (Pi 3/4) ---
+# --- RT kernel ---
 # Discover the exact filenames so this block survives version bumps.
-RT_IMAGE=\$(ls linux-image-*-rt-v8+_*_arm64.deb | head -1)
+RT_IMAGE=\$(ls linux-image-*-rpi-v8-rt_*_arm64.deb | head -1)
 RT_KERN=\$(echo "\$RT_IMAGE" | sed 's/linux-image-\(.*\)_.*_arm64\.deb/\1/')
 echo "==> Installing RT kernel \${RT_KERN}"
 
 # Headers/libc-dev are optional, but a present .deb that fails to install is fatal.
-for deb in linux-headers-*-rt-v8+_*_arm64.deb linux-libc-dev_*.deb; do
+for deb in linux-headers-*-rpi-v8-rt_*_arm64.deb linux-libc-dev_*.deb; do
     if [ -e "\$deb" ]; then
         dpkg -i "\$deb"
     fi
 done
-dpkg -i "\${RT_IMAGE}"
 
-# Flat layout (same as pistomp-arch): kernel and initramfs live directly in
-# /boot/firmware/ under fixed names so config.txt needs no os_prefix or
-# per-model kernel= lines.
+# Unpack the image .deb without running postinst (so we can inject overlays/README
+# before raspi-firmware's kernel postinst hook tries to rsync it).
+dpkg --unpack "\${RT_IMAGE}"
+
+# bindeb-pkg's dtbs_install doesn't include overlays/README (it's not a .dtbo).
+# raspi-firmware's kernel postinst hook rsyncs it to /boot/firmware/overlays/.
+# Create a placeholder so rsync doesn't fail.
+touch /usr/lib/linux-image-\${RT_KERN}/overlays/README
+
+# Now run postinst scripts (raspi-firmware hook copies initramfs + overlays to /boot/firmware/).
+dpkg --configure linux-image-\${RT_KERN}
+
+# Flat layout (same as pistomp-arch): kernel lives directly in
+# /boot/firmware/ under a fixed name so config.txt needs no os_prefix or
+# per-model kernel= lines. The initramfs is copied to /boot/firmware/
+# by the raspi-firmware initramfs post-update hook (which recognises
+# the -rpi-v8-rt flavour and writes initramfs8_rt).
 cp -d  /usr/lib/linux-image-\${RT_KERN}/overlays/* /boot/firmware/overlays/
 cp -dr /usr/lib/linux-image-\${RT_KERN}/broadcom/* /boot/firmware/
 cp /boot/vmlinuz-\${RT_KERN}    /boot/firmware/kernel8.img
-cp /boot/initrd.img-\${RT_KERN} /boot/firmware/initramfs.img
 
 # NM dispatcher requires its own D-Bus activation alias to work
 ln -sf /usr/lib/systemd/system/NetworkManager-dispatcher.service \

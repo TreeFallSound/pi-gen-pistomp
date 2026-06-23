@@ -5,6 +5,16 @@ INFO_FILE="${STAGE_WORK_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.info"
 SBOM_FILE="${STAGE_WORK_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.sbom"
 BMAP_FILE="${STAGE_WORK_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.bmap"
 
+# The chroot shares the build container's network namespace, where DNS is only
+# reachable via Docker's embedded resolver (127.0.0.11). 03-network already
+# installed the shipping resolv.conf (nameserver 8.8.8.8), which is unreachable
+# from the build network and makes apt-listchanges' per-package changelog fetches
+# (and the curl calls below) hang on DNS timeouts. Point at the embedded resolver
+# for the duration of finalise, then restore the shipping resolv.conf before the
+# image is unmounted.
+cp "${ROOTFS_DIR}/etc/resolv.conf" "${ROOTFS_DIR}/etc/resolv.conf.pibuild"
+echo "nameserver 127.0.0.11" > "${ROOTFS_DIR}/etc/resolv.conf"
+
 on_chroot <<- EOF
 	update-initramfs -k all -c
 	if hash hardlink 2>/dev/null; then
@@ -91,6 +101,10 @@ if hash syft 2>/dev/null; then
 		-o spdx-json="${SBOM_FILE}"
 fi
 
+# Restore the shipping resolv.conf (nameserver 8.8.8.8) before the rootfs is
+# unmounted, so the build-only embedded resolver does not ship in the image.
+mv "${ROOTFS_DIR}/etc/resolv.conf.pibuild" "${ROOTFS_DIR}/etc/resolv.conf"
+
 ROOT_DEV="$(awk "\$2 == \"${ROOTFS_DIR}\" {print \$1}" /etc/mtab)"
 
 unmount "${ROOTFS_DIR}"
@@ -106,8 +120,18 @@ fi
 
 mkdir -p "${DEPLOY_DIR}"
 
-rm -f "${DEPLOY_DIR}/${ARCHIVE_FILENAME}${IMG_SUFFIX}.*"
-rm -f "${DEPLOY_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.img"
+# If an image with today's date already exists, append _1, _2, etc.
+# to avoid silently overwriting previous builds.
+SUFFIX=""
+BASE="${DEPLOY_DIR}/${IMG_FILENAME}"
+if [[ -f "${BASE}.img" ]]; then
+    COUNTER=1
+    while [[ -f "${BASE}_${COUNTER}.img" ]]; do
+        ((COUNTER++))
+    done
+    SUFFIX="_${COUNTER}"
+fi
+export IMG_SUFFIX="${IMG_SUFFIX}${SUFFIX}"
 
 case "${DEPLOY_COMPRESSION}" in
 zip)
@@ -125,14 +149,14 @@ xz)
 	--stdout "$IMG_FILE" > "${DEPLOY_DIR}/${ARCHIVE_FILENAME}${IMG_SUFFIX}.img.xz"
 	;;
 none | *)
-	cp "$IMG_FILE" "$DEPLOY_DIR/"
+	cp "$IMG_FILE" "${DEPLOY_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.img"
 ;;
 esac
 
 if [ -f "${SBOM_FILE}" ]; then
-	xz -c "${SBOM_FILE}" > "$DEPLOY_DIR/$(basename "${SBOM_FILE}").xz"
+	xz -c "${SBOM_FILE}" > "${DEPLOY_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.sbom.xz"
 fi
 if [ -f "${BMAP_FILE}" ]; then
-	cp "$BMAP_FILE" "$DEPLOY_DIR/"
+	cp "$BMAP_FILE" "${DEPLOY_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.bmap"
 fi
-cp "$INFO_FILE" "$DEPLOY_DIR/"
+cp "$INFO_FILE" "${DEPLOY_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.info"

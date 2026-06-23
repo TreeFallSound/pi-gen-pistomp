@@ -62,7 +62,7 @@ Build process executes ordered stages.
 ### Step 1 — Build the RT kernel (once, ~20–40 min)
 
 The RT kernel `.deb` files are not checked into git. Build them first and they
-are cached in `stage2/05-pistomp/files/sys/` for all subsequent image builds.
+are cached in `cache/kernel/` for all subsequent image builds.
 
 ```bash
 ./build-rt-kernel-docker.sh
@@ -180,11 +180,11 @@ The uv and pip caches persist across builds automatically — `build-docker.sh` 
 
 ## Kernel Updates
 
-The RT kernel `.deb` files live in `stage2/05-pistomp/files/sys/`. Updating requires:
+The RT kernel `.deb` files live in `cache/kernel/`. Updating requires:
 
 1. Update `KERNEL_VERSION`, `KERNEL_LOCALVERSION`, and `LINUX_RPI_COMMIT` in `config.sh`.
 2. Run `./build-rt-kernel-docker.sh` to build new `.deb` files.
-3. Update `stage2/05-pistomp/03-run.sh` — the `dpkg -i` calls and the `cp`/`mv` block that moves kernel files into `/boot/firmware/<version>/`.
+3. Update `stage2/05-pistomp/03-run.sh` — the `dpkg -i` calls and the `cp`/`mv` block that moves kernel files into `/boot/firmware/`.
 4. Rebuild the image.
 
 > **Note**: Kernel `.deb` files must be built against the target Debian release (Trixie). Bookworm kernel `.deb` files will fail on Trixie's initramfs.

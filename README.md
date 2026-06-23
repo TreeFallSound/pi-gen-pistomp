@@ -21,7 +21,7 @@ The PREEMPT_RT kernel `.deb` files are not in git. Build and cache them first:
 ./build-rt-kernel-docker.sh
 ```
 
-This is a no-op if cached packages already exist in `stage2/05-pistomp/files/sys/`.
+This is a no-op if cached packages already exist in `cache/kernel/`.
 
 ### Step 2 — OS image (~60–90 min)
 

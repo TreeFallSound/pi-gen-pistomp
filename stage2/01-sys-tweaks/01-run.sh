@@ -2,8 +2,8 @@
 
 install -m 644 files/50raspi		"${ROOTFS_DIR}/etc/apt/apt.conf.d/"
 
-install -Dm 644 files/rpi-resize-lcd-splash.conf \
-    "${ROOTFS_DIR}/etc/systemd/system/rpi-resize.service.d/rpi-resize-lcd-splash.conf"
+# rpi-resize.service is not used — filesystem expansion is done inline in firstboot.sh
+# using growpart + resize2fs (faster, single-phase). The drop-in override is not needed.
 
 # Install lightweight USB auto-mount (replaces udisks2, no X11/GL deps).
 install -Dm 755 files/pistomp-usb-mount \
@@ -38,15 +38,14 @@ EOF
 if [ "${USE_QEMU}" = "1" ]; then
 	echo "enter QEMU mode"
 	install -m 644 files/90-qemu.rules "${ROOTFS_DIR}/etc/udev/rules.d/"
-	on_chroot << EOF
-systemctl disable rpi-resize
-EOF
 	echo "leaving QEMU mode"
-else
-	on_chroot << EOF
-systemctl enable rpi-resize
-EOF
 fi
+# rpi-resize.service is masked — filesystem expansion is done inline
+# in firstboot.sh via growpart + resize2fs (faster, single-phase).
+# Masking prevents any dependency from pulling it in.
+on_chroot << EOF
+systemctl mask rpi-resize.service 2>/dev/null || true
+EOF
 
 on_chroot <<EOF
 for GRP in input spi i2c gpio; do

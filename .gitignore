@@ -1,13 +1,10 @@
 deploy/*
 work/*
-.kernel-cache/
 postrun.sh
 SKIP
 SKIP_IMAGES
 .pc
 *-pc
-
-stage2/05-pistomp/files/sys/linux-*_arm64.deb
 
 # Built .deb cache (populated by debpkgs/*/build.sh and build-rt-kernel-docker.sh)
 cache/

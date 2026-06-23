@@ -1,3 +1,3 @@
-# Allow the pistomp user to run package management without a password.
-# Required by pistomp-recovery to perform OTA upgrades.
-pistomp ALL=(ALL) NOPASSWD: /usr/bin/apt-get, /usr/bin/dpkg, /usr/bin/apt
+# Allow the pistomp user passwordless sudo (matches pistomp-arch's wheel group setup).
+# Required by pistomp-recovery (OTA upgrades) and modify_version.sh (sudo sed on /etc/jackdrc).
+pistomp ALL=(ALL) NOPASSWD: ALL

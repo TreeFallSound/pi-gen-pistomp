@@ -7,6 +7,17 @@ LCD="/usr/bin/lcd-splash"
 SPLASH="/usr/share/pistomp/splash.rgb565"
 lcd() { "$LCD" "$SPLASH" "$1" 2>/dev/null || true; }
 
+# ---------- expand root partition to fill SD card ----------
+
+lcd "Expanding filesystem..."
+if command -v growpart &>/dev/null; then
+    ROOT_DEV="$(findmnt -n -o SOURCE /)"
+    DISK="/dev/$(lsblk -no PKNAME "${ROOT_DEV}")"
+    PARTNUM="$(echo "${ROOT_DEV}" | grep -o '[0-9]*$')"
+    growpart "${DISK}" "${PARTNUM}" || true
+    resize2fs "${ROOT_DEV}" || true
+fi
+
 # ---------- apply pistomp.conf ----------
 
 lcd "First boot setup..."
@@ -83,4 +94,4 @@ systemctl disable --now bluetooth.service 2>/dev/null || true
 
 mv /boot/firmware/firstboot.sh /boot/firmware/firstboot.done
 systemctl disable firstboot.service
-reboot
+reboot -f

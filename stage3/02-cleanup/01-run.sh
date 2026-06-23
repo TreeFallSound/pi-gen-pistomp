@@ -7,6 +7,12 @@
 
 echo "=== Cleaning ${ROOTFS_DIR} before image export ==="
 
+# 0. Remove the local apt repository source. It points at file:/pistomp-cache,
+#    which is only bind-mounted during the build stages. If left in place it
+#    breaks `apt-get update` in the export-image stage (and on the running Pi).
+echo "→ Removing local pistomp apt source..."
+rm -f "${ROOTFS_DIR}/etc/apt/sources.list.d/pistomp-local.list" || true
+
 # 1. Remove cached package files
 echo "→ Clearing APT cache..."
 rm -rf "${ROOTFS_DIR}/var/cache/apt/archives/"*.deb || true

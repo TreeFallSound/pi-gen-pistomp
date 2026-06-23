@@ -11,7 +11,8 @@ dtparam=spi=on
 # /boot/firmware/overlays/README
 
 # Kernel and initramfs (flat layout — single build covers Pi 3/4/5)
-initramfs initramfs.img followkernel
+# raspi-firmware's initramfs hook copies to initramfs8_rt for flavour v8-rt
+initramfs initramfs8_rt followkernel
 arm_64bit=1
 
 [all]

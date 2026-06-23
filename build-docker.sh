@@ -84,7 +84,7 @@ start_apt_cache() {
   ${DOCKER} run -d \
     --name ${APT_CACHER_CONTAINER} \
     --network ${APT_CACHER_NET} \
-    --health-cmd='curl -sf http://localhost:3142/acng-report.html' \
+    --health-cmd='wget -q -O /dev/null http://localhost:3142/acng-report.html || exit 1' \
     --health-interval=1s \
     --health-retries=10 \
     --volume "${APT_CACHER_DIR}":/var/cache/apt-cacher-ng \
@@ -132,8 +132,8 @@ if [ "${FORCE}" = "1" ]; then
 		${DOCKER} rm -v "${CONTAINER_NAME}"
 		CONTAINER_EXISTS=""
 	fi
-	echo "Clearing deploy/..."
-	rm -rf "${DIR}/deploy"/*
+	# echo "Clearing deploy/..."
+	# rm -rf "${DIR}/deploy"/*
 elif [ "${CONTAINER_EXISTS}" != "" ] && [ "${CONTINUE}" != "1" ]; then
 	echo "Container ${CONTAINER_NAME} already exists and you did not specify CONTINUE=1. Aborting."
 	echo "You can delete the existing container like this:"

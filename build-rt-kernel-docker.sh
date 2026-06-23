@@ -1,6 +1,7 @@
 #!/bin/bash
 # Builds PREEMPT_RT kernel .deb packages for Raspberry Pi arm64 and caches
-# them in stage2/05-pistomp/files/sys/ for consumption by build-docker.sh.
+# them in cache/kernel/ for consumption by build-docker.sh (mounted at
+# /pistomp-cache/kernel/ inside the build container).
 #
 # Mirror of pistomp-arch's build-rt-kernel-docker.sh but produces .deb files
 # via cross-compilation (x86_64 Debian trixie → arm64) rather than makepkg.
@@ -19,8 +20,8 @@ source "${SCRIPT_DIR}/config.sh"
 # Full kernel release string used by the bootloader and .deb file names
 KERNEL_RELEASE="${KERNEL_VERSION}${KERNEL_LOCALVERSION}"
 
-CACHE_DIR="${SCRIPT_DIR}/stage2/05-pistomp/files/sys"
-SOURCE_CACHE_DIR="${SCRIPT_DIR}/.kernel-cache"
+CACHE_DIR="${SCRIPT_DIR}/cache/kernel"
+SOURCE_CACHE_DIR="${SCRIPT_DIR}/cache/kernel-src"
 DOCKER_IMAGE="pistomp-rt-kernel-builder"
 CONTAINER_NAME="pistomp-rt-kernel-build-$$"
 

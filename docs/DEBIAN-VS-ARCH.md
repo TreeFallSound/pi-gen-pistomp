@@ -245,7 +245,7 @@ exposes before changing either.
 | Source | Raspberry Pi Linux (pinned commit in config.sh) | Arch ARM linux-rpi PKGBUILD base (pinned commit) |
 | diffconfig | ~100 lines (RT + size optimisations, disables XFS/BTRFS/GPU/InfiniBand/ISDN/PCI-audio/staging) | ~400 lines (Arch ARM baseline + RT additions) |
 | Build method | Cross-compile x86_64 → arm64 (`bindeb-pkg`) | Native aarch64 (`makepkg`) |
-| Output | `.deb` files in `stage2/05-pistomp/files/sys/` | `.pkg.tar.*` files in `cache/` |
+| Output | `.deb` files in `cache/kernel/` | `.pkg.tar.*` files in `cache/` |
 | Arch extra patches | — | `disable-heavy-features.patch`, `0001-Make-proc-cpuinfo-consistent-on-arm64-and-arm.patch` |
 
 The Debian diffconfig explicitly disables GPU drivers (amdgpu, i915, nouveau,
