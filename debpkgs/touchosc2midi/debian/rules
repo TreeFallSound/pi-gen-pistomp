@@ -38,6 +38,9 @@ override_dh_auto_install:
 	# Install systemd service file
 	install -Dm 644 debian/touchosc2midi.mod-touchosc2midi.service \
 		$(CURDIR)/debian/touchosc2midi/lib/systemd/system/mod-touchosc2midi.service
+	# Install startup wrapper script
+	install -Dm 755 debian/start_touchosc2midi.sh \
+		$(CURDIR)/debian/touchosc2midi/usr/mod/scripts/start_touchosc2midi.sh
 
 override_dh_shlibdeps:
 	# The venv bundles pyliblo3 (pip package, not apt). Exclude it from

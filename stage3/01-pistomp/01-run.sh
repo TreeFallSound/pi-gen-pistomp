@@ -49,9 +49,6 @@ rm -f /home/${FIRST_USER_NAME}/.pedalboards
 git clone ${PEDALBOARDS_REPO} /home/${FIRST_USER_NAME}/data/.pedalboards
 ln -s /home/${FIRST_USER_NAME}/data/.pedalboards /home/${FIRST_USER_NAME}/.pedalboards
 
-# mod-tweaks script: copy from installed package location
-install -m 755 /opt/pistomp/pi-stomp/setup/mod-tweaks/start_touchosc2midi.sh /usr/mod/scripts/
-
 # NOTE: wifi-hotspot.service, enable/disable_wifi_hotspot.sh, and wifi-check.sh
 # are shipped from stage2/05-pistomp/files/ so networking behaviour is controlled
 # here, not by whatever the pi-stomp repo happens to have checked in.
