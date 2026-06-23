@@ -65,8 +65,20 @@ override_dh_auto_install:
 		$(CURDIR)/debian/mod-ui/lib/systemd/system/mod-ui.service
 
 
+override_dh_strip:
+	# Skip: venv binaries are pre-built pip wheels with no debug info.
+	true
+
 override_dh_dwz:
 	# Skip: venv binaries have no debug info, dwz exits non-zero on them.
+	true
+
+override_dh_makeshlibs:
+	# Skip: bundled wheel libs are private and must not advertise shlibs.
+	true
+
+override_dh_shlibdeps:
+	# Skip: venv is self-contained; wheel-bundled libs satisfy all deps internally.
 	true
 
 override_dh_installsystemd:
