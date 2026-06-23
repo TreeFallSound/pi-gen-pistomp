@@ -30,6 +30,8 @@ MOD_HOST_BRANCH="fix/effect-drain-midi"
 # --- mod-ui ---
 MODUI_REPO="https://github.com/TreeFallSound/mod-ui.git"
 MODUI_BRANCH="master"
+# MODUI_REPO="https://github.com/sastraxi/mod-ui.git"
+# MODUI_BRANCH="more-fixes"
 
 # --- browsepy ---
 BROWSEPY_REPO="https://github.com/micahvdm/browsepy.git"
@@ -54,6 +56,8 @@ MOD_TTYMIDI_REF="master"
 # --- pi-stomp (application) ---
 PISTOMP_REPO="https://github.com/TreeFallSound/pi-stomp.git"
 PISTOMP_BRANCH="pistomp-v3"
+# PISTOMP_REPO="https://github.com/sastraxi/pi-stomp.git"
+# PISTOMP_BRANCH="main"
 
 # --- pistomp-recovery ---
 PISTOMP_RECOVERY_REPO="https://github.com/sastraxi/pistomp-recovery.git"
