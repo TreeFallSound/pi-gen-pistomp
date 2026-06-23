@@ -45,6 +45,7 @@ on_chroot << EOF
 
 mkdir -p /home/${FIRST_USER_NAME}/data
 
+ln -sf /usr/lib/systemd/system/boot-log.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/browsepy.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/jack.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/mod-host.service /etc/systemd/system/multi-user.target.wants
