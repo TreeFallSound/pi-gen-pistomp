@@ -125,11 +125,14 @@ cd - > /dev/null
 # Tell pi-stomp which pedalboard to load on first boot.
 DATA_DIR=/home/${FIRST_USER_NAME}/data
 PEDALBOARDS_DIR=\${DATA_DIR}/.pedalboards
-if [ -d "\${PEDALBOARDS_DIR}/default.pedalboard" ]; then
-    FIRST_PB="\${PEDALBOARDS_DIR}/default.pedalboard"
-else
+
+# Ignore default.pedalboard for now; chooses AmpBud.pedalboard
+#if [ -d "\${PEDALBOARDS_DIR}/default.pedalboard" ]; then
+#    FIRST_PB="\${PEDALBOARDS_DIR}/default.pedalboard"
+#else
     FIRST_PB=\$(find "\${PEDALBOARDS_DIR}" -maxdepth 1 -name '*.pedalboard' -type d | head -n 1 || true)
-fi
+#fi
+
 if [ -n "\${FIRST_PB}" ]; then
     echo "{\"bank\": -2, \"pedalboard\": \"\${FIRST_PB}\", \"supportsDividers\": true}" > \${DATA_DIR}/last.json
 else

@@ -38,7 +38,7 @@ if [[ -f "${CONF}" ]]; then
             connection.autoconnect yes || true
     fi
 
-    if [[ -n "${HOSTNAME:-}" && "${HOSTNAME}" != "pistomp" ]]; then
+    if [[ -n "${HOSTNAME:-}" ]]; then
         hostnamectl set-hostname "${HOSTNAME}"
         sed -i "s/pistomp/${HOSTNAME}/g" /etc/hosts
     fi

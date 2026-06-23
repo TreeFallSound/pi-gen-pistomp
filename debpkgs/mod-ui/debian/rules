@@ -30,10 +30,21 @@ override_dh_auto_configure:
 override_dh_auto_build:
 	# Build the C extension (libmod_utils.so)
 	$(MAKE) -C "$(MODUI_SRC_DIR)/utils"
-	# Install Python 3.11 into uv's cache and copy the binary into the venv
-	# so the venv is self-contained on the target (no uv or build paths needed)
+
+override_dh_auto_install:
+	# Install Python 3.11 into uv's cache, copy the binary into the venv,
+	# then copy the stdlib alongside it so the binary can find it at runtime.
+	# --copies duplicates the interpreter but not the stdlib; pyvenv.cfg home
+	# is patched to the final install path so Python resolves base_prefix correctly.
 	uv python install 3.11
-	UV_PY=$$(uv python find 3.11) && "$$UV_PY" -m venv --copies "$(VENV_DIR)"
+	UV_PY=$$(uv python find 3.11) && \
+	UV_PREFIX=$$(cd "$$(dirname "$$UV_PY")/.." && pwd) && \
+	"$$UV_PY" -m venv --copies "$(VENV_DIR)" && \
+	rsync -a --exclude=site-packages "$$UV_PREFIX/lib/python3.11/" "$(VENV_DIR)/lib/python3.11/" && \
+	sed -i \
+	  -e 's|^home = .*|home = /opt/pistomp/venvs/mod-ui/bin|' \
+	  -e 's|^executable = .*|executable = /opt/pistomp/venvs/mod-ui/bin/python3.11|' \
+	  "$(VENV_DIR)/pyvenv.cfg"
 	# Install tornado==4.3
 	"$(VENV_DIR)/bin/pip" install tornado==4.3
 	# Patch tornado for Python 3.10+ compatibility
@@ -41,8 +52,6 @@ override_dh_auto_build:
 		"$(VENV_DIR)/lib/python3.11/site-packages/tornado/httputil.py"
 	# Install mod-ui into the venv
 	"$(VENV_DIR)/bin/pip" install "$(MODUI_SRC_DIR)"
-
-override_dh_auto_install:
 	# Install HTML assets
 	mkdir -p "$(HTML_INSTALL_DIR)"
 	cp -a "$(MODUI_SRC_DIR)/html/"* "$(HTML_INSTALL_DIR)/"

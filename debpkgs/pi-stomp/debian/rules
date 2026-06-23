@@ -27,22 +27,29 @@ override_dh_auto_configure:
 	fi
 
 override_dh_auto_build:
-	# Venv uses system Python3 (/usr/bin/python3 exists on target, no --copies needed)
-	uv venv --python /usr/bin/python3 --system-site-packages "$(VENV_DIR)"
-	# Sync dependencies; --no-editable installs the wheel into site-packages
-	UV_PROJECT_ENVIRONMENT="$(VENV_DIR)" \
-		uv sync --frozen --no-dev --no-editable --extra hardware \
-		--project "$(PISTOMP_SRC_DIR)"
+	true
 
 override_dh_auto_install:
 	# Install source tree
 	mkdir -p "$(SRC_INSTALL_DIR)"
 	cp -a "$(PISTOMP_SRC_DIR)"/* "$(SRC_INSTALL_DIR)/"
-	# Remove git metadata to keep the package clean
+	# Remove git metadata and test snapshots to keep the package clean
 	rm -rf "$(SRC_INSTALL_DIR)"/.git
+	rm -rf "$(SRC_INSTALL_DIR)"/tests
+	# Build venv here (not in dh_auto_build) so dh_prep doesn't wipe it before packaging
+	uv venv --python /usr/bin/python3 --system-site-packages "$(VENV_DIR)"
+	UV_PROJECT_ENVIRONMENT="$(VENV_DIR)" \
+		uv sync --frozen --no-dev --no-editable --extra hardware \
+		--project "$(PISTOMP_SRC_DIR)"
 	# Install systemd service file
 	install -Dm 644 debian/pi-stomp.mod-ala-pi-stomp.service \
 		$(CURDIR)/debian/pi-stomp/lib/systemd/system/mod-ala-pi-stomp.service
+
+override_dh_dwz:
+	# Skip DWARF compression — PyPI wheel .so files don't have valid DWARF
+
+override_dh_shlibdeps:
+	# Skip — all .so dependencies are private libs bundled inside PyPI wheels
 
 override_dh_installsystemd:
 	# Service enablement is handled by stage2/05-pistomp/01-run.sh ln -sf,

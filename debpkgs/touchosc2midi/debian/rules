@@ -26,14 +26,15 @@ override_dh_auto_configure:
 	fi
 
 override_dh_auto_build:
+	# Nothing to build — touchosc2midi is pure Python, installed into venv below.
+
+override_dh_auto_install:
 	# Venv uses system Python3 (/usr/bin/python3 exists on target, no --copies needed)
 	python3 -m venv --system-site-packages "$(VENV_DIR)"
 	# Install pyliblo3 and pin Cython<3.1 before touchosc2midi pulls in broken pyliblo
 	"$(VENV_DIR)/bin/pip" install 'Cython<3.1'
 	"$(VENV_DIR)/bin/pip" install --no-build-isolation pyliblo3
 	"$(VENV_DIR)/bin/pip" install --no-deps "$(SRC_DIR)"
-
-override_dh_auto_install:
 	# Install systemd service file
 	install -Dm 644 debian/touchosc2midi.mod-touchosc2midi.service \
 		$(CURDIR)/debian/touchosc2midi/lib/systemd/system/mod-touchosc2midi.service

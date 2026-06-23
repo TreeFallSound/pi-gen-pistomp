@@ -16,11 +16,12 @@ override_dh_auto_configure:
 	fi
 
 override_dh_auto_build:
+	# Nothing to build — browsepy is pure Python, installed into venv below.
+
+override_dh_auto_install:
 	# Create a relocatable venv and install browsepy
 	python3 -m venv --copies --system-site-packages "$(VENV_DIR)"
 	"$(VENV_DIR)/bin/pip" install --no-deps "$(BROWSEPY_SRC_DIR)"
-
-override_dh_auto_install:
 	# Install systemd service file
 	install -Dm 644 debian/browsepy.browsepy.service \
 		$(CURDIR)/debian/browsepy/lib/systemd/system/browsepy.service

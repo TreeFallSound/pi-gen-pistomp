@@ -1,3 +1,13 @@
+pi-stomp (3.0-3) trixie; urgency=medium
+
+  * Move venv build to dh_auto_install so dh_prep does not wipe it.
+  * Skip dh_dwz and dh_shlibdeps for PyPI wheel binaries.
+  * Strip tests/ from installed source tree.
+  * Fix WorkingDirectory to /opt/pistomp/pi-stomp/fonts so bare font names resolve.
+  * Pull from fix/font-dir branch (fonts-dejavu bundling fix).
+
+ -- pistomp <pistomp@example.com>  Tue, 23 Jun 2026 00:00:00 +0000
+
 pi-stomp (3.0-2) trixie; urgency=medium
 
   * Add lg, swig, python3-dev to Build-Depends so the lgpio Python wheel

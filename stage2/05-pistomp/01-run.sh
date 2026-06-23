@@ -11,6 +11,9 @@ install -Dm 644 files/journald-pistomp.conf ${ROOTFS_DIR}/etc/systemd/journald.c
 # Grant audio group access to CPU DMA latency control
 install -Dm 644 files/99-cpu-dma-latency.rules ${ROOTFS_DIR}/etc/udev/rules.d/99-cpu-dma-latency.rules
 
+# Tag spidev so systemd synthesises dev-spidev0.0.device (needed by pistomp-lcd-splash.service)
+install -Dm 644 files/99-spidev.rules ${ROOTFS_DIR}/etc/udev/rules.d/99-spidev.rules
+
 # Realtime priority + memlock limits for audio group (non-service processes)
 install -Dm 644 files/99-audio.conf ${ROOTFS_DIR}/etc/security/limits.d/99-audio.conf
 install -m 755 files/wait-for-mod-host.sh ${ROOTFS_DIR}/usr/local/bin/wait-for-mod-host.sh
@@ -45,7 +48,7 @@ on_chroot << EOF
 
 mkdir -p /home/${FIRST_USER_NAME}/data
 
-ln -sf /usr/lib/systemd/system/boot-log.service /etc/systemd/system/multi-user.target.wants
+#ln -sf /usr/lib/systemd/system/boot-log.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/browsepy.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/jack.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/mod-host.service /etc/systemd/system/multi-user.target.wants
@@ -53,7 +56,6 @@ ln -sf /usr/lib/systemd/system/mod-ui.service /etc/systemd/system/multi-user.tar
 ln -sf /usr/lib/systemd/system/mod-amidithru.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/mod-touchosc2midi.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/mod-ala-pi-stomp.service /etc/systemd/system/multi-user.target.wants
-ln -sf /usr/lib/systemd/system/pistomp-recovery.service /etc/systemd/system/multi-user.target.wants
 # TODO: verify mod-touchosc2midi should start at boot. It BindsTo=
 # mod-amidithru.service + jack.service, so it only runs once both are up.
 # Starts /usr/mod/scripts/start_touchosc2midi.sh which launches the

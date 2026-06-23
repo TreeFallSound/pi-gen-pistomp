@@ -54,8 +54,10 @@ MOD_TTYMIDI_REPO="https://github.com/moddevices/mod-ttymidi.git"
 MOD_TTYMIDI_REF="master"
 
 # --- pi-stomp (application) ---
-PISTOMP_REPO="https://github.com/TreeFallSound/pi-stomp.git"
-PISTOMP_BRANCH="pistomp-v3"
+PISTOMP_REPO="https://github.com/sastraxi/pi-stomp.git"
+PISTOMP_BRANCH="fix/font-dir"
+# PISTOMP_REPO="https://github.com/TreeFallSound/pi-stomp.git"
+# PISTOMP_BRANCH="pistomp-v3"
 # PISTOMP_REPO="https://github.com/sastraxi/pi-stomp.git"
 # PISTOMP_BRANCH="main"
 
