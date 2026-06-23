@@ -79,6 +79,9 @@ APT_PROXY="http://${APT_CACHER_CONTAINER}:3142"
 
 start_apt_cache() {
   mkdir -p "${APT_CACHER_DIR}"
+  # Purge rsync metadata snapshots — these are rebuilt on startup and left
+  # corrupt after a crash, causing apt-cacher-ng to exit immediately.
+  rm -rf "${APT_CACHER_DIR}/_xstore/rsnap"
   ${DOCKER} network create ${APT_CACHER_NET} 2>/dev/null || true
   ${DOCKER} rm -f ${APT_CACHER_CONTAINER} 2>/dev/null || true
   ${DOCKER} run -d \
