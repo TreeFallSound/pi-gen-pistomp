@@ -1,3 +1,9 @@
+touchosc2midi (1.0-2) trixie; urgency=medium
+
+  * Patch import liblo -> import pyliblo3 as liblo in venv-installed source.
+
+ -- pistomp <pistomp@example.com>  Tue, 23 Jun 2026 00:00:00 +0000
+
 touchosc2midi (1.0-1) trixie; urgency=medium
 
   * Initial package.

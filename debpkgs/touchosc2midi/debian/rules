@@ -35,6 +35,8 @@ override_dh_auto_install:
 	"$(VENV_DIR)/bin/pip" install 'Cython<3.1'
 	"$(VENV_DIR)/bin/pip" install --no-build-isolation pyliblo3
 	"$(VENV_DIR)/bin/pip" install --no-deps "$(SRC_DIR)"
+	# Patch import liblo -> import pyliblo3 as liblo (upstream uses old package name)
+	find "$(VENV_DIR)" -name '*.py' -exec sed -i 's/^import liblo$$/import pyliblo3 as liblo/' {} +
 	# Install systemd service file
 	install -Dm 644 debian/touchosc2midi.mod-touchosc2midi.service \
 		$(CURDIR)/debian/touchosc2midi/lib/systemd/system/mod-touchosc2midi.service
