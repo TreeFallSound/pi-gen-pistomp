@@ -1,3 +1,9 @@
+ffmpeg-pistomp (7.1.1-2) trixie; urgency=medium
+
+  * Re-enable file and pipe protocols for ps-record-lcd.
+
+ -- pistomp <pistomp@example.com>  Tue, 23 Jun 2026 00:00:00 +0000
+
 ffmpeg-pistomp (7.1.1-1) trixie; urgency=medium
 
   * Initial package. Minimal ffmpeg build for pi-Stomp ps-record-lcd.

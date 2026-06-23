@@ -31,6 +31,8 @@ override_dh_auto_configure:
 		--disable-everything \
 		--disable-network \
 		--disable-protocols \
+		--enable-protocol=file \
+		--enable-protocol=pipe \
 		--disable-indevs \
 		--disable-outdevs \
 		--disable-alsa \

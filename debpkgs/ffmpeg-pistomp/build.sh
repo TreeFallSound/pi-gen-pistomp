@@ -7,7 +7,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${ROOT_DIR}/scripts/build-common.sh"
 
 PKG="ffmpeg-pistomp"
-VERSION="${FFMPEG_VERSION}-1"
+VERSION="$(dpkg-parsechangelog -l "${SCRIPT_DIR}/debian/changelog" -S Version)"
 UPSTREAM_DIR="${WORKDIR}/ffmpeg-${FFMPEG_VERSION}"
 
 cache_check
