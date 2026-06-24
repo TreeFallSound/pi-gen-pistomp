@@ -1,0 +1,6 @@
+# Override raspberrypi-sys-mods' /usr/lib/udev/rules.d/60-ondemand-governor.rules,
+# which forces the cpufreq governor to "ondemand" when each cpu device appears —
+# overriding the cpufreq.default_governor=performance kernel cmdline. ondemand's
+# frequency dips cause periodic JACK XRuns (whole-graph deadline misses) under
+# load. A same-named file in /etc/udev/rules.d wins over /usr/lib/udev/rules.d.
+KERNEL=="cpu*", SUBSYSTEM=="cpu", ATTR{cpufreq/scaling_governor}="performance"

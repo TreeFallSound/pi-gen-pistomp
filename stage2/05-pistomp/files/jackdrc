@@ -16,4 +16,4 @@ if [ -z "${JACK_SAMPLE_RATE}" ] || [ -z "${JACK_PERIOD}" ]; then
     exit 2
 fi
 
-exec env JACK_DRIVER_DIR=/usr/lib/aarch64-linux-gnu/jack /usr/bin/jackd -t 2000 -R -P 95 -d alsa -d hw:0 -r "${JACK_SAMPLE_RATE}" -p "${JACK_PERIOD}" -n 2 -X seq -s
+exec env JACK_DRIVER_DIR=/usr/lib/aarch64-linux-gnu/jack /usr/bin/jackd -t 2000 -R -P 75 -d alsa -d hw:0 -r "${JACK_SAMPLE_RATE}" -p "${JACK_PERIOD}" -n 2 -X seq -s

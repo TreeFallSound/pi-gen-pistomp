@@ -14,6 +14,10 @@ install -Dm 644 files/99-cpu-dma-latency.rules ${ROOTFS_DIR}/etc/udev/rules.d/99
 # Tag spidev so systemd synthesises dev-spidev0.0.device (needed by pistomp-lcd-splash.service)
 install -Dm 644 files/99-spidev.rules ${ROOTFS_DIR}/etc/udev/rules.d/99-spidev.rules
 
+# Pin cpufreq governor to performance, overriding raspberrypi-sys-mods' ondemand
+# rule (ondemand's frequency dips cause periodic JACK XRuns under load).
+install -Dm 644 files/60-ondemand-governor.rules ${ROOTFS_DIR}/etc/udev/rules.d/60-ondemand-governor.rules
+
 # Realtime priority + memlock limits for audio group (non-service processes)
 install -Dm 644 files/99-audio.conf ${ROOTFS_DIR}/etc/security/limits.d/99-audio.conf
 install -m 755 files/wait-for-jack.sh ${ROOTFS_DIR}/usr/local/bin/wait-for-jack.sh
