@@ -132,14 +132,19 @@ jobs:
       - name: Build .deb
         run: |
           source config.sh
-          WORKDIR=/tmp CACHE_DIR=${{ github.workspace }}/cache \
+          WORKDIR=/tmp CACHE_DIR="$GITHUB_WORKSPACE/cache" \
             bash debpkgs/${{ inputs.pkg }}/build.sh
+
+      - name: Verify build output
+        run: |
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          ls -la "$GITHUB_WORKSPACE/cache/"*.deb
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.pkg }}-deb
-          path: cache/*.deb
+          path: ${{ github.workspace }}/cache/*.deb
           if-no-files-found: error
 
       - name: Publish to GitHub Releases
@@ -148,7 +153,7 @@ jobs:
         with:
           tag_name: debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}
           name: "${{ inputs.pkg }} ${{ steps.version.outputs.version }}"
-          files: cache/*.deb
+          files: ${{ github.workspace }}/cache/*.deb
           draft: false
           prerelease: false
         env:
