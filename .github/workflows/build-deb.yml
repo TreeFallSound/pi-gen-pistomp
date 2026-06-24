@@ -117,21 +117,12 @@ jobs:
             echo "No debian/control (binary-only package), skipping build-deps"
             exit 0
           fi
-          # dpkg-checkbuilddeps reads Build-Depends from debian/control and
-          # prints what's missing. Parse its output and install those packages.
+          # apt-get build-dep parses Build-Depends from debian/control natively,
+          # stripping version constraints and resolving alternatives.
+          # Custom pistomp packages already installed (via custom_build_deps
+          # step or build.sh) are satisfied; apt skips them.
           cd "debpkgs/${PKG}"
-          MISSING=$(dpkg-checkbuilddeps 2>&1 || true)
-          if [ -n "$MISSING" ]; then
-            # Output looks like:
-            #   dpkg-checkbuilddeps: error: Unmet build dependencies: foo bar (>= 1.0) baz
-            echo "$MISSING" \
-              | sed 's/.*Unmet build dependencies: //' \
-              | sed 's/([^)]*)//g' \
-              | tr ' ' '\n' \
-              | grep -v '^$' \
-              | sort -u \
-              | xargs -r apt-get install -y --no-install-recommends
-          fi
+          apt-get build-dep -y -q .
 
       - name: Build .deb
         run: |
