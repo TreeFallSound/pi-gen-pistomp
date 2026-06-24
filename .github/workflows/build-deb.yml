@@ -46,7 +46,12 @@ jobs:
         run: |
           apt-get update -qq
           apt-get install -y -qq --no-install-recommends \
-            ca-certificates curl wget jq gnupg dpkg-dev devscripts debhelper-compat
+            ca-certificates curl wget jq gnupg dpkg-dev devscripts debhelper-compat \
+            build-essential python3-dev git swig
+          # uv — used by debian/rules to build the pistomp-recovery venv.
+          # Matches the image build's uv install (stage2/05-pistomp/05-run.sh).
+          curl -LsSf https://astral.sh/uv/install.sh \
+            | env UV_INSTALL_DIR=/usr/local/bin INSTALLER_NO_MODIFY_PATH=1 sh
 
       - name: Extract version
         id: version
