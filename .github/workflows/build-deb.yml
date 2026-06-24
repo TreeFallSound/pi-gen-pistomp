@@ -34,8 +34,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04-arm
+    container:
+      image: debian:trixie
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install base tools
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends \
+            ca-certificates curl wget jq gnupg dpkg-dev devscripts debhelper-compat
 
       - name: Extract version
         id: version
@@ -54,17 +62,19 @@ jobs:
 
       - name: Check version not already published (PR only)
         if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if gh release view "debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}" \
-               --repo ${{ github.repository }} >/dev/null 2>&1; then
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}")
+          if [ "$STATUS" = "200" ]; then
             echo "ERROR: version ${{ steps.version.outputs.version }} is already published." >&2
             echo "Bump the version in debpkgs/${{ inputs.pkg }}/debian/changelog" >&2
             echo "(or config.sh for pinned packages)." >&2
             exit 1
           fi
           echo "Version ${{ steps.version.outputs.version }} is new, OK."
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install custom build deps from Releases
         if: inputs.custom_build_deps != ''
@@ -81,8 +91,10 @@ jobs:
               continue
             fi
             echo "==> Downloading $DEP.deb from GitHub Releases..."
-            ASSET_URL=$(gh api repos/${{ github.repository }}/releases --paginate \
-              --jq ".[] | select(.tag_name | startswith(\"debpkg/$DEP/\")) | .assets[].browser_download_url" \
+            ASSET_URL=$(curl -s -H "Authorization: Bearer ${GH_TOKEN}" \
+              "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100" \
+              | jq -r --arg p "$DEP" \
+                '.[] | select(.tag_name | startswith("debpkg/" + $p + "/")) | .assets[].browser_download_url' \
               | grep "/${DEP}_.*_arm64\.deb$" | head -1)
             if [ -z "$ASSET_URL" ]; then
               echo "ERROR: $DEP.deb not found in GitHub Releases." >&2
@@ -90,14 +102,12 @@ jobs:
               exit 1
             fi
             wget -q -P ${{ github.workspace }}/cache "$ASSET_URL"
-            sudo dpkg -i ${{ github.workspace }}/cache/${DEP}_*_arm64.deb
-            sudo apt-get install -f -y -qq
+            dpkg -i ${{ github.workspace }}/cache/${DEP}_*_arm64.deb
+            apt-get install -f -y -qq
           done
 
       - name: Install build dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends dpkg-dev devscripts debhelper-compat
           PKG="${{ inputs.pkg }}"
           CONTROL="debpkgs/${PKG}/debian/control"
           if [ ! -f "$CONTROL" ]; then
@@ -117,12 +127,10 @@ jobs:
               | tr ' ' '\n' \
               | grep -v '^$' \
               | sort -u \
-              | xargs -r sudo apt-get install -y --no-install-recommends
+              | xargs -r apt-get install -y --no-install-recommends
           fi
 
       - name: Build .deb
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           source config.sh
           WORKDIR=/tmp CACHE_DIR=${{ github.workspace }}/cache \
