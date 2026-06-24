@@ -15,7 +15,7 @@ echo "==> Building local apt repository in ${REPO_DIR}"
 
 rm -rf "${REPO_DIR}"
 mkdir -p "${REPO_DIR}/pool/main"
-mkdir -p "${REPO_DIR}/dists/trixie/main/binary-arm64"
+mkdir -p "${REPO_DIR}/dists/${APT_REPO_SUITE}/${APT_REPO_COMPONENT}/binary-${APT_REPO_ARCH}"
 
 # Copy all pistomp .deb files into the pool (skip apt-cacher subdir, skip symlinks)
 for deb in "${CACHE_DIR}"/*.deb; do
@@ -24,20 +24,20 @@ for deb in "${CACHE_DIR}"/*.deb; do
 done
 
 # Generate Packages.gz
-(cd "${REPO_DIR}" && dpkg-scanpackages --arch arm64 pool/main /dev/null \
-    > "dists/trixie/main/binary-arm64/Packages")
-gzip -9 -c "${REPO_DIR}/dists/trixie/main/binary-arm64/Packages" \
-    > "${REPO_DIR}/dists/trixie/main/binary-arm64/Packages.gz"
+(cd "${REPO_DIR}" && dpkg-scanpackages --arch "${APT_REPO_ARCH}" pool/main /dev/null \
+    > "dists/${APT_REPO_SUITE}/${APT_REPO_COMPONENT}/binary-${APT_REPO_ARCH}/Packages")
+gzip -9 -c "${REPO_DIR}/dists/${APT_REPO_SUITE}/${APT_REPO_COMPONENT}/binary-${APT_REPO_ARCH}/Packages" \
+    > "${REPO_DIR}/dists/${APT_REPO_SUITE}/${APT_REPO_COMPONENT}/binary-${APT_REPO_ARCH}/Packages.gz"
 
 # Generate Release file
-cat > "${REPO_DIR}/dists/trixie/Release" <<EOF
+cat > "${REPO_DIR}/dists/${APT_REPO_SUITE}/Release" <<EOF
 Origin: pistomp
 Label: pistomp
-Suite: trixie
-Codename: trixie
+Suite: ${APT_REPO_SUITE}
+Codename: ${APT_REPO_SUITE}
 Date: $(date -Ru)
-Architectures: arm64
-Components: main
+Architectures: ${APT_REPO_ARCH}
+Components: ${APT_REPO_COMPONENT}
 Description: pi-Stomp custom packages
 EOF
 

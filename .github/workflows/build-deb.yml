@@ -5,7 +5,7 @@
 #   name: build-jack2-pistomp
 #   on:
 #     push:
-#       branches: [pistomp-v3]
+#       branches: [main]
 #       paths: ['debpkgs/jack2-pistomp/**', 'config.sh']
 #     pull_request:
 #       paths: ['debpkgs/jack2-pistomp/**', 'config.sh']

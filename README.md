@@ -102,6 +102,19 @@ dch -v <new-version> "Description of change."
 
 Then rebuild. [build.sh](./build.sh) reads the version from the changelog automatically — nothing else to update.
 
+## OTA package updates
+
+Custom `.deb` packages are also published to an apt repository hosted on GitHub Pages, so devices already running an image can pull updates without reflashing. The repository URL is pinned in [`config.sh`](./config.sh) (`APT_REPO_URL`) and written to `/etc/apt/sources.list.d/pistomp.list` on the image by `stage2/05-pistomp/05-run.sh`.
+
+To push a package update over the air:
+
+1. Bump the version in `debpkgs/<pkg>/debian/changelog` (see [Updating a package version](#updating-a-package-version)).
+2. Push to `main`. The per-package workflow (`.github/workflows/build-<pkg>.yml`) builds the `.deb` and publishes a GitHub Release tagged `debpkg/<pkg>/<version>`.
+3. The `publish-apt-repo` workflow rebuilds the `gh-pages` apt index from all release assets.
+4. On the device, `pistomp-recovery`'s "Update packages" menu runs `apt-get update` and installs the new version. Or manually: `sudo apt-get update && sudo apt-get install --only-upgrade <pkg>`.
+
+> Devices flashed from older images (before the OTA source was baked in) need the source added once: see `GUIDE.md` → *OTA updates*.
+
 ## Architecture
 
 | Stage | What it builds |

@@ -1,3 +1,13 @@
+pistomp-recovery (0.1.0-6) trixie; urgency=medium
+
+  * Start conflicting units (mod-ui, mod-ala-pi-stomp) with --no-block in
+    start_main_app() so systemctl returns immediately; the previous blocking
+    start deadlocked against our own Conflicts= (systemd had to stop recovery
+    before the start could finish, but we were waiting on the start), which
+    froze the LCD on Exit until systemd's stop timeout SIGKILLed us.
+
+ -- pistomp <pistomp@example.com>  Tue, 23 Jun 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-5) trixie; urgency=medium
 
   * Snapshot CrashInfo at startup before stop_main_app() wipes service Result;

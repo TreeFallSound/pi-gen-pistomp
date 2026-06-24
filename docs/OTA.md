@@ -49,7 +49,7 @@ lines.
 - Parses `Build-Depends` from `debian/control` and installs them
   automatically — no per-package dep list to maintain.
 - Runs `debpkgs/<pkg>/build.sh`.
-- On push to `pistomp-v3`, publishes the `.deb` as a GitHub Release
+- On push to `main`, publishes the `.deb` as a GitHub Release
   asset tagged `debpkg/<pkg>/<version>`.
 
 ### Per-package workflow
@@ -62,7 +62,7 @@ name: build-jack2-pistomp
 
 on:
   push:
-    branches: [pistomp-v3]
+    branches: [main]
     paths:
       - 'debpkgs/jack2-pistomp/**'
       - 'config.sh'
@@ -283,7 +283,7 @@ To sign the repo later:
 ## How it works end-to-end
 
 1. **Developer pushes** a change to `debpkgs/jack2-pistomp/**` or
-   `config.sh` on `pistomp-v3`.
+   `config.sh` on `main`.
 2. **`build-jack2-pistomp` workflow** runs on an arm64 runner, builds the
    `.deb`, publishes it as a GitHub Release asset tagged
    `debpkg/jack2-pistomp/<version>`.

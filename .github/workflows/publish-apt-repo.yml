@@ -1,0 +1,79 @@
+name: publish-apt-repo
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: write
+      pages: write
+    steps:
+      - name: Checkout gh-pages (or seed empty orphan)
+        run: |
+          git clone --single-branch --branch gh-pages \
+            "https://${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" repo \
+            || git clone "https://${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" repo
+          cd repo
+          if ! git rev-parse --verify gh-pages >/dev/null 2>&1; then
+            git checkout --orphan gh-pages
+            git rm -rf . 2>/dev/null || true
+          else
+            git checkout gh-pages
+          fi
+          # Ensure reprepro config exists (idempotent)
+          mkdir -p conf
+          cat > conf/distributions <<'CFG'
+Origin: pistomp
+Label: pistomp
+Suite: trixie
+Codename: trixie
+Architectures: arm64
+Components: main
+Description: pi-Stomp custom packages
+CFG
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add conf/distributions
+          git commit -m "apt: bootstrap reprepro config" || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install reprepro
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq reprepro
+
+      - name: Download all *_arm64.deb release assets
+        working-directory: repo
+        run: |
+          mkdir -p incoming
+          gh release list --repo "${GITHUB_REPOSITORY}" --limit 200 \
+            --json tagName,assets \
+            | jq -r '.[].assets[].browserDownloadUrl' \
+            | grep '_arm64\.deb$' \
+            | xargs -r -n1 -I{} wget -q -P incoming/ {}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add packages to repo (refuses duplicate name+version)
+        working-directory: repo
+        run: |
+          shopt -s nullglob
+          for deb in incoming/*.deb; do
+            reprepro -b . includedeb trixie "$deb" || {
+              echo "::warning::reprepro refused $deb (likely a duplicate name+version)."
+            }
+          done
+
+      - name: Commit and push
+        working-directory: repo
+        run: |
+          git add pool/ dists/ conf/
+          if git diff --cached --quiet; then
+            echo "No changes — repo is already up to date."
+            exit 0
+          fi
+          git commit -m "apt: rebuild index $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push origin gh-pages
