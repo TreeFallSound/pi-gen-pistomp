@@ -63,10 +63,6 @@ if [ "${PASSWORDLESS_SUDO}" = "1" ]; then
 	EOF
 fi
 
-if [ -f "${ROOTFS_DIR}/etc/sudoers.d/010_pi-nopasswd" ]; then
-  sed -i "s/^pi /$FIRST_USER_NAME /" "${ROOTFS_DIR}/etc/sudoers.d/010_pi-nopasswd"
-fi
-
 on_chroot << EOF
 setupcon --force --save-only -v
 EOF
@@ -75,6 +71,9 @@ on_chroot << EOF
 usermod --pass='*' root
 EOF
 
+# SSH host keys are deleted here and regenerated on first boot by
+# regenerate_ssh_host_keys.service (shipped by raspberrypi-sys-mods,
+# auto-enabled by its postinst, ConditionFirstBoot=yes).
 rm -f "${ROOTFS_DIR}/etc/ssh/"ssh_host_*_key*
 
 sed -i "s/PLACEHOLDER//" "${ROOTFS_DIR}/etc/default/keyboard"

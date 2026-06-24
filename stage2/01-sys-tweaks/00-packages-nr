@@ -1,3 +1,10 @@
 cifs-utils
 cloud-utils
 python3-pip
+
+# raspberrypi-sys-mods goes here (no-install-recommends) so its Recommends
+# (userconf-pi, rfkill) don't get pulled in. userconf-pi is only needed by
+# export-image/01-user-rename which installs it explicitly; rfkill is
+# pulled in by other packages already. rpi-eeprom and ssh-import-id, also
+# Recommends of raspberrypi-sys-mods, are explicitly listed in 00-packages.
+raspberrypi-sys-mods

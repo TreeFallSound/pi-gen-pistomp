@@ -5,9 +5,6 @@ install -m 644 files/jackdrc ${ROOTFS_DIR}/etc/
 install -m 644 files/jack-env.sh ${ROOTFS_DIR}/etc/profile.d/
 install -Dm 644 files/rtirq.conf ${ROOTFS_DIR}/etc/default/rtirq
 
-# journald size cap for SD card longevity
-install -Dm 644 files/journald-pistomp.conf ${ROOTFS_DIR}/etc/systemd/journald.conf.d/pistomp.conf
-
 # Grant audio group access to CPU DMA latency control
 install -Dm 644 files/99-cpu-dma-latency.rules ${ROOTFS_DIR}/etc/udev/rules.d/99-cpu-dma-latency.rules
 

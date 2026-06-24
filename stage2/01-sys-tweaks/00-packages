@@ -12,7 +12,6 @@ ca-certificates curl
 usbutils
 dosfstools
 rpi-swap rpi-loop-utils
-raspberrypi-sys-mods
 bluez bluez-firmware
 apt-listchanges
 usb-modeswitch

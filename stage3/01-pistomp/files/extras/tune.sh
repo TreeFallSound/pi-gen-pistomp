@@ -4,11 +4,23 @@
 #   - https://wiki.linuxaudio.org/wiki/system_configuration#cpu_vulnerability_mitigations
 #   - https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html
 #   - https://linuxreviews.org/Kernel_Lockdown_and_Performance_Impact
+#
+# Also toggles the hardware watchdog. raspberrypi-sys-mods ships
+# /usr/lib/systemd/system.conf.d/40-rpi-enable-watchdog.conf which arms
+# /dev/watchdog0 via systemd (RuntimeWatchdogSec=1m, RebootWatchdogSec=2m).
+# The kernel `nowatchdog` cmdline param only stops the *kernel* from arming
+# the watchdog at boot — systemd re-arms it regardless. To fully disarm we
+# also write a higher-priority systemd drop-in (50- > 40-) that zeroes both
+# timers. `safe` removes the drop-in, restoring RPi's default behaviour.
 
 set -euo pipefail
 
 CMDLINE="/boot/firmware/cmdline.txt"
 PARAMS=("mitigations=off" "audit=0" "nowatchdog")
+
+# /etc drop-in overrides /usr/lib lexicographically (50- > 40-).
+WATCHDOG_OVERRIDE_DIR="/etc/systemd/system.conf.d"
+WATCHDOG_OVERRIDE="${WATCHDOG_OVERRIDE_DIR}/50-pistomp-no-watchdog.conf"
 
 if [[ $# -ne 1 ]]; then
     echo "Usage: $0 [unsafe|safe]"
@@ -30,6 +42,14 @@ case "$1" in
                 sed -i "1s/$/ $param/" "$CMDLINE"
             fi
         done
+        # Disarm systemd's watchdog too — nowatchdog only stops the kernel
+        # from arming it; systemd re-arms via 40-rpi-enable-watchdog.conf.
+        mkdir -p "$WATCHDOG_OVERRIDE_DIR"
+        cat > "$WATCHDOG_OVERRIDE" <<'EOF'
+[Manager]
+RuntimeWatchdogSec=0
+RebootWatchdogSec=0
+EOF
         echo "==> Done. Reboot to gain performance (and lose security)."
         ;;
     safe)
@@ -46,6 +66,8 @@ case "$1" in
         sed -i 's/  */ /g' "$CMDLINE"
         # Trim trailing space
         sed -i 's/ $//' "$CMDLINE"
+        # Restore RPi's default watchdog behaviour by removing our override.
+        rm -f "$WATCHDOG_OVERRIDE"
         echo "==> Done. Reboot to restore security."
         ;;
     *)
