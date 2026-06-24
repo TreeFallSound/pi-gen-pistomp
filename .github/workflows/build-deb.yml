@@ -36,6 +36,9 @@ jobs:
     runs-on: ubuntu-24.04-arm
     container:
       image: debian:trixie
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
 
