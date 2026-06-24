@@ -24,17 +24,21 @@ jobs:
             git checkout --orphan gh-pages
             git rm -rf . 2>/dev/null || true
           fi
-          # Ensure reprepro config exists (idempotent)
+          # Ensure reprepro config exists (idempotent).
+          # Written with printf (not a heredoc) so the lines can be indented
+          # to keep the YAML block scalar valid while the generated file has
+          # no leading whitespace (Debian control format treats leading
+          # whitespace as a field continuation).
           mkdir -p conf
-          cat > conf/distributions <<'CFG'
-Origin: pistomp
-Label: pistomp
-Suite: trixie
-Codename: trixie
-Architectures: arm64
-Components: main
-Description: pi-Stomp custom packages
-CFG
+          printf '%s\n' \
+            "Origin: pistomp" \
+            "Label: pistomp" \
+            "Suite: trixie" \
+            "Codename: trixie" \
+            "Architectures: arm64" \
+            "Components: main" \
+            "Description: pi-Stomp custom packages" \
+            > conf/distributions
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add conf/distributions
