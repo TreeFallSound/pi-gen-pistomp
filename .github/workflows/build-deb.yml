@@ -147,12 +147,27 @@ jobs:
           path: ${{ github.workspace }}/cache/*.deb
           if-no-files-found: error
 
+      - name: Extract changelog entry
+        if: github.event_name == 'push'
+        id: changelog
+        run: |
+          PKG="${{ inputs.pkg }}"
+          if [ -f "debpkgs/${PKG}/debian/changelog" ]; then
+            BODY=$(dpkg-parsechangelog --show-field Changes \
+              --file "debpkgs/${PKG}/debian/changelog")
+            EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+            echo "body<<${EOF}" >> $GITHUB_OUTPUT
+            echo "${BODY}" >> $GITHUB_OUTPUT
+            echo "${EOF}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Publish to GitHub Releases
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}
           name: "${{ inputs.pkg }} ${{ steps.version.outputs.version }}"
+          body: ${{ steps.changelog.outputs.body }}
           files: ${{ github.workspace }}/cache/*.deb
           draft: false
           prerelease: false
