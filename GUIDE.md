@@ -263,8 +263,88 @@ Then re-run the build normally. The cacher will restart clean and rebuild its in
 
 ## Workflow for pi-stomp code changes
 
-1. Push changes to `TreeFallSound/pi-stomp` `pistomp-v3` branch.
+1. Push changes to `TreeFallSound/pi-stomp` `main` branch.
 2. Stage 3 clones that branch at build time — no image changes needed.
 3. Run `./build-docker.sh -f`.
 
 To test a different branch, set `PISTOMP_BRANCH` in `config.sh`.
+
+## OTA updates
+
+Custom `.deb` packages ship on a GitHub Pages-hosted apt repository so devices can `apt upgrade` without reflashing. Full design in [`docs/OTA.md`](./docs/OTA.md); this section is the operator/developer cheat sheet.
+
+### Pipeline
+
+```
+push debpkgs/<pkg>/**  →  build-<pkg>.yml  →  GitHub Release (debpkg/<pkg>/<ver>)
+                                              ↓
+                       publish-apt-repo.yml  →  gh-pages branch (reprepro index)
+                                              ↓
+device /etc/apt/sources.list.d/pistomp.list  →  apt update  →  apt install --only-upgrade <pkg>
+```
+
+### Source of truth: `config.sh`
+
+| Var | Meaning |
+| :--- | :--- |
+| `APT_REPO_URL` | Base URL of the Pages site (e.g. `https://sastraxi.github.io/pi-gen-pistomp`). Written to `pistomp.list` by `stage2/05-pistomp/05-run.sh`. |
+| `APT_REPO_SUITE` | Debian suite served by the repo (`trixie`). |
+| `APT_REPO_COMPONENT` | apt component (`main`). |
+| `APT_REPO_ARCH` | apt architecture (`arm64`). |
+
+The same vars drive the *build-time* local file repo (`scripts/setup-apt-repo.sh`, consumed in `stage2/00-dummy-packages/01-run.sh`) and the *runtime* OTA source, so the two never drift.
+
+### Workflows
+
+| File | Trigger | What it does |
+| :--- | :--- | :--- |
+| `.github/workflows/build-deb.yml` | `workflow_call` | Reusable: extract version from `debian/changelog`, install `Build-Depends` from `debian/control` automatically, run `build.sh`, publish a Release tagged `debpkg/<pkg>/<ver>`. On PRs, fails if that tag already exists (unbumped version). |
+| `.github/workflows/build-<pkg>.yml` | push/PR on `debpkgs/<pkg>/**` or `config.sh` | Thin wrapper calling `build-deb.yml` with `pkg:`. One per package. Template at `debpkgs/template/build.yml`. |
+| `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` release asset, `reprepro includedeb trixie` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch and `conf/distributions` on first run. |
+
+### Duplicate-version gates (three layers)
+
+1. **PR check** — `build-deb.yml` queries for an existing `debpkg/<pkg>/<ver>` release and fails the status check before merge.
+2. **Release tag** — `softprops/action-gh-release` gets HTTP 422 from GitHub if the tag exists.
+3. **`reprepro includedeb`** — refuses to add a package whose name+version is already in the repo; the publish workflow warns and skips it. `gh-pages` is only updated when something actually changed.
+
+To ship a new version you **must** bump `debian/changelog`; all three gates point at it.
+
+### Build-time vs runtime apt sources
+
+The image build installs the baseline `.deb`s from a *local* file repo (`file:/pistomp-cache/apt-repo`, built by `scripts/setup-apt-repo.sh`, sourced in `stage2/00-dummy-packages/01-run.sh`). That bind-mount only exists during the build container's lifetime, so `stage2/05-pistomp/05-run.sh` (the final substage) deletes `pistomp-local.list` and writes `pistomp.list` pointing at `APT_REPO_URL`. Devices therefore ship with a clean apt config: no dead `file://` URI to warn about on every `apt update`, and OTA works out of the box.
+
+### One-time setup (GitHub Pages)
+
+1. Push a `gh-pages` branch (the `publish-apt-repo.yml` workflow creates it on first run; no need to seed manually).
+2. Repo Settings → Pages → Source → Deploy from a branch → `gh-pages` / `/(root)`.
+
+### Upgrading an already-flashed device (one-time, for pre-OTA images)
+
+Devices flashed before the `pistomp.list` source was baked in need it added once. After this, `pistomp-recovery`'s Update packages menu (or plain `apt upgrade`) works unattended.
+
+```bash
+ssh pistomp@pistomp.local
+echo "deb [arch=arm64 trusted=yes] https://sastraxi.github.io/pi-gen-pistomp trixie main" \
+  | sudo tee /etc/apt/sources.list.d/pistomp.list
+sudo apt-get update
+sudo apt-get install --only-upgrade pistomp-recovery   # or whichever package you're shipping
+```
+
+If the old `file:/pistomp-cache/apt-repo` source is present from a prior image, remove it first to silence `apt update` warnings:
+
+```bash
+sudo rm -f /etc/apt/sources.list.d/pistomp-local.list
+```
+
+### pistomp-recovery self-upgrade
+
+Recovery installs package updates via `AptManager` ([`../pistomp-recovery/src/pistomp_recovery/packages/manager.py`](../pistomp-recovery/src/pistomp_recovery/packages/manager.py)) — `apt-get update` → `apt-get install -y <pkgs>`. Upgrading `pistomp-recovery` itself is safe: the unit's `postinst` doesn't restart the service, so the LCD stays owned by the running process throughout the install. The new code runs after the next service restart (manual `sudo systemctl restart pistomp-recovery`, or the next crash handoff, or reboot).
+
+### Adding a new package to OTA
+
+1. Create `debpkgs/<pkg>/` with `build.sh`, `debian/`, and a `debian/changelog` entry.
+2. Add the package to `stage2/05-pistomp/02-run.sh`'s `apt-get install` list (factory baseline).
+3. Copy `.github/workflows/build-pistomp-recovery.yml` → `build-<pkg>.yml`, changing the name, `paths:` filter, and `pkg:` input.
+4. If the package has a build-time dep on another pistomp `.deb` (e.g. `mod-host-pistomp` needs `hylia`), the per-package workflow can't extend the reusable workflow — add the dep download as a step in `build.sh` itself, or wrap with a small pre-job. See OTA.md "Packages with build-time dependencies" note.
+5. Bump `debian/changelog`, push to `main`, watch the two workflows run.

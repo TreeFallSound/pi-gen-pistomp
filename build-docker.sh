@@ -70,6 +70,16 @@ PIGEN_DOCKER_OPTS=${PIGEN_DOCKER_OPTS:-""}
 
 IMG_DATE="$(date +%Y-%m-%d)"
 
+# When IMG_VERSION is set (CI release builds), name the image
+# pistompOS-<version>.img instead of the default <date>-pistompOS.img.
+# IMG_FILENAME is honoured by pi-gen's build.sh and is not set in `config`,
+# so passing it as an env var into the container takes effect cleanly.
+IMG_VERSION="${IMG_VERSION:-}"
+IMG_FILENAME_ENV=""
+if [ -n "${IMG_VERSION}" ]; then
+	IMG_FILENAME_ENV="-e IMG_FILENAME=${IMG_NAME}-${IMG_VERSION}"
+fi
+
 # --- apt-cacher-ng (persistent package cache) ---
 APT_CACHER_CONTAINER="pigen_apt_cacher"
 APT_CACHER_NET="pigen_net"
@@ -211,6 +221,7 @@ time ${DOCKER} run \
   ${PIGEN_DOCKER_OPTS} \
   --volume "${CONFIG_FILE}":/config:ro \
   --volume "${DIR}/cache":/pistomp-cache:rw \
+  ${IMG_FILENAME_ENV} \
   -e "GIT_HASH=${GIT_HASH}" \
   -e "GIT_DESCRIBE=${GIT_DESCRIBE}" \
   -e "APT_PROXY=${APT_PROXY}" \

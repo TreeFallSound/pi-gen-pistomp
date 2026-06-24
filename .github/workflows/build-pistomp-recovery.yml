@@ -1,0 +1,21 @@
+name: build-pistomp-recovery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/pistomp-recovery/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/pistomp-recovery/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: pistomp-recovery
+      custom_build_deps: lg
+    secrets: inherit

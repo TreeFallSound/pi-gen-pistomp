@@ -5,7 +5,7 @@
 #   name: build-jack2-pistomp
 #   on:
 #     push:
-#       branches: [pistomp-v3]
+#       branches: [main]
 #       paths: ['debpkgs/jack2-pistomp/**', 'config.sh']
 #     pull_request:
 #       paths: ['debpkgs/jack2-pistomp/**', 'config.sh']
@@ -25,12 +25,33 @@ on:
       pkg:
         required: true
         type: string
+      custom_build_deps:
+        description: Comma-separated custom pistomp packages in Build-Depends that aren't in apt repos (e.g. "lg"). Downloaded from GitHub Releases before dpkg-checkbuilddeps runs.
+        required: false
+        default: ""
+        type: string
 
 jobs:
   build:
     runs-on: ubuntu-24.04-arm
+    container:
+      image: debian:trixie
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install base tools
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends \
+            ca-certificates curl wget jq gnupg dpkg-dev devscripts debhelper-compat \
+            build-essential python3-dev git swig
+          # uv — used by debian/rules to build the pistomp-recovery venv.
+          # Matches the image build's uv install (stage2/05-pistomp/05-run.sh).
+          curl -LsSf https://astral.sh/uv/install.sh \
+            | env UV_INSTALL_DIR=/usr/local/bin INSTALLER_NO_MODIFY_PATH=1 sh
 
       - name: Extract version
         id: version
@@ -49,55 +70,81 @@ jobs:
 
       - name: Check version not already published (PR only)
         if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if gh release view "debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}" \
-               --repo ${{ github.repository }} >/dev/null 2>&1; then
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}")
+          if [ "$STATUS" = "200" ]; then
             echo "ERROR: version ${{ steps.version.outputs.version }} is already published." >&2
             echo "Bump the version in debpkgs/${{ inputs.pkg }}/debian/changelog" >&2
             echo "(or config.sh for pinned packages)." >&2
             exit 1
           fi
           echo "Version ${{ steps.version.outputs.version }} is new, OK."
+
+      - name: Install custom build deps from Releases
+        if: inputs.custom_build_deps != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          IFS=',' read -ra CUSTOM_PKGS <<< "${{ inputs.custom_build_deps }}"
+          mkdir -p ${{ github.workspace }}/cache
+          for DEP in "${CUSTOM_PKGS[@]}"; do
+            DEP="${DEP// /}"  # strip whitespace
+            [ -z "$DEP" ] && continue
+            if dpkg -s "$DEP" >/dev/null 2>&1; then
+              echo "$DEP already installed"
+              continue
+            fi
+            echo "==> Downloading $DEP.deb from GitHub Releases..."
+            ASSET_URL=$(curl -s -H "Authorization: Bearer ${GH_TOKEN}" \
+              "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100" \
+              | jq -r --arg p "$DEP" \
+                '.[] | select(.tag_name | startswith("debpkg/" + $p + "/")) | .assets[].browser_download_url' \
+              | grep "/${DEP}_.*_arm64\.deb$" | head -1)
+            if [ -z "$ASSET_URL" ]; then
+              echo "ERROR: $DEP.deb not found in GitHub Releases." >&2
+              echo "Publish $DEP first." >&2
+              exit 1
+            fi
+            wget -q -P ${{ github.workspace }}/cache "$ASSET_URL"
+            dpkg -i ${{ github.workspace }}/cache/${DEP}_*_arm64.deb
+            apt-get install -f -y -qq
+          done
 
       - name: Install build dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends dpkg-dev devscripts debhelper-compat
           PKG="${{ inputs.pkg }}"
           CONTROL="debpkgs/${PKG}/debian/control"
           if [ ! -f "$CONTROL" ]; then
             echo "No debian/control (binary-only package), skipping build-deps"
             exit 0
           fi
-          # dpkg-checkbuilddeps reads Build-Depends from debian/control and
-          # prints what's missing. Parse its output and install those packages.
+          # apt-get build-dep parses Build-Depends from debian/control natively,
+          # stripping version constraints and resolving alternatives.
+          # Custom pistomp packages already installed (via custom_build_deps
+          # step or build.sh) are satisfied; apt skips them.
           cd "debpkgs/${PKG}"
-          MISSING=$(dpkg-checkbuilddeps 2>&1 || true)
-          if [ -n "$MISSING" ]; then
-            # Output looks like:
-            #   dpkg-checkbuilddeps: error: Unmet build dependencies: foo bar (>= 1.0) baz
-            echo "$MISSING" \
-              | sed 's/.*Unmet build dependencies: //' \
-              | sed 's/([^)]*)//g' \
-              | tr ' ' '\n' \
-              | grep -v '^$' \
-              | sort -u \
-              | xargs -r sudo apt-get install -y --no-install-recommends
-          fi
+          apt-get build-dep -y -q .
 
       - name: Build .deb
         run: |
           source config.sh
-          WORKDIR=/tmp CACHE_DIR=${{ github.workspace }}/cache \
+          WORKDIR=/tmp CACHE_DIR="$GITHUB_WORKSPACE/cache" \
             bash debpkgs/${{ inputs.pkg }}/build.sh
+
+      - name: Verify build output
+        run: |
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          ls -la "$GITHUB_WORKSPACE/cache/"*.deb
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.pkg }}-deb
-          path: cache/*.deb
+          path: ${{ github.workspace }}/cache/*.deb
           if-no-files-found: error
 
       - name: Publish to GitHub Releases
@@ -106,7 +153,7 @@ jobs:
         with:
           tag_name: debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}
           name: "${{ inputs.pkg }} ${{ steps.version.outputs.version }}"
-          files: cache/*.deb
+          files: ${{ github.workspace }}/cache/*.deb
           draft: false
           prerelease: false
         env:

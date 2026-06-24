@@ -12,7 +12,7 @@ name: build-<pkg>
 
 on:
   push:
-    branches: [pistomp-v3]
+    branches: [main]
     paths:
       - 'debpkgs/<pkg>/**'
       - 'config.sh'

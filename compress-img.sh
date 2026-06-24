@@ -12,11 +12,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DEPLOY_DIR="${SCRIPT_DIR}/deploy"
 
-# Find the uncompressed image in deploy/. pi-gen names it
-# <IMG_DATE>-pistompOS.img when IMG_SUFFIX is empty.
-SRC_FILE=$(ls "${DEPLOY_DIR}"/*-pistompOS.img 2>/dev/null | head -n 1 || true)
+# Find the uncompressed image in deploy/. Local builds name it
+# <IMG_DATE>-pistompOS.img; CI release builds (IMG_VERSION set) name it
+# pistompOS-<version>.img. Match both.
+SRC_FILE=$(ls "${DEPLOY_DIR}"/*pistompOS*.img 2>/dev/null | head -n 1 || true)
 if [[ -z "$SRC_FILE" ]]; then
-    echo "ERROR: No uncompressed image found in ${DEPLOY_DIR} (expected *-pistompOS.img)"
+    echo "ERROR: No uncompressed image found in ${DEPLOY_DIR} (expected *pistompOS*.img)"
     echo "Run ./build-docker.sh -f first."
     exit 1
 fi

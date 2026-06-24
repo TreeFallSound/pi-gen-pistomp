@@ -1,0 +1,91 @@
+name: build-image
+
+# Builds the full pistompOS SD-card image.
+#
+# Triggers ONLY on:
+#   - a pushed tag matching `release/<version>` (e.g. release/3.0.0) — produces
+#     a GitHub Release with the image attached, named pistompOS-<version>.img.xz
+#   - manual dispatch — produces a workflow artifact only (no release)
+#
+# Per-package OTA releases (tagged debpkg/<pkg>/<ver>) do NOT trigger this
+# workflow, so shipping a .deb no longer rebuilds the whole image.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'release/*'
+
+jobs:
+  build:
+    # Native arm64 runner: the build runs in an arm64 container, so no QEMU /
+    # binfmt cross-arch shim is needed (build-docker.sh skips it on aarch64).
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+    - name: Clean Workspace Folder
+      run: |
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        clean: true
+
+    - name: Determine image version
+      id: version
+      run: |
+        if [[ "${GITHUB_REF}" == refs/tags/release/* ]]; then
+          VERSION="${GITHUB_REF#refs/tags/release/}"
+        else
+          VERSION="dev-$(git rev-parse --short HEAD)"
+        fi
+        echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+        echo "Image version: ${VERSION}"
+
+    - name: Run build-docker.sh
+      env:
+        IMG_VERSION: ${{ steps.version.outputs.version }}
+      run: ./build-docker.sh
+
+    - name: Compress image
+      run: ./compress-img.sh
+
+    - name: List output files
+      run: ls -lh deploy
+
+    - name: Upload built image
+      uses: actions/upload-artifact@v4
+      with:
+        name: pistompOS
+        path: ./deploy/*pistompOS*.img.xz
+        compression-level: 6
+        if-no-files-found: error
+
+    - name: Upload debug artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-files
+        path: |
+          ./deploy/*pistompOS*.info
+          ./deploy/*build*.log
+        compression-level: 6
+        if-no-files-found: error
+
+  release:
+    # Only publish a Release for `release/<version>` tag pushes, never for
+    # manual dispatch (whose github.ref is a branch).
+    if: startsWith(github.ref, 'refs/tags/release/')
+    needs: [build]
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pistompOS
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: '**/*'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

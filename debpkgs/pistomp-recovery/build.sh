@@ -14,9 +14,13 @@ cache_check
 [ ! -d "${UPSTREAM_DIR}" ] && \
     git clone --branch "${PISTOMP_RECOVERY_BRANCH}" --depth 1 "${PISTOMP_RECOVERY_REPO}" "${UPSTREAM_DIR}"
 
-# Install lg from cache (build-time dep for liblgpio headers/library)
-dpkg -i "${CACHE_DIR}/lg_"*"_arm64.deb" 2>/dev/null || true
-apt-get install -f -y -qq
+# Install lg (build-time dep for liblgpio headers/library). In the full image
+# build, lg.deb is already in CACHE_DIR. In CI, build-deb.yml installs it from
+# GitHub Releases before invoking build.sh (see custom_build_deps input).
+if ! dpkg -s lg &>/dev/null; then
+    dpkg -i "${CACHE_DIR}/lg_"*"_arm64.deb"
+    apt-get install -f -y -qq
+fi
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"
 cd "${UPSTREAM_DIR}"

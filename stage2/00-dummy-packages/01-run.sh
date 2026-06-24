@@ -11,7 +11,9 @@ dpkg --purge --force-all \$(dpkg -l 2>/dev/null | awk '/^iU|^iF|^iH/{print \$2}'
 apt-get install -f -y
 
 # Add local apt repository (built by scripts/setup-apt-repo.sh from cache/).
-echo "deb [arch=arm64 trusted=yes] file:/pistomp-cache/apt-repo trixie main" \
+# This is the build-time-only source; stage2/05-pistomp/05-run.sh replaces it
+# with the GitHub Pages OTA repo before the image is finalized.
+echo "deb [arch=${APT_REPO_ARCH} trusted=yes] file:/pistomp-cache/apt-repo ${APT_REPO_SUITE} ${APT_REPO_COMPONENT}" \
     > /etc/apt/sources.list.d/pistomp-local.list
 apt-get update -qq
 

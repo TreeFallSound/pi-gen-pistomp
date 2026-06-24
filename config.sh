@@ -105,6 +105,11 @@ NAM_REAMP_URL="https://www.tone3000.com/T3K-sweep-v3.wav"
 MOD_UI_PYTHON_VERSION="3.11"
 
 # --- apt repo (GitHub Pages) ---
+# Base URL of the GitHub Pages site serving the OTA apt repo. The device's
+# /etc/apt/sources.list.d/pistomp.list is built from this in
+# stage2/05-pistomp/05-run.sh. Must match the Pages URL of the repo that
+# publishes via .github/workflows/publish-apt-repo.yml.
+APT_REPO_URL="https://sastraxi.github.io/pi-gen-pistomp"
 APT_REPO_SUITE="trixie"
 APT_REPO_COMPONENT="main"
 APT_REPO_ARCH="arm64"
