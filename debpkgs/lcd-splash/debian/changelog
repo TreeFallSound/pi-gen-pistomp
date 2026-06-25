@@ -1,3 +1,9 @@
+lcd-splash (1.0-9) trixie; urgency=medium
+
+  * Use apt-get install -d (download-only) instead of apt-get download to fetch console-setup-linux.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 25 Jun 2026 21:37:21 +0000
+
 lcd-splash (1.0-8) trixie; urgency=medium
 
   * Fix apt-get download working directory so glob finds the downloaded .deb.

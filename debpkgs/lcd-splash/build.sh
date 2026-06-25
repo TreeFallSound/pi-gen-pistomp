@@ -25,9 +25,9 @@ FONT=/usr/share/consolefonts/Lat15-TerminusBold22x11.psf.gz
 if [ ! -f "${FONT}" ]; then
     CSL_EXTRACT="${WORKDIR}/console-setup-linux-extract"
     mkdir -p "${CSL_EXTRACT}"
-    # cd so apt-get download places the .deb in a known directory
-    (cd "${WORKDIR}" && apt-get download console-setup-linux)
-    dpkg-deb -x "${WORKDIR}"/console-setup-linux_*.deb "${CSL_EXTRACT}"
+    # -d: download only, no install/postinst; .deb lands in /var/cache/apt/archives/
+    apt-get install -d -y --no-install-recommends console-setup-linux
+    dpkg-deb -x /var/cache/apt/archives/console-setup-linux_*.deb "${CSL_EXTRACT}"
     FONT="${CSL_EXTRACT}/usr/share/consolefonts/Lat15-TerminusBold22x11.psf.gz"
 fi
 python3 "${SRC_DIR}/gen-font-h.py" "${FONT}" > "${SRC_DIR}/font.h"
