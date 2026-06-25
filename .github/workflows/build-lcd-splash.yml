@@ -1,0 +1,20 @@
+name: build-lcd-splash
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/lcd-splash/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/lcd-splash/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: lcd-splash
+    secrets: inherit

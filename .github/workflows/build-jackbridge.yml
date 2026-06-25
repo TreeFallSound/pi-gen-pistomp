@@ -1,0 +1,20 @@
+name: build-jackbridge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/jackbridge/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/jackbridge/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: jackbridge
+    secrets: inherit

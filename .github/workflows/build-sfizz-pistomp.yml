@@ -1,0 +1,20 @@
+name: build-sfizz-pistomp
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/sfizz-pistomp/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/sfizz-pistomp/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: sfizz-pistomp
+    secrets: inherit

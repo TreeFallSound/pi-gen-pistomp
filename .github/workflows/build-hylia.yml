@@ -1,0 +1,20 @@
+name: build-hylia
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/hylia/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/hylia/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: hylia
+    secrets: inherit

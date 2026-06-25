@@ -1,0 +1,20 @@
+name: build-libfluidsynth2-compat
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/libfluidsynth2-compat/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/libfluidsynth2-compat/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: libfluidsynth2-compat
+    secrets: inherit

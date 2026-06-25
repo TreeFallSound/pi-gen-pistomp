@@ -1,0 +1,20 @@
+name: build-mod-midi-merger
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/mod-midi-merger/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/mod-midi-merger/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: mod-midi-merger
+    secrets: inherit

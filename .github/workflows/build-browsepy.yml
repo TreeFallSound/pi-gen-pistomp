@@ -1,0 +1,20 @@
+name: build-browsepy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/browsepy/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/browsepy/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: browsepy
+    secrets: inherit

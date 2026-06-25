@@ -1,0 +1,20 @@
+name: build-touchosc2midi
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/touchosc2midi/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/touchosc2midi/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: touchosc2midi
+    secrets: inherit

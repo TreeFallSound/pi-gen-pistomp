@@ -1,0 +1,20 @@
+name: build-amidithru
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/amidithru/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/amidithru/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: amidithru
+    secrets: inherit

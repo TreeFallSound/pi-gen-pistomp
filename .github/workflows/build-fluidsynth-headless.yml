@@ -1,0 +1,20 @@
+name: build-fluidsynth-headless
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/fluidsynth-headless/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/fluidsynth-headless/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: fluidsynth-headless
+    secrets: inherit
