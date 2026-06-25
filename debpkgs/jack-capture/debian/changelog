@@ -1,3 +1,9 @@
+jack-capture (0.9.73-2) trixie; urgency=medium
+
+  * Add quilt to Build-Depends.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 25 Jun 2026 18:04:57 +0000
+
 jack-capture (0.9.73-1) trixie; urgency=medium
 
   * Initial package.

@@ -1,3 +1,9 @@
+lcd-splash (1.0-3) trixie; urgency=medium
+
+  * Add console-setup to Build-Depends.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 25 Jun 2026 18:04:57 +0000
+
 lcd-splash (1.0-2) trixie; urgency=medium
 
   * Initial release.

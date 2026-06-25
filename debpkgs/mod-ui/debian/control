@@ -2,7 +2,7 @@ Source: mod-ui
 Section: web
 Priority: optional
 Maintainer: pistomp <pistomp@example.com>
-Build-Depends: debhelper-compat (= 13), python3, make,
+Build-Depends: debhelper-compat (= 13), python3, make, rsync,
  libjack-jackd2-dev | libjack-dev, liblilv-dev
 Standards-Version: 4.6.2
 
