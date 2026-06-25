@@ -30,10 +30,11 @@ override_dh_auto_build:
 	python3 setup.py build_ext --include-dirs=.. --library-dirs=..
 
 override_dh_auto_install:
-	# Shared library
+	# Shared library — use multiarch path so the linker finds it on arm64
 	install -Dm755 "$(SRC_DIR)/liblgpio.so.1" \
-		$(CURDIR)/debian/$(PKG)/usr/lib/liblgpio.so.1
-	ln -s liblgpio.so.1 $(CURDIR)/debian/$(PKG)/usr/lib/liblgpio.so
+		$(CURDIR)/debian/$(PKG)/usr/lib/aarch64-linux-gnu/liblgpio.so.1
+	ln -s liblgpio.so.1 \
+		$(CURDIR)/debian/$(PKG)/usr/lib/aarch64-linux-gnu/liblgpio.so
 	# Header
 	install -Dm644 "$(SRC_DIR)/lgpio.h" \
 		$(CURDIR)/debian/$(PKG)/usr/include/lgpio.h
