@@ -16,8 +16,8 @@ cache_check
 [ ! -d "${UPSTREAM_DIR}" ] && \
     git clone --branch "${PISTOMP_BRANCH}" --depth 1 "${PISTOMP_REPO}" "${UPSTREAM_DIR}"
 
-# Install lg from cache (build-time dep for liblgpio headers/library)
-dpkg -i "${CACHE_DIR}/lg_"*"_arm64.deb" 2>/dev/null || true
+# Install lg-pistomp from cache (build-time dep for liblgpio headers/library)
+dpkg -i "${CACHE_DIR}/lg-pistomp_"*"_arm64.deb" 2>/dev/null || true
 apt-get install -f -y -qq
 
 # Keep packaging metadata separate from the upstream source tree to avoid

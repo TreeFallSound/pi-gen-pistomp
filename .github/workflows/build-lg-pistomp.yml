@@ -1,14 +1,14 @@
-name: build-lg
+name: build-lg-pistomp
 
 on:
   push:
     branches: [main]
     paths:
-      - 'debpkgs/lg/**'
+      - 'debpkgs/lg-pistomp/**'
       - 'config.sh'
   pull_request:
     paths:
-      - 'debpkgs/lg/**'
+      - 'debpkgs/lg-pistomp/**'
       - 'config.sh'
   workflow_dispatch:
 
@@ -16,5 +16,5 @@ jobs:
   build:
     uses: ./.github/workflows/build-deb.yml
     with:
-      pkg: lg
+      pkg: lg-pistomp
     secrets: inherit

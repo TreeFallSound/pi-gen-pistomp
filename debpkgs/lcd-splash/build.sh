@@ -38,17 +38,17 @@ if [ ! -f "${FONT}" ]; then
 fi
 python3 "${SRC_DIR}/gen-font-h.py" "${FONT}" > "${SRC_DIR}/font.h"
 
-# Extract lg.deb for headers and library — it's built before lcd-splash in
-# fetch-packages.sh but not installed into the build container.
-LG_DEB="$(find "${CACHE_DIR}" -maxdepth 1 -name 'lg_*_arm64.deb' | sort -r | head -1)"
+# Extract lg-pistomp .deb for headers and library — not installed into the build
+# container, but downloaded to CACHE_DIR by build-deb.yml's install-deps step.
+LG_DEB="$(find "${CACHE_DIR}" -maxdepth 1 -name 'lg-pistomp_*_arm64.deb' | sort -r | head -1)"
 if [[ -z "${LG_DEB}" ]]; then
-    echo "ERROR: lg .deb not found in ${CACHE_DIR} — build lg first" >&2
+    echo "ERROR: lg-pistomp .deb not found in ${CACHE_DIR} — build lg-pistomp first" >&2
     exit 1
 fi
-LG_EXTRACT="${WORKDIR}/lg-extract"
+LG_EXTRACT="${WORKDIR}/lg-pistomp-extract"
 dpkg-deb -x "${LG_DEB}" "${LG_EXTRACT}"
 
-# Compile (link against extracted lgpio; at runtime the installed lg.deb provides it)
+# Compile (link against our lgpio; at runtime lg-pistomp provides it)
 gcc -O2 -Wall -Wextra \
     -I"${LG_EXTRACT}/usr/include" \
     -L"${LG_EXTRACT}/usr/lib" \

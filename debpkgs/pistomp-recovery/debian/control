@@ -2,7 +2,7 @@ Source: pistomp-recovery
 Section: utils
 Priority: optional
 Maintainer: pistomp <pistomp@example.com>
-Build-Depends: debhelper-compat (= 13), python3, python3-dev, git, swig, lg,
+Build-Depends: debhelper-compat (= 13), python3, python3-dev, git, swig, lg-pistomp,
  libjack-jackd2-dev | libjack-dev,
  libasound2-dev, libfreetype-dev, libpng-dev,
  libjpeg-dev, libportmidi-dev, libsndfile1-dev, libv4l-dev
@@ -11,7 +11,7 @@ Standards-Version: 4.6.2
 Package: pistomp-recovery
 Architecture: arm64
 Depends: ${shlibs:Depends}, ${misc:Depends}, python3, jack2-pistomp,
- lg, libasound2, libfreetype6
+ lg-pistomp, libasound2, libfreetype6
 Description: Package update and recovery service for pi-Stomp
  Recovery service that provides LCD-based factory reset, package rollback,
  and OTA update management. Runs as a systemd service triggered on

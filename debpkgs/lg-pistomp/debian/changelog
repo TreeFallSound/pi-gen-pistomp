@@ -1,0 +1,12 @@
+lg-pistomp (0.2.2-2) trixie; urgency=medium
+
+  * Rename package to lg-pistomp to avoid collision with Debian's lg package.
+  * Add Provides/Replaces/Conflicts: lg so dependents are satisfied.
+
+ -- pistomp <pistomp@example.com>  Wed, 25 Jun 2026 22:00:00 +0000
+
+lg-pistomp (0.2.2-1) trixie; urgency=medium
+
+  * Initial package — build liblgpio.so.1 + Python SWIG bindings from source.
+
+ -- pistomp <pistomp@example.com>  Mon, 22 Jun 2026 00:00:00 +0000

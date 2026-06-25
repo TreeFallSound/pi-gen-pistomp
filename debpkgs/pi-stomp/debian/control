@@ -2,14 +2,14 @@ Source: pi-stomp
 Section: sound
 Priority: optional
 Maintainer: pistomp <pistomp@example.com>
-Build-Depends: debhelper-compat (= 13), python3, python3-dev, swig, lg,
+Build-Depends: debhelper-compat (= 13), python3, python3-dev, swig, lg-pistomp,
  pkg-config, jack2-pistomp, libasound2-dev
 Standards-Version: 4.6.2
 
 Package: pi-stomp
 Architecture: arm64
 Depends: ${shlibs:Depends}, ${misc:Depends}, python3,
- lg, python3-lilv,
+ lg-pistomp, python3-lilv,
  mod-host-pistomp, mod-ui, mod-midi-merger, mod-ttymidi, amidithru,
  jack2-pistomp, hylia, sfizz-pistomp, lcd-splash, jack-capture
 Description: pi-Stomp application — guitar effects pedalboard software

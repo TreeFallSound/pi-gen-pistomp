@@ -4,8 +4,8 @@ Section: misc
 Priority: optional
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Build-Depends: lg
-Depends: lg
+Build-Depends: lg-pistomp
+Depends: lg-pistomp
 Description: Fast ILI9341 LCD boot splash for pi-Stomp
  Drives the 320x240 SPI LCD directly (spidev + lgpio) with no
  Python/interpreter overhead. Displays a pre-converted RGB565 image
