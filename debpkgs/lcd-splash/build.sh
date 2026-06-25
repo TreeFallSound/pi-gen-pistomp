@@ -26,14 +26,13 @@ FONT=/usr/share/consolefonts/Lat15-TerminusBold22x11.psf.gz
 if [ ! -f "${FONT}" ]; then
     CSL_EXTRACT="${WORKDIR}/console-setup-linux-extract"
     mkdir -p "${CSL_EXTRACT}"
-    CSL_URL=$(apt-cache show console-setup-linux \
-        | grep '^Filename:' | head -1 \
-        | awk '{print "http://deb.debian.org/debian/" $2}')
+    CSL_URL=$(apt-cache show console-setup-linux 2>/dev/null \
+        | awk '/^Filename:/ { print "http://deb.debian.org/debian/" $2; exit }')
     if [ -z "${CSL_URL}" ]; then
         echo "ERROR: could not determine console-setup-linux download URL" >&2
         exit 1
     fi
-    wget -q -O "${WORKDIR}/console-setup-linux.deb" "${CSL_URL}"
+    wget -nv -O "${WORKDIR}/console-setup-linux.deb" "${CSL_URL}"
     dpkg-deb -x "${WORKDIR}/console-setup-linux.deb" "${CSL_EXTRACT}"
     FONT="${CSL_EXTRACT}/usr/share/consolefonts/Lat15-TerminusBold22x11.psf.gz"
 fi
