@@ -1,3 +1,9 @@
+lcd-splash (1.0-15) trixie; urgency=medium
+
+  * Fix silent pipefail on ls glob; use find for lg .deb lookup.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 25 Jun 2026 22:04:29 +0000
+
 lcd-splash (1.0-14) trixie; urgency=medium
 
   * Add tracing to font download block to identify failing line.
