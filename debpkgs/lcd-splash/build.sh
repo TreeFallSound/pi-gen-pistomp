@@ -26,17 +26,23 @@ FONT=/usr/share/consolefonts/Lat15-TerminusBold22x11.psf.gz
 if [ ! -f "${FONT}" ]; then
     CSL_EXTRACT="${WORKDIR}/console-setup-linux-extract"
     mkdir -p "${CSL_EXTRACT}"
+    echo "==> font: getting download URL via apt-cache"
     CSL_URL=$(apt-cache show console-setup-linux 2>/dev/null \
         | awk '/^Filename:/ { print "http://deb.debian.org/debian/" $2; exit }')
     if [ -z "${CSL_URL}" ]; then
         echo "ERROR: could not determine console-setup-linux download URL" >&2
         exit 1
     fi
+    echo "==> font: downloading ${CSL_URL}"
     wget -nv -O "${WORKDIR}/console-setup-linux.deb" "${CSL_URL}"
+    echo "==> font: extracting .deb"
     dpkg-deb -x "${WORKDIR}/console-setup-linux.deb" "${CSL_EXTRACT}"
     FONT="${CSL_EXTRACT}/usr/share/consolefonts/Lat15-TerminusBold22x11.psf.gz"
+    echo "==> font: extracted, FONT=${FONT}"
 fi
+echo "==> font: generating font.h from ${FONT}"
 python3 "${SRC_DIR}/gen-font-h.py" "${FONT}" > "${SRC_DIR}/font.h"
+echo "==> font: font.h generated"
 
 # Extract lg.deb for headers and library — it's built before lcd-splash in
 # fetch-packages.sh but not installed into the build container.

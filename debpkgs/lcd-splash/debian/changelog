@@ -1,3 +1,9 @@
+lcd-splash (1.0-14) trixie; urgency=medium
+
+  * Add tracing to font download block to identify failing line.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 25 Jun 2026 22:01:32 +0000
+
 lcd-splash (1.0-13) trixie; urgency=medium
 
   * Fix silent failure modes in font download: single awk, wget -nv.
