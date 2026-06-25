@@ -1,3 +1,9 @@
+lcd-splash (1.0-12) trixie; urgency=medium
+
+  * Use apt-cache+wget to fetch console-setup-linux font instead of apt-get install.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 25 Jun 2026 21:50:34 +0000
+
 lcd-splash (1.0-11) trixie; urgency=medium
 
   * Remove console-setup-linux from Build-Depends; build.sh fetches the font itself.
