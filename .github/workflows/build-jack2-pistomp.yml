@@ -1,0 +1,21 @@
+name: build-jack2-pistomp
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/jack2-pistomp/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/jack2-pistomp/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: jack2-pistomp
+      # custom_build_deps:
+    secrets: inherit
