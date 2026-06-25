@@ -74,7 +74,7 @@ jobs:
           shopt -s nullglob
           for deb in incoming/*.deb; do
             reprepro -b . includedeb trixie "$deb" || {
-              echo "::warning::reprepro refused $deb (likely a duplicate name+version)."
+              echo "::warning::reprepro refused $deb (duplicate name+version, or missing Section/Priority in debian/control)."
             }
           done
 

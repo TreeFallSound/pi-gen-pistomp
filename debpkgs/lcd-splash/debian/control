@@ -1,5 +1,7 @@
 Package: lcd-splash
 Version: 1.0-2
+Section: misc
+Priority: optional
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
 Build-Depends: lg, console-setup-linux

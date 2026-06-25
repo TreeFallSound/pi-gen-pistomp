@@ -1,3 +1,9 @@
+lcd-splash (1.0-5) trixie; urgency=medium
+
+  * Add Section and Priority fields to debian/control for reprepro compatibility.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 25 Jun 2026 20:54:58 +0000
+
 lcd-splash (1.0-4) trixie; urgency=medium
 
   * Fix Build-Depends: use console-setup-linux (provides the font files) instead of console-setup.

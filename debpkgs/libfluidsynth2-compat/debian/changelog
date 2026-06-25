@@ -1,3 +1,9 @@
+libfluidsynth2-compat (2.3.4-3) trixie; urgency=medium
+
+  * Add Priority field to debian/control for reprepro compatibility.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 25 Jun 2026 20:54:58 +0000
+
 libfluidsynth2-compat (2.3.4-2) trixie; urgency=medium
 
   * Add Section: libs to fix reprepro rejection from apt repo.

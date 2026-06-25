@@ -1,6 +1,7 @@
 Package: libfluidsynth2-compat
 Version: 2.3.4-2
 Section: libs
+Priority: optional
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
 Depends: fluidsynth-headless
