@@ -1,3 +1,18 @@
+pistomp-recovery (0.1.0-11) trixie; urgency=medium
+
+  * Fix dirty-rect partial updates rendering vertically flipped on the LCD
+    (title bar appeared at the bottom, content reversed, top of the panel
+    never repainted). Port pi-stomp's landscape-native ILI9341 driver:
+    init() rewrites MADCTL to 0xE8/0x28 so 320x240 surface coords map
+    straight to the panel address window, and both full and partial pushes
+    share one _block_fast path (numpy RGB565 pack, single SPI lock/CS, os.write
+    chunked by SPIDEV_BUFSIZ) with no per-push rotation or coordinate swap.
+  * Drop the adafruit_rgb_display image_to_data monkeypatch (driver_patch):
+    the hot update() path now bypasses image_to_data entirely, so the patch
+    is dead weight.
+
+ -- pistomp <pistomp@example.com>  Thu, 25 Jun 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-10) trixie; urgency=medium
 
   * Re-issue.
