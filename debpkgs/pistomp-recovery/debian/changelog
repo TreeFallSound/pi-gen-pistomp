@@ -1,3 +1,22 @@
+pistomp-recovery (0.1.0-10) trixie; urgency=medium
+
+  * Re-issue.
+  * After a successful package install, restart any affected services that are
+    currently active (e.g. browsepy, mod-touchosc2midi) rather than asking the
+    user to exit recovery; pistomp-recovery restarts itself via systemd when it
+    is among the installed packages.
+  * Do not stamp packages after an install — the stamp should only be written
+    by pistomp-stamp when pi-Stomp successfully loads, so rollback-to-stamp
+    remains a meaningful revert target.
+  * Fix services_for_packages() dropping services not in PISTOMP_SERVICES
+    (e.g. mod-touchosc2midi was silently omitted); add mod-touchosc2midi to
+    the ordering chain.
+  * Partial-redraw (dirty-rect) support: MenuScreen tracks which rows changed
+    and flushes only those rectangles over SPI, reducing typical frame transfer
+    time from a full-screen blit to a small clip.
+
+ -- pistomp <pistomp@example.com>  Wed, 25 Jun 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-8) trixie; urgency=medium
 
   * After a successful package install, restart any affected services that are
