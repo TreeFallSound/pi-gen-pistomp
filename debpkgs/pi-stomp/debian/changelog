@@ -1,6 +1,6 @@
 pi-stomp (3.0-5) trixie; urgency=medium
 
-  * Add pkg-config, libjack-dev to Build-Depends so python-rtmidi's
+  * Add pkg-config, jack2-pistomp to Build-Depends so python-rtmidi's
     meson build can find JACK via pkg-config at compile time.
 
  -- Cam Gorrie <sastraxi@gmail.com>  Thu, 25 Jun 2026 00:00:00 +0000

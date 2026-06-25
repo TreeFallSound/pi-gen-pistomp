@@ -94,9 +94,10 @@ jobs:
           # Extract package names from dpkg-checkbuilddeps stderr, stripping
           # version constraints like (>= 1.0) and the | alternatives operator.
           get_unmet() {
-            dpkg-checkbuilddeps "$CONTROL" 2>&1 | \
-              grep -i 'unmet build dependencies' | \
-              sed 's/.*[Uu]nmet build dependencies: //' | \
+            local raw
+            raw=$(dpkg-checkbuilddeps "$CONTROL" 2>&1 || true)
+            echo "$raw" | grep -i 'unmet build dependencies' | \
+              sed 's/.*unmet build dependencies: //i' | \
               tr ' ' '\n' | \
               grep -E '^[a-z]' || true
           }
