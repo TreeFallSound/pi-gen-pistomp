@@ -1,3 +1,26 @@
+pistomp-recovery (0.1.0-13) trixie; urgency=medium
+
+  * PluginFacet now supports stamp and checkpoint in addition to factory
+    reset. A stamp file (PLUGINS_STAMP_FILE) records the known-good bundle
+    set; pistomp-stamp adds bundles on successful install. Checkpoint shows
+    bundles installed since the last stamp with a "Rollback to stamp" action
+    that deletes them; stamped-but-missing bundles appear as informational
+    rows. A factory allowlist (FACTORY_LV2_BUNDLES_FILE, one bundle dir per
+    line) prevents factory-shipped bundles from being deleted even if they
+    carry the PatchStorage marker.
+  * Updates picker shows only the System domain. domains(mode) now accepts a
+    mode parameter; for "updates" mode all backends return only System, since
+    pedalboards and plugins have no installable updates via recovery.
+  * Checkpoint mode preserves clean items with no rollback action as
+    informational rows, so the user can see their full stamped state even for
+    items that are already at checkpoint.
+  * pistomp-stamp refactored to use subcommands (stamp/status) with --pedalboard
+    and --plugin flags. Stamps plugins facet globally; --plugin <name> appends
+    a single bundle to the stamp set. Backward-compatible: the old positional
+    form (pistomp-stamp stamp <bundle-path>) still works.
+
+ -- pistomp <pistomp@example.com>  Thu, 25 Jun 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-12) trixie; urgency=medium
 
   * Fix the landscape-native port rendering the LCD upside-down on the Tre.
