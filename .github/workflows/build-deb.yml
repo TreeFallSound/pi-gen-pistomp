@@ -98,7 +98,7 @@ jobs:
               grep 'Unmet build dependencies' | \
               sed 's/.*Unmet build dependencies: //' | \
               tr ' ' '\n' | \
-              grep -E '^[a-z]'
+              grep -E '^[a-z]' || true
           }
 
           for PASS in 1 2 3 4 5; do
