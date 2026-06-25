@@ -3,7 +3,7 @@ Section: sound
 Priority: optional
 Maintainer: pistomp <pistomp@example.com>
 Build-Depends: debhelper-compat (= 13), python3, python3-dev, swig, lg,
- pkg-config, jack2-pistomp
+ pkg-config, jack2-pistomp, libasound2-dev
 Standards-Version: 4.6.2
 
 Package: pi-stomp
