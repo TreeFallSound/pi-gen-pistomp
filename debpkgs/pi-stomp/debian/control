@@ -2,7 +2,8 @@ Source: pi-stomp
 Section: sound
 Priority: optional
 Maintainer: pistomp <pistomp@example.com>
-Build-Depends: debhelper-compat (= 13), python3, python3-dev, swig, lg
+Build-Depends: debhelper-compat (= 13), python3, python3-dev, swig, lg,
+ pkg-config, libjack-dev
 Standards-Version: 4.6.2
 
 Package: pi-stomp
