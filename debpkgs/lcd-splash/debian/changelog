@@ -1,3 +1,9 @@
+lcd-splash (1.0-11) trixie; urgency=medium
+
+  * Remove console-setup-linux from Build-Depends; build.sh fetches the font itself.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 25 Jun 2026 21:44:19 +0000
+
 lcd-splash (1.0-10) trixie; urgency=medium
 
   * Tolerate apt-get exit 2 when downloading console-setup-linux; verify file instead.
