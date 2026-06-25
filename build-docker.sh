@@ -157,6 +157,10 @@ fi
 # Modify original build-options to allow config file to be mounted in the docker container
 BUILD_OPTS="$(echo "${BUILD_OPTS:-}" | sed -E 's@-c ?([^ ]+)@-c /config@; s/--force//g; s/(^| )-f( |$)/ /g')"
 
+# Pre-flight: verify every custom package is available before spending time on
+# the Docker build.  Checks cache/debpkgs/ AND the published apt repo.
+CACHE_DIR="${DIR}/cache" bash "${DIR}/scripts/check-packages.sh"
+
 ${DOCKER} build --build-arg BASE_IMAGE=debian:trixie -t pi-gen "${DIR}"
 
 if [ "${CONTAINER_EXISTS}" != "" ]; then
