@@ -2,6 +2,7 @@ Package: lcd-splash
 Version: 1.0-2
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
+Build-Depends: lg
 Depends: lg
 Description: Fast ILI9341 LCD boot splash for pi-Stomp
  Drives the 320x240 SPI LCD directly (spidev + lgpio) with no

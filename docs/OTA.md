@@ -1,358 +1,156 @@
 # OTA Updates via GitHub Pages apt Repository
 
-This document describes how to enable over-the-air package updates on
-pistompOS devices using a GitHub Pages-hosted apt repository.
+pistompOS devices receive package updates via a GitHub Pages-hosted apt
+repository. Pushing a change to `debpkgs/<pkg>/` on `main` triggers a CI
+build, publishes the `.deb` as a GitHub Release, and rebuilds the apt index
+on `gh-pages` — all automatically.
 
-## Current state
-
-Factory images install custom `.deb` packages via `dpkg -i` from a
-build-time cache (`stage2/05-pistomp/02-run.sh`). There is no apt source
-entry on the device, so `apt update`, `apt upgrade`, and
-pistomp-recovery's `apt-get install <pkg>` cannot find newer versions.
-
-To enable OTA, the device needs an apt source pointing at a repository
-that serves the latest `.deb` files. GitHub Pages can host this for free.
-
-## Architecture
+## Pipeline
 
 ```
- pi-gen-pistomp repo                GitHub Pages (gh-pages branch)
- ─────────────────                  ────────────────────────────────
- debpkgs/*/build.sh  ──build──▶  pool/main/<pkg>_<ver>_arm64.deb
-                                          │
- .github/workflows/                 dists/trixie/
-   publish-apt-repo.yml  ─────▶      Release
-                                          main/binary-arm64/
-                                            Packages
-                                            Packages.gz
-                                          │
- Device  ◀──────── https://<org>.github.io/<repo> trixie main
- /etc/apt/sources.list.d/pistomp.list
+push debpkgs/<pkg>/**  →  build-<pkg>.yml  →  GitHub Release (debpkg/<pkg>/<ver>)
+                                                ↓
+                       publish-apt-repo.yml  →  gh-pages branch (reprepro index)
+                                                ↓
+device /etc/apt/sources.list.d/pistomp.list  →  apt update  →  apt upgrade <pkg>
 ```
 
-## Step 1 — Per-package build workflows
+## Workflows
 
-Each package under `debpkgs/` needs a thin workflow that triggers on
-changes to that package's files and calls a shared reusable workflow.
-The build logic (version extraction, duplicate check, build-dep
-installation, release publishing) lives once in
-`.github/workflows/build-deb.yml`. Each per-package workflow is ~15
-lines.
+| File | Trigger | What it does |
+| :--- | :--- | :--- |
+| `.github/workflows/build-deb.yml` | `workflow_call` | Reusable: extract version from `debian/changelog`, install `Build-Depends` automatically (apt then GitHub Releases fallback, up to 5 passes), run `build.sh`, publish a Release tagged `debpkg/<pkg>/<ver>`. On PRs, fails if that tag already exists. |
+| `.github/workflows/build-<pkg>.yml` | push/PR on `debpkgs/<pkg>/**` or `config.sh` | Thin wrapper calling `build-deb.yml`. One file per package. Template at `docs/package-template/build.yml`. |
+| `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` release asset, `reprepro includedeb trixie` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch on first run. |
 
-### Reusable workflow (already in the repo)
+All 19 packages have a `build-<pkg>.yml` workflow.
 
-`.github/workflows/build-deb.yml` is a `workflow_call` workflow that:
-- Extracts the version from `debian/changelog` (or `debian/control` for
-  binary-only packages).
-- On PRs, checks if a GitHub Release tag for that version already exists
-  (fails the PR check if it does).
-- Parses `Build-Depends` from `debian/control` and installs them
-  automatically — no per-package dep list to maintain.
-- Runs `debpkgs/<pkg>/build.sh`.
-- On push to `main`, publishes the `.deb` as a GitHub Release
-  asset tagged `debpkg/<pkg>/<version>`.
+## Build-time vs runtime apt sources
 
-### Per-package workflow
+The image build installs custom packages directly from the GitHub Pages apt
+repo — no local package building required. `stage2/00-dummy-packages/01-run.sh`
+writes `pistomp.list` pointing at `APT_REPO_URL` (defined in `config.sh`) as
+the primary source.
 
-Create `.github/workflows/build-<pkg>.yml` (template at
-`debpkgs/template/build.yml`):
+If `cache/debpkgs/` contains locally-built `.deb` overrides (produced by
+`build-package-docker.sh`), `build-docker.sh` runs `scripts/setup-apt-repo.sh`
+first to generate `cache/apt-repo/`, and `01-run.sh` adds it as a
+higher-priority source (`Pin-Priority: 1001`) via `pistomp-local.list`. This
+lets you test a locally-modified package without publishing a release.
 
-```yaml
-name: build-jack2-pistomp
+`stage2/05-pistomp/05-run.sh` removes the local override files
+(`pistomp-local.list` and the preferences pin) before the image is
+finalized. The final image carries only `pistomp.list` pointing at
+`APT_REPO_URL` — no dead `file://` source, OTA works out of the box.
 
-on:
-  push:
-    branches: [main]
-    paths:
-      - 'debpkgs/jack2-pistomp/**'
-      - 'config.sh'
-  pull_request:
-    paths:
-      - 'debpkgs/jack2-pistomp/**'
-      - 'config.sh'
-  workflow_dispatch:
+## Version gate: `debian/changelog` is the only trigger
 
-jobs:
-  build:
-    uses: ./.github/workflows/build-deb.yml
-    with:
-      pkg: jack2-pistomp
-    secrets: inherit
-```
-
-That's the entire per-package workflow — change the name, the path
-filter, and the `pkg` input. The reusable workflow handles everything
-else.
-
-**Notes:**
-
-- `ubuntu-24.04-arm` runners are native arm64 — no QEMU, no
-  cross-compilation.
-- Build dependencies are parsed from `debian/control` at runtime, so
-  adding a new `Build-Depends` line to a package's control file is all
-  that's needed — no workflow edit required.
-- Binary-only packages (`lcd-splash`, `libfluidsynth2-compat`) have no
-  `Build-Depends` in `debian/control`; the install step detects this and
-  skips.
-- Packages with build-time dependencies on other pistomp packages (e.g.
-  `mod-host-pistomp` depends on `hylia`) need a pre-build step to
-  download and install the dependency's `.deb` from Release assets. Add
-  this to the per-package workflow after the `uses:` call is not
-  possible (reusable workflows can't be extended), so instead add the
-  hylia download as a step in a wrapper workflow, or add a
-  `pre-build.sh` hook convention in `build.sh` itself. Simplest: have
-  `build.sh` download its own build deps from GitHub Releases if not
-  installed locally.
-
-## Step 2 — Publish-apt-repo workflow
-
-This workflow runs after any package release. It downloads all `*_arm64.deb`
-release assets, uses `reprepro` to add them to the apt repo (which refuses
-duplicate name+version by default), and pushes the result to the
-`gh-pages` branch.
-
-Create `.github/workflows/publish-apt-repo.yml`:
-
-```yaml
-name: publish-apt-repo
-
-on:
-  release:
-    types: [published]
-  workflow_dispatch:
-
-jobs:
-  publish:
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-          fetch-depth: 0
-
-      - name: Install reprepro
-        run: sudo apt-get install -y reprepro
-
-      - name: Download all release assets
-        run: |
-          mkdir -p pool/main
-          gh release list --repo ${{ github.repository }} --limit 100 \
-            --json tagName,assets \
-            | jq -r '.[].assets[].browserDownloadUrl' \
-            | grep '_arm64\.deb$' \
-            | xargs -I{} wget -q -P pool/main/ {} 2>/dev/null || true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Add packages to repo (refuses duplicate name+version)
-        run: |
-          for deb in pool/main/*.deb; do
-            reprepro -b . includedeb trixie "$deb"
-          done
-
-      - name: Commit and push
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pool/ dists/
-          git diff --cached --quiet && echo "No changes" && exit 0
-          git commit -m "apt: rebuild index $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          git push origin gh-pages
-```
-
-**Prerequisite:** Enable GitHub Pages for the repository, set to serve
-from the `gh-pages` branch root. Do this once in
-Settings → Pages → Source → Deploy from a branch → `gh-pages` / `/(root)`.
-
-**Prerequisite:** Create a `reprepro` config in the `gh-pages` branch
-root (one-time setup, committed alongside the repo):
-
-```
-# conf/distributions
-Origin: pistomp
-Label: pistomp
-Suite: trixie
-Codename: trixie
-Architectures: arm64
-Components: main
-Description: pi-Stomp custom packages
-```
-
-### Duplicate version prevention
-
-Three independent gates, each catching unbumped versions at a different
-stage:
-
-1. **PR check (before merge):** The `Check version bumped` step in the
-   build workflow runs on `pull_request`. It extracts the version from
-   `debian/changelog` (or `config.sh` for pinned packages) and checks
-   if a GitHub Release tag `debpkg/<pkg>/<version>` already exists. If
-   so, the PR check fails — the developer sees a red status check with a
-   message to bump the version.
-
-2. **Release tag (at push to branch):** The build workflow's
-   `softprops/action-gh-release` step creates a GitHub Release tagged
-   `debpkg/<pkg>/<version>`. GitHub refuses to create a tag that already
-   exists (HTTP 422). This catches anything that slipped past the PR
-   check (e.g. a direct push without a PR).
-
-3. **`reprepro includedeb` (at publish time):** `reprepro` refuses to
-   add a package if the same name+version already exists in the repo:
-   ```
-   ERROR: Could not add 'pool/main/jack2-pistomp_1.9.22-1_arm64.deb':
-   Already have package jack2-pistomp version 1.9.22-1 in trixie.
-   ```
-   The publish workflow fails, `gh-pages` is not updated, and the
-   device never sees the stale version.
-
-All three fail loudly with messages pointing at the version source
-(`debian/changelog` or `config.sh`). To update a package, the developer
-must increment the version — `reprepro` then automatically supersedes
-the old version in the repo index.
-
-## Step 3 — apt source entry on the device
-
-Add the apt source during image build. In `stage2/05-pistomp/02-run.sh`,
-before the `dpkg -i` block (or replacing it once the repo is live):
+**Nothing is published unless you bump the version in `debian/changelog`.**
+The CI extracts the version from the changelog, tags the release
+`debpkg/<pkg>/<version>`, and the three gates below all key off that tag.
+If the tag already exists, nothing is pushed to GitHub Releases or `gh-pages`.
 
 ```bash
-# Pistomp apt repo (GitHub Pages)
-echo "deb [arch=arm64 trusted=yes] https://treefallsound.github.io/pi-gen-pistomp trixie main" \
-    > /etc/apt/sources.list.d/pistomp.list
-apt-get update -qq
+./scripts/bump-version.sh <pkg> "Description of change."
 ```
 
-Then replace the `dpkg -i /pistomp-cache/*.deb` block with:
+### Duplicate-version protection (three layers)
 
-```bash
-apt-get install -y \
-    hylia \
-    jack2-pistomp \
-    mod-host-pistomp \
-    amidithru \
-    mod-midi-merger \
-    mod-ttymidi \
-    sfizz-pistomp \
-    fluidsynth-headless \
-    lcd-splash \
-    jack-capture \
-    libfluidsynth2-compat \
-    browsepy \
-    touchosc2midi \
-    mod-ui \
-    pi-stomp \
-    pistomp-recovery \
-    jackbridge
-```
+1. **PR check** — `build-deb.yml` queries for an existing `debpkg/<pkg>/<ver>`
+   release and fails the status check before merge.
+2. **Release tag** — `softprops/action-gh-release` gets HTTP 422 from GitHub
+   if the tag exists.
+3. **`reprepro includedeb`** — refuses to add a package whose name+version is
+   already in the repo; `gh-pages` is only updated when something changed.
 
-`apt-get install` resolves dependencies automatically (unlike `dpkg -i`),
-so ordering doesn't matter and `apt-get install -f` is no longer needed.
+## Packages
 
-### Transition strategy
+All 19 custom `.deb` packages have CI workflows and are published to the repo:
 
-You don't have to switch all at once. Keep `dpkg -i` for the factory
-image build (it's faster and works offline), and add the apt source entry
-so devices can `apt update && apt upgrade` to pull newer versions later.
-Both approaches coexist — `dpkg -i` installs the baseline, the apt source
-provides the upgrade path.
-
-## Step 4 — GPG signing (optional, later)
-
-The `trusted=yes` in the source line tells apt to skip signature
-verification. This is fine while the repo is private or experimental.
-To sign the repo later:
-
-1. Generate a GPG key for the repo.
-2. Export the public key and install it on the device during image build:
-   ```bash
-   # In stage2/05-pistomp/01-run.sh:
-   install -m 644 files/pistomp-archive-keyring.gpg \
-       "${ROOTFS_DIR}/usr/share/keyrings/pistomp-archive-keyring.gpg"
-   ```
-3. Change the source line to use `signed-by`:
-   ```
-   deb [arch=arm64 signed-by=/usr/share/keyrings/pistomp-archive-keyring.gpg] \
-       https://treefallsound.github.io/pi-gen-pistomp trixie main
-   ```
-4. Sign the `Release` file in the publish workflow with `apt-ftparchive`
-   using `gpg`:
-   ```bash
-   gpg --batch --yes --armor --detach-sign --output dists/trixie/InRelease dists/trixie/Release
-   ```
-
-## How it works end-to-end
-
-1. **Developer pushes** a change to `debpkgs/jack2-pistomp/**` or
-   `config.sh` on `main`.
-2. **`build-jack2-pistomp` workflow** runs on an arm64 runner, builds the
-   `.deb`, publishes it as a GitHub Release asset tagged
-   `debpkg/jack2-pistomp/<version>`.
-3. **`publish-apt-repo` workflow** triggers on the release, downloads all
-   `.deb` release assets, `reprepro includedeb` adds them to the repo
-   (refusing duplicate name+version), pushes to `gh-pages`.
-4. **GitHub Pages** serves the repo at
-   `https://treefallsound.github.io/pi-gen-pistomp`.
-5. **Device** runs `apt update` (or pistomp-recovery does it
-   automatically), sees the new version, runs `apt upgrade jack2-pistomp`
-   (or pistomp-recovery's UI installs it).
-
-## Packages to publish
-
-All 16 custom `.deb` packages under `debpkgs/`:
-
-| Package | Build-deps notes |
+| Package | Notes |
 | :--- | :--- |
-| `hylia` | None (plain make) |
+| `hylia` | Plain make; no pistomp deps |
 | `jack2-pistomp` | waf, libdb5.3-dev, quilt |
-| `mod-host-pistomp` | Needs `hylia` .deb installed first |
+| `mod-host-pistomp` | Build-dep on `hylia` (fetched from Releases automatically) |
 | `amidithru` | libasound2-dev |
 | `mod-midi-merger` | cmake, libjack-dev |
 | `mod-ttymidi` | libjack-dev, libasound2-dev |
 | `sfizz-pistomp` | cmake, lv2-dev, libsamplerate0-dev |
 | `fluidsynth-headless` | cmake, many audio libs |
-| `lcd-splash` | None (binary-only, `dpkg-deb`) |
+| `lcd-splash` | Binary-only (`dpkg-deb`); build-dep on `lg` (fetched from Releases) |
+| `lg` | lgpio; needed at compile time by `lcd-splash` |
 | `jack-capture` | libjack-dev, libsndfile1-dev, liblo-dev |
-| `libfluidsynth2-compat` | None (symlink shim, `dpkg-deb`) |
+| `libfluidsynth2-compat` | Symlink shim (`dpkg-deb`); no build deps |
 | `browsepy` | python3, uv |
 | `touchosc2midi` | python3, uv, Cython<3.1, pyliblo3 |
 | `mod-ui` | python3, uv, make, libjack-dev |
 | `pi-stomp` | python3, uv |
 | `pistomp-recovery` | python3, uv, swig, SDL2/freetype headers |
-| `jackbridge` | git only (shell scripts, no compilation) |
+| `jackbridge` | Shell scripts only; git |
+| `ffmpeg-pistomp` | cmake, many codec libs |
 
-## Local repo for testing
+## Adding a new package to OTA
 
-Before setting up CI, you can test the apt source locally by building
-all `.deb` files and serving them from a directory:
+1. Create `debpkgs/<pkg>/` with `build.sh`, `debian/`, and a `debian/changelog` entry.
+2. Add the package to `stage2/05-pistomp/02-run.sh`'s `apt-get install` list (factory baseline).
+3. Copy `docs/package-template/build.yml` → `.github/workflows/build-<pkg>.yml`, changing the name, `paths:` filter, and `pkg:` input.
+4. Bump `debian/changelog`, push to `main`, watch the two workflows run.
+
+## Testing a local package build
 
 ```bash
-# Build all packages
-CACHE_DIR=./cache ./scripts/fetch-packages.sh
-
-# Create reprepro config
-mkdir -p /tmp/pistomp-repo/conf
-cat > /tmp/pistomp-repo/conf/distributions <<'EOF'
-Origin: pistomp
-Label: pistomp
-Suite: trixie
-Codename: trixie
-Architectures: arm64
-Components: main
-Description: pi-Stomp custom packages
-EOF
-
-# Add all .debs (reprepro refuses duplicate name+version)
-cd /tmp/pistomp-repo
-for deb in /path/to/cache/*.deb; do
-    reprepro includedeb trixie "$deb"
-done
-
-# Serve (e.g. via Python)
-python3 -m http.server 8080
-
-# On the device:
-echo "deb [arch=arm64 trusted=yes] http://<host-ip>:8080 trixie main" \
-    > /etc/apt/sources.list.d/pistomp.list
-apt-get update
-apt-get install --only-upgrade jack2-pistomp
+./build-package-docker.sh <pkg>
+# .deb lands in cache/debpkgs/
+./build-docker.sh -f
+# image build uses it via the high-priority local override
 ```
+
+Remove the `.deb` from `cache/debpkgs/` to revert to the published version.
+
+## Staleness check for branch-pinned packages
+
+Packages pinned to an upstream branch (those with `_BRANCH` or `_REF` in
+`config.sh`) can accumulate new commits silently — the changelog version is
+unchanged, the published `.deb` is cached, and old code ships. Run the
+staleness check manually before deciding whether to cut a new release:
+
+```bash
+./scripts/check-upstream-staleness.sh
+```
+
+This reports the current HEAD SHA of each upstream branch/ref alongside the
+latest published release version. It does not build or push anything.
+
+## One-time setup (GitHub Pages)
+
+The `publish-apt-repo.yml` workflow creates the `gh-pages` branch on first
+run. After the first workflow run, enable Pages:
+
+> Repo Settings → Pages → Source → Deploy from a branch → `gh-pages` / `/(root)`
+
+## Upgrading a pre-OTA device
+
+Devices flashed before `pistomp.list` was baked in need the source added once:
+
+```bash
+ssh pistomp@pistomp.local
+echo "deb [arch=arm64 trusted=yes] https://sastraxi.github.io/pi-gen-pistomp trixie main" \
+  | sudo tee /etc/apt/sources.list.d/pistomp.list
+sudo apt-get update
+sudo apt-get install --only-upgrade pistomp-recovery
+```
+
+If a stale `file:/pistomp-cache/apt-repo` source is present, remove it first:
+
+```bash
+sudo rm -f /etc/apt/sources.list.d/pistomp-local.list
+```
+
+## GPG signing (future)
+
+The `trusted=yes` flag skips signature verification. To sign the repo later:
+
+1. Generate a GPG key and export the public key to `pistomp-archive-keyring.gpg`.
+2. Install the keyring during image build (`stage2/05-pistomp/01-run.sh`).
+3. Change the source line to `signed-by=/usr/share/keyrings/pistomp-archive-keyring.gpg`.
+4. Sign `dists/trixie/Release` in `publish-apt-repo.yml` with `gpg --detach-sign`.

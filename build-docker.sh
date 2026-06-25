@@ -225,7 +225,6 @@ time ${DOCKER} run \
   -e "GIT_HASH=${GIT_HASH}" \
   -e "GIT_DESCRIBE=${GIT_DESCRIBE}" \
   -e "APT_PROXY=${APT_PROXY}" \
-  -e "FORCE_REBUILD=${FORCE_REBUILD:-0}" \
   -e "UV_CACHE_DIR=/pistomp-cache/uv-cache" \
   -e "UV_PYTHON_INSTALL_DIR=/pistomp-cache/uv-python" \
   -e "PIP_CACHE_DIR=/pistomp-cache/pip-cache" \
@@ -236,10 +235,12 @@ time ${DOCKER} run \
     # binfmt_misc is sometimes not mounted with debian trixie image
     (mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc || true) &&
     cd /pi-gen &&
-    echo '==> Fetching/building custom .deb packages...' &&
-    CACHE_DIR=/pistomp-cache bash scripts/fetch-packages.sh &&
-    echo '==> Building local apt repository...' &&
-    CACHE_DIR=/pistomp-cache REPO_DIR=/pistomp-cache/apt-repo bash scripts/setup-apt-repo.sh &&
+    echo '==> Downloading non-.deb assets...' &&
+    CACHE_DIR=/pistomp-cache bash scripts/fetch-assets.sh &&
+    if ls /pistomp-cache/debpkgs/*.deb 2>/dev/null | head -1 >/dev/null; then
+      echo '==> Building local apt override repository from cache/debpkgs/...' &&
+      CACHE_DIR=/pistomp-cache REPO_DIR=/pistomp-cache/apt-repo bash scripts/setup-apt-repo.sh
+    fi &&
     ./build.sh ${BUILD_OPTS} &&
     rsync -av work/*/build.log "deploy/${IMG_DATE}-build.log"
   " &

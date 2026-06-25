@@ -17,8 +17,8 @@ rm -rf "${REPO_DIR}"
 mkdir -p "${REPO_DIR}/pool/main"
 mkdir -p "${REPO_DIR}/dists/${APT_REPO_SUITE}/${APT_REPO_COMPONENT}/binary-${APT_REPO_ARCH}"
 
-# Copy all pistomp .deb files into the pool (skip apt-cacher subdir, skip symlinks)
-for deb in "${CACHE_DIR}"/*.deb; do
+# Copy locally built override .deb files into the pool (skip symlinks).
+for deb in "${CACHE_DIR}/debpkgs"/*.deb; do
     [ -f "$deb" ] || continue
     cp "$deb" "${REPO_DIR}/pool/main/"
 done

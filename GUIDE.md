@@ -129,10 +129,9 @@ Iterate on one `debpkgs/<pkg>` without running the full image build:
 
 ```bash
 ./build-package-docker.sh jack2-pistomp
-FORCE_REBUILD=1 ./build-package-docker.sh mod-ui
 ```
 
-Mounts `cache/` at `/pistomp-cache` (same as the full build) and the repo root at `/pistomp` read-write (some packages write into `debpkgs/<pkg>/debian/` as a staging tree). Sets `CACHE_DIR`, `WORKDIR`, `FORCE_REBUILD`, and all uv/pip cache vars automatically.
+Always rebuilds. Output lands in `cache/debpkgs/`; the next `./build-docker.sh` run installs it via a high-priority apt override. Remove it from `cache/debpkgs/` to revert to the published version. Mounts `cache/` at `/pistomp-cache` and the repo root at `/pistomp` read-write.
 
 ### Resume an interrupted build
 
@@ -156,7 +155,6 @@ PRESERVE_CONTAINER=1 ./build-docker.sh
 | `CONTINUE` | `0` | Resume existing container instead of failing |
 | `PRESERVE_CONTAINER` | `0` | Don't delete the container after build |
 | `CONTAINER_NAME` | `pigen_work` | Override container name |
-| `FORCE_REBUILD` | `0` | Set to `1` to rebuild all custom `.deb` packages from source, ignoring cache. Must be exactly `"1"` — the check is `!= "1"`, not a truthiness test. |
 
 ## Configuration
 
@@ -164,7 +162,7 @@ PRESERVE_CONTAINER=1 ./build-docker.sh
 Build-time settings for the pi-gen image builder: image name, Debian release, compression, locale, keyboard layout, and the `pistomp` user account. Does **not** contain user-facing configuration — that is the old Raspberry Pi Imager 1.x pattern. WiFi, hostname, password, and timezone all live in `pistomp.conf` and are applied by `firstboot.sh` at first boot.
 
 ### `config.sh`
-All upstream URLs, branches, and version pins for custom packages. `config.sh` uses `set -a`, so every variable is automatically exported into `build.sh`, `fetch-packages.sh`, and every `debian/rules` make subprocess. This makes `config.sh` the single source of truth for repository URLs and branches.
+All upstream URLs, branches, and version pins for custom packages. `config.sh` uses `set -a`, so every variable is automatically exported into `build.sh`, `fetch-assets.sh`, and every `debian/rules` make subprocess. This makes `config.sh` the single source of truth for repository URLs and branches.
 
 ### `stage2/05-pistomp/files/pistomp.conf`
 Runtime configuration copied to `/boot/pistomp.conf` on the image. Contains `JACK_SAMPLE_RATE` and `JACK_PERIOD`. `firstboot.sh` reads these and writes `/etc/default/jack`. To change the JACK buffer size, edit this file and rebuild.
@@ -177,33 +175,26 @@ Custom packages live under `debpkgs/<pkg>/`. Each has:
 
 **`scripts/build-common.sh`** is sourced by every `build.sh` and provides:
 - Env setup: `source config.sh`, `CACHE_DIR`, `WORKDIR`, `mkdir -p`
-- `cache_check()` — exits 0 immediately if a versioned `.deb` already exists in `cache/` and `FORCE_REBUILD != 1`
-- `move_to_cache [dir]` — moves `${PKG}_*.deb` from the build parent dir into `cache/`
+- `cache_check()` — no-op (kept for compatibility; formerly skipped cached builds)
+- `move_to_cache [dir]` — moves `${PKG}_*.deb` from the build parent dir into `CACHE_DIR`
 
-**Version source of truth**: `debian/changelog`. To bump a package version:
+**`debian/changelog` is the version gate.** Nothing is published to GitHub Releases or the apt repo unless the version is bumped. All three duplicate-version gates (PR check, release tag, `reprepro`) key off it.
 
 ```bash
-cd debpkgs/<pkg>
-dch -v <new-version> "Description of change."
+./scripts/bump-version.sh <pkg> "Description of change."
 ```
 
 `build.sh` reads the version from the changelog via `dpkg-parsechangelog` — no other files need updating.
 
 Packages using `dpkg-deb --build` (`lcd-splash`, `libfluidsynth2-compat`) derive their version from `debian/control`'s `Version:` field instead.
 
-**Stable symlinks**: `scripts/fetch-packages.sh` creates a `<pkg>.deb` symlink in `cache/` pointing to the latest versioned `.deb` (e.g. `mod-host-pistomp.deb → mod-host-pistomp_1.0.5-1_arm64.deb`). Stage scripts reference the unversioned symlink so version bumps don't require script edits. Dangling symlinks (versioned target deleted) are pruned automatically at the start of `fetch-packages.sh`.
-
-### Package build order
-
-`scripts/fetch-packages.sh` processes packages in dependency order (defined in the `PACKAGES` array). `lg` is built before `lcd-splash` because lcd-splash links against lgpio at compile time by extracting the lg `.deb` from cache.
-
 ### `cache/` directory structure
 
 | Path | Contents |
 | :--- | :--- |
-| `cache/<pkg>_<ver>_arm64.deb` | Built/downloaded package archives |
-| `cache/<pkg>.deb` | Stable symlink → latest versioned `.deb` |
-| `cache/apt-repo/` | Generated local apt repo (rebuilt each run) |
+| `cache/debpkgs/*.deb` | Locally-built override packages (from `build-package-docker.sh`) |
+| `cache/apt-repo/` | Generated from `cache/debpkgs/` by `setup-apt-repo.sh`; only present when overrides exist |
+| `cache/kernel/` | RT kernel `.deb` files |
 | `cache/apt-cacher/` | apt-cacher-ng persistent cache (Debian packages) |
 | `cache/uv-cache/` | uv wheel/sdist cache (`UV_CACHE_DIR`) |
 | `cache/uv-python/` | uv-managed Python installs (`UV_PYTHON_INSTALL_DIR`) |
@@ -287,19 +278,17 @@ device /etc/apt/sources.list.d/pistomp.list  →  apt update  →  apt install -
 
 | Var | Meaning |
 | :--- | :--- |
-| `APT_REPO_URL` | Base URL of the Pages site (e.g. `https://sastraxi.github.io/pi-gen-pistomp`). Written to `pistomp.list` by `stage2/05-pistomp/05-run.sh`. |
+| `APT_REPO_URL` | Base URL of the Pages site (e.g. `https://sastraxi.github.io/pi-gen-pistomp`). Written to `pistomp.list` by `stage2/00-dummy-packages/01-run.sh`. |
 | `APT_REPO_SUITE` | Debian suite served by the repo (`trixie`). |
 | `APT_REPO_COMPONENT` | apt component (`main`). |
 | `APT_REPO_ARCH` | apt architecture (`arm64`). |
-
-The same vars drive the *build-time* local file repo (`scripts/setup-apt-repo.sh`, consumed in `stage2/00-dummy-packages/01-run.sh`) and the *runtime* OTA source, so the two never drift.
 
 ### Workflows
 
 | File | Trigger | What it does |
 | :--- | :--- | :--- |
 | `.github/workflows/build-deb.yml` | `workflow_call` | Reusable: extract version from `debian/changelog`, install `Build-Depends` from `debian/control` automatically, run `build.sh`, publish a Release tagged `debpkg/<pkg>/<ver>`. On PRs, fails if that tag already exists (unbumped version). |
-| `.github/workflows/build-<pkg>.yml` | push/PR on `debpkgs/<pkg>/**` or `config.sh` | Thin wrapper calling `build-deb.yml` with `pkg:`. One per package. Template at `debpkgs/template/build.yml`. |
+| `.github/workflows/build-<pkg>.yml` | push/PR on `debpkgs/<pkg>/**` or `config.sh` | Thin wrapper calling `build-deb.yml` with `pkg:`. One per package. Template at `docs/package-template/build.yml`. |
 | `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` release asset, `reprepro includedeb trixie` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch and `conf/distributions` on first run. |
 
 ### Duplicate-version gates (three layers)
@@ -312,7 +301,7 @@ To ship a new version you **must** bump `debian/changelog`; all three gates poin
 
 ### Build-time vs runtime apt sources
 
-The image build installs the baseline `.deb`s from a *local* file repo (`file:/pistomp-cache/apt-repo`, built by `scripts/setup-apt-repo.sh`, sourced in `stage2/00-dummy-packages/01-run.sh`). That bind-mount only exists during the build container's lifetime, so `stage2/05-pistomp/05-run.sh` (the final substage) deletes `pistomp-local.list` and writes `pistomp.list` pointing at `APT_REPO_URL`. Devices therefore ship with a clean apt config: no dead `file://` URI to warn about on every `apt update`, and OTA works out of the box.
+`stage2/00-dummy-packages/01-run.sh` writes `pistomp.list` pointing at `APT_REPO_URL` as the primary apt source — the same URL devices use for OTA. If `cache/debpkgs/` has locally-built `.deb` overrides, `build-docker.sh` generates `cache/apt-repo/` first and `01-run.sh` adds `pistomp-local.list` (Pin-Priority 1001) so those packages win. `stage2/05-pistomp/05-run.sh` removes `pistomp-local.list` and the preferences pin before finalizing the image. Devices ship with only `pistomp.list` — no dead `file://` URI.
 
 ### One-time setup (GitHub Pages)
 
@@ -345,6 +334,5 @@ Recovery installs package updates via `AptManager` ([`../pistomp-recovery/src/pi
 
 1. Create `debpkgs/<pkg>/` with `build.sh`, `debian/`, and a `debian/changelog` entry.
 2. Add the package to `stage2/05-pistomp/02-run.sh`'s `apt-get install` list (factory baseline).
-3. Copy `.github/workflows/build-pistomp-recovery.yml` → `build-<pkg>.yml`, changing the name, `paths:` filter, and `pkg:` input.
-4. If the package has a build-time dep on another pistomp `.deb` (e.g. `mod-host-pistomp` needs `hylia`), the per-package workflow can't extend the reusable workflow — add the dep download as a step in `build.sh` itself, or wrap with a small pre-job. See OTA.md "Packages with build-time dependencies" note.
-5. Bump `debian/changelog`, push to `main`, watch the two workflows run.
+3. Copy `docs/package-template/build.yml` → `.github/workflows/build-<pkg>.yml`, changing the name, `paths:` filter, and `pkg:` input.
+4. Bump `debian/changelog`, push to `main`, watch the two workflows run.

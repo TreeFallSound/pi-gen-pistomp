@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-# Bind-mount the host /pistomp-cache into the chroot so apt can see the local repo.
+# Bind-mount the host /pistomp-cache into the chroot so apt can see any local
+# package overrides.
 mkdir -p "${ROOTFS_DIR}/pistomp-cache"
 mount --bind /pistomp-cache "${ROOTFS_DIR}/pistomp-cache"
 
@@ -10,11 +11,23 @@ on_chroot << EOF
 dpkg --purge --force-all \$(dpkg -l 2>/dev/null | awk '/^iU|^iF|^iH/{print \$2}') 2>/dev/null || true
 apt-get install -f -y
 
-# Add local apt repository (built by scripts/setup-apt-repo.sh from cache/).
-# This is the build-time-only source; stage2/05-pistomp/05-run.sh replaces it
-# with the GitHub Pages OTA repo before the image is finalized.
-echo "deb [arch=${APT_REPO_ARCH} trusted=yes] file:/pistomp-cache/apt-repo ${APT_REPO_SUITE} ${APT_REPO_COMPONENT}" \
-    > /etc/apt/sources.list.d/pistomp-local.list
+# Primary apt source: the GitHub Pages OTA repo (same URL devices use).
+echo "deb [arch=${APT_REPO_ARCH} trusted=yes] ${APT_REPO_URL} ${APT_REPO_SUITE} ${APT_REPO_COMPONENT}" \
+    > /etc/apt/sources.list.d/pistomp.list
+
+# Optional: local override for packages built via build-package-docker.sh.
+# When cache/debpkgs/ contains .deb files, setup-apt-repo.sh has already
+# populated /pistomp-cache/apt-repo; add it as a higher-priority source.
+if ls /pistomp-cache/apt-repo/pool/main/*.deb 2>/dev/null | head -1 >/dev/null; then
+    echo "deb [arch=${APT_REPO_ARCH} trusted=yes] file:/pistomp-cache/apt-repo ${APT_REPO_SUITE} ${APT_REPO_COMPONENT}" \
+        > /etc/apt/sources.list.d/pistomp-local.list
+    cat > /etc/apt/preferences.d/pistomp-local << 'PREF'
+Package: *
+Pin: origin ""
+Pin-Priority: 1001
+PREF
+fi
+
 apt-get update -qq
 
 # Install jack2-pistomp and lg early so their Provides satisfy dependencies

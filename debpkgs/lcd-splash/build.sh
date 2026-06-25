@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${ROOT_DIR}/scripts/build-common.sh"
 
 PKG="lcd-splash"
-VERSION="$(grep '^Version:' "${SCRIPT_DIR}/debian/control" | awk '{print $2}')"
+VERSION="$(head -1 "${SCRIPT_DIR}/debian/changelog" | sed 's/.*(\(.*\)).*/\1/')"
 SRC_DIR="${SCRIPT_DIR}/src"
 
 cache_check
@@ -15,7 +15,8 @@ cache_check
 DEB_DIR="${SCRIPT_DIR}/debian/${PKG}"
 rm -rf "${DEB_DIR}"
 mkdir -p "${DEB_DIR}/DEBIAN" "${DEB_DIR}/usr/bin" "${DEB_DIR}/usr/share/pistomp"
-cp "${SCRIPT_DIR}/debian/control" "${DEB_DIR}/DEBIAN/control"
+sed "s/^Version:.*/Version: ${VERSION}/" "${SCRIPT_DIR}/debian/control" \
+    | grep -v '^Build-Depends:' > "${DEB_DIR}/DEBIAN/control"
 
 # Generate font.h from Terminus Bold 22px console font (console-setup provides this)
 python3 "${SRC_DIR}/gen-font-h.py" \

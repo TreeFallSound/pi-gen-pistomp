@@ -96,24 +96,24 @@ To use a different branch (or fork) during development, see [config.sh](./config
 Package versions are owned by `debian/changelog` in each `debpkgs/<pkg>/` directory. To bump:
 
 ```bash
-cd debpkgs/<pkg>
-dch -v <new-version> "Description of change."
+./scripts/bump-version.sh <pkg> "Description of change."
 ```
 
 Then rebuild. [build.sh](./build.sh) reads the version from the changelog automatically — nothing else to update.
 
 ## OTA package updates
 
-Custom `.deb` packages are also published to an apt repository hosted on GitHub Pages, so devices already running an image can pull updates without reflashing. The repository URL is pinned in [`config.sh`](./config.sh) (`APT_REPO_URL`) and written to `/etc/apt/sources.list.d/pistomp.list` on the image by `stage2/05-pistomp/05-run.sh`.
+Custom `.deb` packages are published to a GitHub Pages-hosted apt repository. All images ship with `/etc/apt/sources.list.d/pistomp.list` pointing at it, so `pistomp-recovery`'s "Update packages" menu (or `sudo apt-get update && sudo apt-get install --only-upgrade <pkg>`) works out of the box.
+
+**Nothing is published unless you bump `debian/changelog`.** The CI gates on the version tag — if it already exists, no Release is created and the apt index is unchanged.
 
 To push a package update over the air:
 
-1. Bump the version in `debpkgs/<pkg>/debian/changelog` (see [Updating a package version](#updating-a-package-version)).
-2. Push to `main`. The per-package workflow (`.github/workflows/build-<pkg>.yml`) builds the `.deb` and publishes a GitHub Release tagged `debpkg/<pkg>/<version>`.
-3. The `publish-apt-repo` workflow rebuilds the `gh-pages` apt index from all release assets.
-4. On the device, `pistomp-recovery`'s "Update packages" menu runs `apt-get update` and installs the new version. Or manually: `sudo apt-get update && sudo apt-get install --only-upgrade <pkg>`.
+1. Bump the version: `./scripts/bump-version.sh <pkg> "Description."` (see [Updating a package version](#updating-a-package-version)).
+2. Push to `main`. The per-package workflow builds the `.deb` and publishes a GitHub Release tagged `debpkg/<pkg>/<version>`.
+3. The `publish-apt-repo` workflow rebuilds the `gh-pages` apt index.
 
-> Devices flashed from older images (before the OTA source was baked in) need the source added once: see `GUIDE.md` → *OTA updates*.
+See [`docs/OTA.md`](./docs/OTA.md) for the full pipeline, local override workflow, staleness checks, and pre-OTA device migration.
 
 ## Architecture
 
@@ -123,7 +123,7 @@ To push a package update over the air:
 | **2** | RT kernel, custom `.deb` packages, audio stack, networking, services |
 | **3** | pi-stomp app, pedalboards, LV2 plugins, factory state |
 
-Custom packages are built from source by `scripts/fetch-packages.sh` before the image build starts. Sources and URLs are pinned in `config.sh`. The built `.deb` files land in `cache/` alongside persistent uv, pip, and apt caches — all bind-mounted into the Docker build container at `/pistomp-cache` so subsequent builds skip re-downloading.
+The image build installs custom packages from the GitHub Pages apt repository (`APT_REPO_URL` in `config.sh`). Static assets (NAM reamp wav, LV2 plugins tarball) are downloaded by `scripts/fetch-assets.sh`. Persistent uv, pip, and apt caches are bind-mounted into the Docker build container at `/pistomp-cache`. Locally-built `.deb` overrides in `cache/debpkgs/` (produced by `build-package-docker.sh`) take precedence over the published versions when present.
 
 See **`GUIDE.md`** for full architecture detail, design decisions, debugging procedures, and kernel update instructions.
 
@@ -131,26 +131,15 @@ See **`GUIDE.md`** for full architecture detail, design decisions, debugging pro
 
 ## Appendix — Advanced build commands
 
-### Rebuild all custom packages from source
-
-Custom `.deb` packages (`debpkgs/`) are cached in `cache/` and only rebuilt when missing. To force a full rebuild (e.g. after changing a `debian/control` dependency):
-
-```bash
-FORCE_REBUILD=1 ./build-docker.sh -f
-```
-
-(`FORCE_REBUILD` must be exactly `"1"` — the check is `!= "1"`, not a truthiness test.)
-
 ### Build a single package without a full image build
 
 Iterate on one `debpkgs/<pkg>` without running the full image build:
 
 ```bash
 ./build-package-docker.sh jack2-pistomp
-FORCE_REBUILD=1 ./build-package-docker.sh mod-ui
 ```
 
-Mounts `cache/` at `/pistomp-cache` (same as the full build) and the repo root at `/pistomp` read-write (some packages write into `debpkgs/<pkg>/debian/` as a staging tree). The built `.deb` lands in `cache/` and is picked up by the next `./build-docker.sh` run without rebuilding.
+Always rebuilds. The `.deb` lands in `cache/debpkgs/` and is preferred over the published version on the next `./build-docker.sh` run. Remove it from `cache/debpkgs/` to revert to the released package.
 
 ### Resume an interrupted build
 
@@ -174,6 +163,5 @@ docker exec -it pigen_work bash
 | `CONTINUE` | `0` | Resume existing container instead of failing |
 | `PRESERVE_CONTAINER` | `0` | Don't delete the container after build |
 | `CONTAINER_NAME` | `pigen_work` | Override container name |
-| `FORCE_REBUILD` | `0` | Set to `1` to rebuild all custom `.deb` packages from source, ignoring cache |
 
 For kernel updates, debugging failed builds, mounting the built image, and apt-cacher troubleshooting, see **`GUIDE.md`**.

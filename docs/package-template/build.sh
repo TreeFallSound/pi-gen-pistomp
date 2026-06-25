@@ -12,13 +12,11 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${ROOT_DIR}/scripts/build-common.sh"
 
 PKG="<pkg-name>"
-VERSION="${<PKG>_TAG:-${<PKG>_REF}}"      # whichever var applies
+VERSION="$(dpkg-parsechangelog -l "${SCRIPT_DIR}/debian/changelog" -S Version)"
 UPSTREAM_DIR="${WORKDIR}/${PKG}-src"
 
-cache_check
-
 [ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${VERSION}" --recurse-submodules "${<PKG>_REPO}" "${UPSTREAM_DIR}"
+    git clone --branch "${<PKG>_REF}" --depth 1 "${<PKG>_REPO}" "${UPSTREAM_DIR}"
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"
 cd "${UPSTREAM_DIR}"
