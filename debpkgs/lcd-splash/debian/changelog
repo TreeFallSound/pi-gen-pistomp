@@ -1,3 +1,9 @@
+lcd-splash (1.0-8) trixie; urgency=medium
+
+  * Fix apt-get download working directory so glob finds the downloaded .deb.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 25 Jun 2026 21:30:43 +0000
+
 lcd-splash (1.0-7) trixie; urgency=medium
 
   * Extract font from console-setup-linux .deb directly to avoid postinst TTY requirement.
