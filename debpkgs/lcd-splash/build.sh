@@ -18,7 +18,12 @@ mkdir -p "${DEB_DIR}/DEBIAN" "${DEB_DIR}/usr/bin" "${DEB_DIR}/usr/share/pistomp"
 sed "s/^Version:.*/Version: ${VERSION}/" "${SCRIPT_DIR}/debian/control" \
     | grep -v '^Build-Depends:' > "${DEB_DIR}/DEBIAN/control"
 
-# Generate font.h from Terminus Bold 22px console font (console-setup provides this)
+# Generate font.h from Terminus Bold 22px console font (console-setup provides this).
+# Force-reinstall in case the minimal trixie Docker image has the package registered
+# in the dpkg database but the font files not actually on disk.
+if [ ! -f /usr/share/consolefonts/Lat15-TerminusBold22x11.psf.gz ]; then
+    apt-get install -y --reinstall console-setup-linux >/dev/null
+fi
 python3 "${SRC_DIR}/gen-font-h.py" \
     /usr/share/consolefonts/Lat15-TerminusBold22x11.psf.gz > "${SRC_DIR}/font.h"
 

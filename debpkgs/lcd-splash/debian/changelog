@@ -1,3 +1,9 @@
+lcd-splash (1.0-6) trixie; urgency=medium
+
+  * Force-reinstall console-setup-linux in build.sh if font file is missing on disk.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 25 Jun 2026 21:18:36 +0000
+
 lcd-splash (1.0-5) trixie; urgency=medium
 
   * Add Section and Priority fields to debian/control for reprepro compatibility.
