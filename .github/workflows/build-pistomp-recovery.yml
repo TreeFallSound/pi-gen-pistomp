@@ -17,5 +17,4 @@ jobs:
     uses: ./.github/workflows/build-deb.yml
     with:
       pkg: pistomp-recovery
-      custom_build_deps: lg
     secrets: inherit

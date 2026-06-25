@@ -17,5 +17,4 @@ jobs:
     uses: ./.github/workflows/build-deb.yml
     with:
       pkg: pi-stomp
-      custom_build_deps: lg,jack2-pistomp
     secrets: inherit

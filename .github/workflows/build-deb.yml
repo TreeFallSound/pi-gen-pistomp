@@ -25,11 +25,6 @@ on:
       pkg:
         required: true
         type: string
-      custom_build_deps:
-        description: Comma-separated custom pistomp packages in Build-Depends that aren't in apt repos (e.g. "lg"). Downloaded from GitHub Releases before dpkg-checkbuilddeps runs.
-        required: false
-        default: ""
-        type: string
 
 jobs:
   build:
@@ -84,37 +79,9 @@ jobs:
           fi
           echo "Version ${{ steps.version.outputs.version }} is new, OK."
 
-      - name: Install custom build deps from Releases
-        if: inputs.custom_build_deps != ''
+      - name: Install build dependencies
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          IFS=',' read -ra CUSTOM_PKGS <<< "${{ inputs.custom_build_deps }}"
-          mkdir -p ${{ github.workspace }}/cache
-          for DEP in "${CUSTOM_PKGS[@]}"; do
-            DEP="${DEP// /}"  # strip whitespace
-            [ -z "$DEP" ] && continue
-            if dpkg -s "$DEP" >/dev/null 2>&1; then
-              echo "$DEP already installed"
-              continue
-            fi
-            echo "==> Downloading $DEP.deb from GitHub Releases..."
-            ASSET_URL=$(curl -s -H "Authorization: Bearer ${GH_TOKEN}" \
-              "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100" \
-              | jq -r --arg p "$DEP" \
-                '.[] | select(.tag_name | startswith("debpkg/" + $p + "/")) | .assets[].browser_download_url' \
-              | grep "/${DEP}_.*_arm64\.deb$" | head -1)
-            if [ -z "$ASSET_URL" ]; then
-              echo "ERROR: $DEP.deb not found in GitHub Releases." >&2
-              echo "Publish $DEP first." >&2
-              exit 1
-            fi
-            wget -q -P ${{ github.workspace }}/cache "$ASSET_URL"
-            dpkg -i ${{ github.workspace }}/cache/${DEP}_*_arm64.deb
-            apt-get install -f -y -qq
-          done
-
-      - name: Install build dependencies
         run: |
           PKG="${{ inputs.pkg }}"
           CONTROL="debpkgs/${PKG}/debian/control"
@@ -122,12 +89,53 @@ jobs:
             echo "No debian/control (binary-only package), skipping build-deps"
             exit 0
           fi
-          # apt-get build-dep parses Build-Depends from debian/control natively,
-          # stripping version constraints and resolving alternatives.
-          # Custom pistomp packages already installed (via custom_build_deps
-          # step or build.sh) are satisfied; apt skips them.
-          cd "debpkgs/${PKG}"
-          apt-get build-dep -y -q .
+          mkdir -p "$GITHUB_WORKSPACE/cache"
+
+          # Extract package names from dpkg-checkbuilddeps stderr, stripping
+          # version constraints like (>= 1.0) and the | alternatives operator.
+          get_unmet() {
+            dpkg-checkbuilddeps "$CONTROL" 2>&1 | \
+              grep 'Unmet build dependencies' | \
+              sed 's/.*Unmet build dependencies: //' | \
+              tr ' ' '\n' | \
+              grep -E '^[a-z]'
+          }
+
+          for PASS in 1 2 3 4 5; do
+            UNMET=$(get_unmet)
+            [ -z "$UNMET" ] && { echo "All build dependencies satisfied."; break; }
+            [ "$PASS" -eq 5 ] && {
+              echo "ERROR: build deps still unmet after 4 passes: $UNMET" >&2
+              exit 1
+            }
+
+            echo "=== Pass $PASS — unmet: $(echo $UNMET | tr '\n' ' ')"
+            for DEP in $UNMET; do
+              # Try apt first; if the package isn't in any apt source it exits non-zero.
+              if apt-get install -y -qq "$DEP" >/dev/null 2>&1; then
+                echo "$DEP: installed from apt"
+                continue
+              fi
+
+              # Fall back to a published GitHub Release for this repo.
+              echo "$DEP: not in apt, trying GitHub Releases..."
+              ASSET_URL=$(curl -s -H "Authorization: Bearer ${GH_TOKEN}" \
+                "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100" \
+                | jq -r --arg p "$DEP" \
+                  '.[] | select(.tag_name | startswith("debpkg/" + $p + "/")) | .assets[].browser_download_url' \
+                | grep "/${DEP}_.*_arm64\.deb$" | head -1)
+
+              if [ -z "$ASSET_URL" ]; then
+                echo "ERROR: $DEP not found in apt or GitHub Releases." >&2
+                exit 1
+              fi
+
+              wget -q -P "$GITHUB_WORKSPACE/cache" "$ASSET_URL"
+              dpkg -i "$GITHUB_WORKSPACE/cache/${DEP}_"*"_arm64.deb" || true
+              apt-get install -f -y -qq
+              echo "$DEP: installed from GitHub Releases"
+            done
+          done
 
       - name: Build .deb
         run: |

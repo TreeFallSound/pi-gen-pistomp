@@ -17,5 +17,4 @@ jobs:
     uses: ./.github/workflows/build-deb.yml
     with:
       pkg: jack2-pistomp
-      # custom_build_deps:
     secrets: inherit
