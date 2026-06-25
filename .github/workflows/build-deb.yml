@@ -179,4 +179,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh workflow run publish-apt-repo.yml --repo "${{ github.repository }}" --ref main
+          # Dispatch publish-apt-repo via the Actions REST API (gh CLI not
+          # installed on this runner image).
+          curl -fsSL -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/publish-apt-repo.yml/dispatches" \
+            -d '{"ref":"main"}'
