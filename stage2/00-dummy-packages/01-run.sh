@@ -18,7 +18,7 @@ echo "deb [arch=${APT_REPO_ARCH} trusted=yes] ${APT_REPO_URL} ${APT_REPO_SUITE} 
 # Optional: local override for packages built via build-package-docker.sh.
 # When cache/debpkgs/ contains .deb files, setup-apt-repo.sh has already
 # populated /pistomp-cache/apt-repo; add it as a higher-priority source.
-if ls /pistomp-cache/apt-repo/pool/main/*.deb 2>/dev/null | head -1 >/dev/null; then
+if ls /pistomp-cache/apt-repo/pool/main/*.deb >/dev/null 2>&1; then
     echo "deb [arch=${APT_REPO_ARCH} trusted=yes] file:/pistomp-cache/apt-repo ${APT_REPO_SUITE} ${APT_REPO_COMPONENT}" \
         > /etc/apt/sources.list.d/pistomp-local.list
     cat > /etc/apt/preferences.d/pistomp-local << 'PREF'

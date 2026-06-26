@@ -90,3 +90,35 @@ if [ "${#missing[@]}" -gt 0 ]; then
 fi
 
 echo "==> Package pre-flight check passed (${checked} packages, all at required versions)."
+echo ""
+
+# --- print ToC then changelogs ---
+declare -a pkg_names pkg_versions pkg_dirs
+while IFS= read -r control_file; do
+    pkg=$(grep '^Package:' "$control_file" | awk '{print $2}')
+    [ -n "$pkg" ] || continue
+    pkg_dir="$(dirname "$(dirname "$control_file")")"
+    if [ -f "${pkg_dir}/debian/changelog" ]; then
+        ver=$(head -1 "${pkg_dir}/debian/changelog" | awk '{gsub(/[()]/,""); print $2}')
+    else
+        ver=$(grep '^Version:' "$control_file" | awk '{print $2}')
+    fi
+    pkg_names+=("$pkg")
+    pkg_versions+=("$ver")
+    pkg_dirs+=("$pkg_dir")
+done < <(find "${ROOT_DIR}/debpkgs" -name control -path "*/debian/control" | sort)
+
+echo "Packages:"
+for i in "${!pkg_names[@]}"; do
+    printf "  %-40s %s\n" "${pkg_names[$i]}" "${pkg_versions[$i]}"
+done
+echo ""
+
+for i in "${!pkg_names[@]}"; do
+    if [ -f "${pkg_dirs[$i]}/debian/changelog" ]; then
+        awk '/^[^ ]/{found++} found==2{exit} {print}' "${pkg_dirs[$i]}/debian/changelog"
+    else
+        echo "(no changelog — version from debian/control)"
+    fi
+    echo ""
+done

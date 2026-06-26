@@ -260,7 +260,7 @@ time ${DOCKER} run \
     cd /pi-gen &&
     echo '==> Downloading non-.deb assets...' &&
     CACHE_DIR=/pistomp-cache bash scripts/fetch-assets.sh &&
-    if ls /pistomp-cache/debpkgs/*.deb 2>/dev/null | head -1 >/dev/null; then
+    if ls /pistomp-cache/debpkgs/*.deb >/dev/null 2>&1; then
       echo '==> Building local apt override repository from cache/debpkgs/...' &&
       CACHE_DIR=/pistomp-cache REPO_DIR=/pistomp-cache/apt-repo bash scripts/setup-apt-repo.sh
     fi &&
