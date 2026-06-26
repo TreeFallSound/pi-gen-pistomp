@@ -1,3 +1,9 @@
+lg-pistomp (0.2.2-5) trixie; urgency=medium
+
+  * Conflict/Replace liblgpio1 to prevent file overwrite on Trixie
+
+ -- pi-gen-pistomp <noreply@github.com>  Fri, 26 Jun 2026 04:09:54 +0000
+
 lg-pistomp (0.2.2-4) trixie; urgency=medium
 
   * Install liblgpio.so.1 to /usr/lib/aarch64-linux-gnu/ (multiarch path)
