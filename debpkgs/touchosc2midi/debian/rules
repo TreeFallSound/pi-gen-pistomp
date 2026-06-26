@@ -37,6 +37,10 @@ override_dh_auto_install:
 	"$(VENV_DIR)/bin/pip" install --no-deps "$(SRC_DIR)"
 	# Patch import liblo -> import pyliblo3 as liblo (upstream uses old package name)
 	find "$(VENV_DIR)" -name '*.py' -exec sed -i 's/^import liblo$$/import pyliblo3 as liblo/' {} +
+	# Fix KeyError when no default route: gateways()['default'] raises KeyError if
+	# the key is absent; .get('default') returns None and lets the fallback scan run.
+	find "$(VENV_DIR)" -name 'advertise.py' -exec sed -i \
+		"s/netifaces\.gateways()\['default'\]/netifaces.gateways().get('default')/" {} +
 	# Install systemd service file
 	install -Dm 644 debian/touchosc2midi.mod-touchosc2midi.service \
 		$(CURDIR)/debian/touchosc2midi/lib/systemd/system/mod-touchosc2midi.service
