@@ -1,3 +1,12 @@
+mod-ui (3.0-8) trixie; urgency=medium
+
+  * Sync browser tab title with the active pedalboard and snapshot:
+    tab now shows "pi-Stomp: <Pedalboard> - <Snapshot>" and updates
+    whenever the pedalboard or snapshot changes, including switches
+    triggered by pi-stomp over WebSocket.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 27 Jun 2026 22:00:00 +0000
+
 mod-ui (3.0-7) trixie; urgency=medium
 
   * Cut web UI startup time from ~7s to under 2s to interactive.
