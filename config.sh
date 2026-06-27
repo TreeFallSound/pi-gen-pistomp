@@ -28,10 +28,10 @@ MOD_HOST_REPO="https://github.com/sastraxi/mod-host.git"
 MOD_HOST_BRANCH="fix/effect-drain-midi"
 
 # --- mod-ui ---
-# MODUI_REPO="https://github.com/TreeFallSound/mod-ui.git"
-# MODUI_BRANCH="master"
-MODUI_REPO="https://github.com/sastraxi/mod-ui.git"
-MODUI_BRANCH="main"
+# MOD_UI_REPO="https://github.com/TreeFallSound/mod-ui.git"
+# MOD_UI_BRANCH="master"
+MOD_UI_REPO="https://github.com/sastraxi/mod-ui.git"
+MOD_UI_BRANCH="main"
 
 # --- browsepy ---
 BROWSEPY_REPO="https://github.com/micahvdm/browsepy.git"

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Developer opt-in staleness check for branch-pinned packages.
+# Developer opt-in staleness check for the git-backed packages discovered by
+# scripts/pkg-sources.sh (branch- and commit-pinned; tag-pinned are skipped).
 # Compares the latest commit on the upstream branch/ref against the most
 # recently published GitHub Release for each package.
 # Does NOT fail the build. Run manually before cutting new .deb releases.
@@ -12,6 +13,8 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # shellcheck source=../config.sh
 source "${ROOT_DIR}/config.sh"
+# shellcheck source=./pkg-sources.sh
+source "${ROOT_DIR}/scripts/pkg-sources.sh"
 
 REPO_OWNER="${GH_REPO_OWNER:-sastraxi}"
 REPO_NAME="${GH_REPO_NAME:-pi-gen-pistomp}"
@@ -51,21 +54,16 @@ check_pkg() {
     echo "  OK    ${pkg}: upstream ${ref} is at ${upstream_sha:0:12}, latest release is ${latest_tag}"
 }
 
-echo "==> Checking upstream branch staleness for branch-pinned packages..."
+echo "==> Checking upstream staleness for git-backed packages..."
 echo "    (This is informational only — it does not update or build anything.)"
 echo ""
 
-check_pkg "hylia"           "${HYLIA_REPO}"          "${HYLIA_REF}"
-check_pkg "mod-host-pistomp" "${MOD_HOST_REPO}"      "${MOD_HOST_BRANCH}"
-check_pkg "mod-ui"           "${MODUI_REPO}"          "${MODUI_BRANCH}"
-check_pkg "browsepy"         "${BROWSEPY_REPO}"       "${BROWSEPY_REF}"
-check_pkg "amidithru"        "${AMIDITHRU_REPO}"      "${AMIDITHRU_REF}"
-check_pkg "touchosc2midi"    "${TOUCHOSC2MIDI_REPO}"  "${TOUCHOSC2MIDI_REF}"
-check_pkg "mod-midi-merger"  "${MOD_MIDI_MERGER_REPO}" "${MOD_MIDI_MERGER_REF}"
-check_pkg "mod-ttymidi"      "${MOD_TTYMIDI_REPO}"    "${MOD_TTYMIDI_REF}"
-check_pkg "jack-capture"     "${JACK_CAPTURE_REPO}"   "${JACK_CAPTURE_REF}"
-check_pkg "pi-stomp"         "${PISTOMP_REPO}"        "${PISTOMP_BRANCH}"
-check_pkg "pistomp-recovery" "${PISTOMP_RECOVERY_REPO}" "${PISTOMP_RECOVERY_BRANCH}"
+# Branch- and commit-pinned packages are worth checking; tag-pinned ones move
+# only via an explicit config.sh bump, so skip them.
+while IFS='|' read -r pkg repo ref kind; do
+    [ "$kind" = "tag" ] && continue
+    check_pkg "$pkg" "$repo" "$ref"
+done < <(pkg_sources)
 
 echo ""
 if [[ "${warn}" -eq 1 ]]; then

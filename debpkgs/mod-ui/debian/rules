@@ -2,7 +2,7 @@
 export DH_VERBOSE=1
 
 PKG=mod-ui
-MODUI_SRC_DIR=$(CURDIR)/../mod-ui-src
+MOD_UI_SRC_DIR=$(CURDIR)/../mod-ui-src
 VENV_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/venvs/mod-ui
 HTML_INSTALL_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/mod-ui/html
 PEDALBOARD_DIR=$(CURDIR)/debian/$(PKG)/opt/pistomp/mod-ui/default.pedalboard
@@ -21,15 +21,15 @@ override_dh_auto_test:
 
 override_dh_auto_configure:
 	# Clone mod-ui source if not already present
-	if [ ! -d "$(MODUI_SRC_DIR)" ]; then \
-		git clone --branch "$(MODUI_BRANCH)" --depth 1 \
-			"$(MODUI_REPO)" \
-			"$(MODUI_SRC_DIR)"; \
+	if [ ! -d "$(MOD_UI_SRC_DIR)" ]; then \
+		git clone --branch "$(MOD_UI_BRANCH)" --depth 1 \
+			"$(MOD_UI_REPO)" \
+			"$(MOD_UI_SRC_DIR)"; \
 	fi
 
 override_dh_auto_build:
 	# Build the C extension (libmod_utils.so)
-	$(MAKE) -C "$(MODUI_SRC_DIR)/utils"
+	$(MAKE) -C "$(MOD_UI_SRC_DIR)/utils"
 
 override_dh_auto_install:
 	# Install Python 3.11 into uv's cache, copy the binary into the venv,
@@ -53,13 +53,13 @@ override_dh_auto_install:
 	sed -i -e 's/collections\.MutableMapping/collections.abc.MutableMapping/g' \
 		"$(VENV_DIR)/lib/python3.11/site-packages/tornado/httputil.py"
 	# Install mod-ui with --no-deps: bogus declared deps already satisfied above
-	"$(VENV_DIR)/bin/pip" install --no-deps "$(MODUI_SRC_DIR)"
+	"$(VENV_DIR)/bin/pip" install --no-deps "$(MOD_UI_SRC_DIR)"
 	# Install HTML assets
 	mkdir -p "$(HTML_INSTALL_DIR)"
-	cp -a "$(MODUI_SRC_DIR)/html/"* "$(HTML_INSTALL_DIR)/"
+	cp -a "$(MOD_UI_SRC_DIR)/html/"* "$(HTML_INSTALL_DIR)/"
 	# Install default.pedalboard
 	mkdir -p "$(PEDALBOARD_DIR)"
-	cp -a "$(MODUI_SRC_DIR)/default.pedalboard/"* "$(PEDALBOARD_DIR)/"
+	cp -a "$(MOD_UI_SRC_DIR)/default.pedalboard/"* "$(PEDALBOARD_DIR)/"
 	# Install systemd service file
 	install -Dm 644 debian/mod-ui.mod-ui.service \
 		$(CURDIR)/debian/mod-ui/lib/systemd/system/mod-ui.service
