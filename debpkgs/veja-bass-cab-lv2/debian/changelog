@@ -1,0 +1,13 @@
+veja-bass-cab-lv2 (1.0-1) trixie; urgency=medium
+
+  * Initial package: VeJa Bass Cabinets LV2 plugin (pistomp fork).
+  * Generalize overlap-add to support arbitrary JACK period sizes.
+    Upstream only handled 128/256-sample periods; any other period left
+    multiplier at its initialized value of 2, causing silence. Fix uses
+    int multiplier = SIZE / n_samples and a single generalized overlap
+    buffer loop (same approach as cabsim-lv2).
+  * Remove dead #include "sndfile.h" and oA/oB/oC overlap buffers that
+    were only used by the broken 128-sample branch.
+  * Install modgui/ directory so MOD-UI shows the cabinet pedal GUI.
+
+ -- pi-gen-pistomp <noreply@github.com>  Sat, 27 Jun 2026 18:00:00 +0000

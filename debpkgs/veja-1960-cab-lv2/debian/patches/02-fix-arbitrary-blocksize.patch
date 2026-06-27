@@ -1,0 +1,111 @@
+--- a/source/veja-1960-cab.c
++++ b/source/veja-1960-cab.c
+@@ -342,9 +342,6 @@
+     float *IR;
+     float *impulseResponse;
+     float *overlap;
+-    float *oA;
+-    float *oB;
+-    float *oC;
+     float *micPos;
+     int modelPrevious;
+     int prevMicPos;
+@@ -784,10 +781,6 @@
+     cabsim->outbuf = (float *) calloc((SIZE),sizeof(float));
+     cabsim->inbuf = (float *) calloc((SIZE),sizeof(float));
+     cabsim->IR = (float *) calloc((SIZE),sizeof(float));
+-    cabsim->oA = (float *) calloc((SIZE),sizeof(float));
+-    cabsim->oB = (float *) calloc((SIZE),sizeof(float));
+-    cabsim->oC = (float *) calloc((SIZE),sizeof(float));
+-
+     const char* wisdomFile = "cabsim.wisdom";
+     //open file A
+     const size_t path_len    = strlen(bundle_path);
+@@ -856,15 +849,12 @@
+ {
+     Cabsim* cabsim = (Cabsim*)instance;    
+ 
+-    const float const *in = cabsim->in;
++    const float *in = cabsim->in;
+     float *out = cabsim->out;
+     float *outbuf = cabsim->outbuf;
+     float *inbuf = cabsim->inbuf;
+     float *IR = cabsim->IR;
+     float *overlap = cabsim->overlap;
+-    float *oA = cabsim->oA;
+-    float *oB = cabsim->oB;
+-    float *oC = cabsim->oC;
+     int model = (int)(*(cabsim->model));
+     int position = (int)(*cabsim->micPos);
+     int distance = (int)(*cabsim->Distance);
+@@ -874,16 +864,8 @@
+ 
+     uint32_t i, j, m;
+     
+-    int multiplier = (SIZE / n_samples);
+-
+-    if(n_samples == 128)
+-    {
+-        multiplier = 4;
+-    }
+-    else if (n_samples == 256)
+-    {
+-        multiplier = 2;
+-    }
++    /* Works for any n_samples that divides SIZE (e.g. 64, 128, 256). */
++    int multiplier = SIZE / (int)n_samples;
+ 
+     //copy inputbuffer and IR buffer with zero padding.
+     if((cabsim->modelPrevious!=model || cabsim->prevMicPos!=position) || cabsim->prevDistance!= distance)
+@@ -921,37 +903,21 @@
+ 
+     fftwf_execute(cabsim->ifft);
+ 
+-    //normalize output with overlap add.
+-    if(n_samples == 256)
+-    {
+-        for ( j = 0; j < n_samples * multiplier; j++)
+-        {
+-            if(j < n_samples)
+-            {
+-                out[j] = ((outbuf[j] / (n_samples * multiplier)) + overlap[j]) * 0.25f;
+-            }
+-            else
+-            {
+-                overlap[j - n_samples] = outbuf[j]  / (n_samples * multiplier);
+-            }
+-        }
++    /* Normalize (FFTW IFFT is unscaled) and output with generalized overlap-add.
++     * Works for any block size: out[j] = outbuf[j]/SIZE + accumulated overlap,
++     * then shift the overlap window forward by n_samples. */
++    for (j = 0; j < (uint32_t)SIZE; j++)
++        outbuf[j] /= (float)SIZE;
++
++    for (j = 0; j < n_samples; j++)
++        out[j] = (outbuf[j] + overlap[j]) * 0.25f;
++
++    for (j = 0; j < (uint32_t)(SIZE - (int)n_samples); j++) {
++        uint32_t src = j + n_samples;
++        overlap[j] = outbuf[src];
++        if (src < (uint32_t)(SIZE - (int)n_samples))
++            overlap[j] += overlap[src];
+     }
+-    else if (n_samples == 128)
+-    {
+-        for ( j = 0; j < n_samples * multiplier; j++)
+-        {
+-            if(j < n_samples)   //runs 128 times filling the output buffer with overap add
+-            {
+-                out[j] = (outbuf[j] / (n_samples * multiplier) + oA[j] + oB[j] + oC[j]) * 0.25f;
+-            }
+-            else   
+-            {
+-                oC[j - n_samples] = oB[j]; // 128 samples of usefull data
+-                oB[j - n_samples] = oA[j];  //filled with samples 128 to 255 of usefull data
+-                oA[j - n_samples] = (outbuf[j] / (n_samples * multiplier)); //filled with 384 samples
+-            }
+-        }
+-    }
+ }
+ 
+ /**********************************************************************************************************************************************************/

@@ -1,0 +1,14 @@
+Source: veja-bass-cab-lv2
+Section: sound
+Priority: optional
+Maintainer: pistomp <pistomp@example.com>
+Build-Depends: debhelper-compat (= 13), libfftw3-dev, libsndfile1-dev, libsamplerate0-dev, lv2-dev, pkg-config, quilt
+Standards-Version: 4.6.2
+
+Package: veja-bass-cab-lv2
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: VeJa Bass Cabinets LV2 plugin (pistomp fork)
+ Bass guitar cabinet impulse response convolver with multiple speaker
+ models embedded as compiled data. Patched to support arbitrary JACK
+ period sizes (64, 128, 256+) via a generalized overlap-add implementation.

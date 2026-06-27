@@ -1,0 +1,88 @@
+--- a/source/veja-1960-cab.c
++++ b/source/veja-1960-cab.c
+@@ -361,6 +361,7 @@
+ 
+     XXX* xxx;
+ 
++    char* bundle_path;
+ } Cabsim;
+ 
+ /**********************************************************************************************************************************************************/
+@@ -369,17 +370,27 @@
+ /**********************************************************************************************************************************************************/
+ 
+ static XXX*
+-load_xxx(Cabsim* self, const char* path)
++load_xxx(const char* bundle_path, const char* path)
+ {
+-        XXX* const  xxx  = (XXX*)malloc(sizeof(XXX)); 
+-        
+-        const size_t path_len = strlen(path);
++        XXX* const  xxx  = (XXX*)malloc(sizeof(XXX));
+ 
++        /* Strip hardcoded /root/.lv2/ prefix; replace with bundle_path. */
++        static const char* const hardcoded_prefix = "/root/.lv2/veja-1960-cab.lv2/";
++        const size_t prefix_len = strlen(hardcoded_prefix);
++        const char* rel = (strncmp(path, hardcoded_prefix, prefix_len) == 0)
++                          ? path + prefix_len : path;
++        const size_t blen = strlen(bundle_path);
++        const size_t rlen = strlen(rel);
++        char* full_path = (char*)malloc(blen + rlen + 1);
++        snprintf(full_path, blen + rlen + 1, "%s%s", bundle_path, rel);
++        const size_t path_len = blen + rlen;
++
+         SF_INFO* const info    = &xxx->info;
+-        SNDFILE* const sndfile = sf_open(path, SFM_READ, info);
++        SNDFILE* const sndfile = sf_open(full_path, SFM_READ, info);
+ 
+         if (!sndfile || !info->frames || (info->channels != 1))
+         {
++            free(full_path);
+             free(xxx);
+             return NULL;
+         }
+@@ -388,6 +399,7 @@
+         float* const data = malloc(sizeof(float) * info->frames);
+         if (!data)
+         {
++            free(full_path);
+             return NULL;
+         }
+         sf_seek(sndfile, 0ul, SEEK_SET);
+@@ -398,7 +410,8 @@
+         xxx->data     = data;
+         xxx->path     = (char*)malloc(path_len + 1);
+         xxx->path_len = (uint32_t)path_len;
+-        memcpy(xxx->path, path, path_len + 1);
++        memcpy(xxx->path, full_path, path_len + 1);
++        free(full_path);
+ 
+         return xxx;
+ }
+@@ -794,7 +807,8 @@
+         cabsim->ifft = fftwf_plan_dft_c2r_1d(SIZE, cabsim->convolved, cabsim->outbuf, FFTW_ESTIMATE);
+     }
+ 
+-    cabsim->xxx = load_xxx(cabsim, samplePath[1][1][4]);
++    cabsim->bundle_path = strdup(bundle_path);
++    cabsim->xxx = load_xxx(cabsim->bundle_path, samplePath[1][1][4]);
+ 
+     free(wisdom_path);
+ 
+@@ -874,7 +888,7 @@
+     //copy inputbuffer and IR buffer with zero padding.
+     if((cabsim->modelPrevious!=model || cabsim->prevMicPos!=position) || cabsim->prevDistance!= distance)
+     {
+-        cabsim->xxx = load_xxx(cabsim,samplePath[distance][position][model]);
++        cabsim->xxx = load_xxx(cabsim->bundle_path,samplePath[distance][position][model]);
+ 
+         cabsim->modelPrevious = model;
+         cabsim->prevDistance = distance;
+@@ -958,6 +972,7 @@
+     fftwf_free(cabsim->IRout);
+     fftwf_free(cabsim->convolved);
+     //free allocated memory
++    free(cabsim->bundle_path);
+     free_xxx(cabsim, cabsim->xxx);
+     free(instance);
+ }

@@ -1,0 +1,16 @@
+veja-1960-cab-lv2 (1.0-1) trixie; urgency=medium
+
+  * Initial package: VeJa Marshall 1960 Cabinet LV2 plugin (pistomp fork).
+  * Fix hardcoded /root/.lv2/ IR file paths: load_xxx() now strips the
+    upstream's hardcoded prefix and prepends the LV2 bundle_path so the
+    plugin works when installed anywhere (e.g. /usr/lib/lv2/).
+  * Generalize overlap-add to support arbitrary JACK period sizes.
+    Upstream already computed multiplier = SIZE / n_samples correctly but
+    the overlap-add output block still used a 128/256-only if/else,
+    producing silence for any other period. Replace with the same
+    generalized single-buffer loop used in cabsim-lv2.
+  * Remove oA/oB/oC overlap buffers (only used by the broken 128-sample
+    branch).
+  * Install modgui/ and IR/ directories alongside the .so and .ttl files.
+
+ -- pi-gen-pistomp <noreply@github.com>  Sat, 27 Jun 2026 18:00:00 +0000

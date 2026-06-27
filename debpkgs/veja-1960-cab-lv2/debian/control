@@ -1,0 +1,15 @@
+Source: veja-1960-cab-lv2
+Section: sound
+Priority: optional
+Maintainer: pistomp <pistomp@example.com>
+Build-Depends: debhelper-compat (= 13), libfftw3-dev, libsndfile1-dev, libsamplerate0-dev, lv2-dev, pkg-config, quilt
+Standards-Version: 4.6.2
+
+Package: veja-1960-cab-lv2
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}, libsndfile1
+Description: VeJa Marshall 1960 Cabinet LV2 plugin (pistomp fork)
+ Marshall 1960A guitar cabinet convolver that loads IR .wav files from
+ the bundle directory at runtime. Patched to support arbitrary JACK
+ period sizes and to use bundle_path instead of a hardcoded /root/.lv2/
+ prefix so the plugin works when installed anywhere.

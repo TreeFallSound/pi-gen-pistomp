@@ -96,6 +96,14 @@ JACK_CAPTURE_REF="a539d444d388c4cfed7279e385830e7767d59c41"
 CABSIM_LV2_REPO="https://github.com/VeJa-Plugins/Cabinet-Simulator.git"
 CABSIM_LV2_REF="master"
 
+# --- VeJa Bass Cabinets LV2 plugin (pistomp fork) ---
+VEJA_BASS_CAB_REPO="https://github.com/VeJa-Plugins/Bass-Cabinets.git"
+VEJA_BASS_CAB_REF="master"
+
+# --- VeJa Marshall 1960 Cabinet LV2 plugin (pistomp fork) ---
+VEJA_1960_CAB_REPO="https://github.com/VeJa-Plugins/Marshall-1960.git"
+VEJA_1960_CAB_REF="master"
+
 # --- LV2 plugins tarball ---
 LV2_PLUGINS_URL="https://www.treefallsound.com/downloads/lv2plugins.tar.gz"
 LV2_PLUGINS_SHA256=""

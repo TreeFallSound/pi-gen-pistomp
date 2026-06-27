@@ -1,0 +1,20 @@
+name: build-veja-bass-cab-lv2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/veja-bass-cab-lv2/**'
+      - 'config.sh'
+  pull_request:
+    paths:
+      - 'debpkgs/veja-bass-cab-lv2/**'
+      - 'config.sh'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: veja-bass-cab-lv2
+    secrets: inherit

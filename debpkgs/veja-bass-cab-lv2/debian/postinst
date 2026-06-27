@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+# Remove the lv2plugins.tar.gz copy so the deb version takes precedence.
+# mod-host scans ~/.lv2 before /usr/lib/lv2, so the user-dir copy would
+# shadow this package if left in place.
+if [ -d /home/pistomp/.lv2/veja-bass-cab.lv2 ]; then
+    rm -rf /home/pistomp/.lv2/veja-bass-cab.lv2
+fi
+#DEBHELPER#

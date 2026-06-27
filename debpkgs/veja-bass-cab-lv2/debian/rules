@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+export DH_VERBOSE = 1
+export QUILT_PATCHES = debian/patches
+
+%:
+	dh $@ --with quilt
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	$(MAKE)
+
+override_dh_auto_install:
+	install -d $(CURDIR)/debian/veja-bass-cab-lv2/usr/lib/lv2/veja-bass-cab.lv2
+	install -m 644 veja-bass-cab.lv2/*.so  $(CURDIR)/debian/veja-bass-cab-lv2/usr/lib/lv2/veja-bass-cab.lv2/
+	install -m 644 veja-bass-cab.lv2/*.ttl $(CURDIR)/debian/veja-bass-cab-lv2/usr/lib/lv2/veja-bass-cab.lv2/
+	install -m 644 debian/cabsim.wisdom $(CURDIR)/debian/veja-bass-cab-lv2/usr/lib/lv2/veja-bass-cab.lv2/
+	cp -r veja-bass-cab.lv2/modgui \
+		$(CURDIR)/debian/veja-bass-cab-lv2/usr/lib/lv2/veja-bass-cab.lv2/
+
+override_dh_auto_test:
