@@ -14,5 +14,7 @@ override_dh_auto_install:
 	$(MAKE) -C cabsim/source install \
 		DESTDIR=$(CURDIR)/debian/cabsim-lv2 \
 		PREFIX=/usr
+	cp -r cabsim/source/cabsim.lv2/modgui \
+		$(CURDIR)/debian/cabsim-lv2/usr/lib/lv2/cabsim.lv2/
 
 override_dh_auto_test:
