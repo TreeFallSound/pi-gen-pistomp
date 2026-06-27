@@ -49,6 +49,10 @@
 #define CMD_RAMWR       0x2C
 #define CMD_MADCTL      0x36
 #define CMD_PIXFMT      0x3A
+#define CMD_FRMCTR1     0xB1
+#define CMD_DISCTRL     0xB6
+#define CMD_PWCTR1      0xC0
+#define CMD_PWCTR2      0xC1
 #define CMD_VMCTR1      0xC5
 #define CMD_VMCTR2      0xC7
 #define CMD_PGAMCTRL    0xE0
@@ -128,19 +132,43 @@ static void lcd_init(void)
         if (fd >= 0) close(fd);
     }
 
-    /* Always set pixel format, orientation, and color calibration —
-     * other software (e.g. adafruit driver) may have changed these.
-     * Values match the Adafruit ILI9341 driver init sequence. */
+    /* Full init matching the Adafruit ILI9341 driver sequence so the panel
+     * state is identical before and after pi-stomp takes over. */
+
+    /* Undocumented manufacturer power/timing sequence */
+    send_cmd(0xEF); send_data((const uint8_t[]){ 0x03, 0x80, 0x02 }, 3);
+    send_cmd(0xCF); send_data((const uint8_t[]){ 0x00, 0xC1, 0x30 }, 3);
+    send_cmd(0xED); send_data((const uint8_t[]){ 0x64, 0x03, 0x12, 0x81 }, 4);
+    send_cmd(0xE8); send_data((const uint8_t[]){ 0x85, 0x00, 0x78 }, 3);
+    send_cmd(0xCB); send_data((const uint8_t[]){ 0x39, 0x2C, 0x00, 0x34, 0x02 }, 5);
+    send_cmd(0xF7); send_data8(0x20);
+    send_cmd(0xEA); send_data((const uint8_t[]){ 0x00, 0x00 }, 2);
+
+    /* Power Control 1 — GVDD = 4.60 V; reset default 0x26 = 4.75 V shifts gamma */
+    send_cmd(CMD_PWCTR1); send_data8(0x23);
+    /* Power Control 2 */
+    send_cmd(CMD_PWCTR2); send_data8(0x10);
+
+    /* VCOM voltage — affects contrast and colour balance */
+    send_cmd(CMD_VMCTR1);
+    send_data((const uint8_t[]){ 0x3E, 0x28 }, 2);
+    send_cmd(CMD_VMCTR2);
+    send_data8(0x86);
+
+    /* Pixel format and orientation */
     send_cmd(CMD_PIXFMT);
     send_data8(0x55);
     send_cmd(CMD_MADCTL);
     send_data8(MADCTL_LANDSCAPE);
 
-    /* VCOM voltage — affects contrast and color balance */
-    send_cmd(CMD_VMCTR1);
-    send_data((const uint8_t[]){ 0x3E, 0x28 }, 2);
-    send_cmd(CMD_VMCTR2);
-    send_data8(0x86);
+    /* Frame rate ~79 Hz */
+    send_cmd(CMD_FRMCTR1);
+    send_data((const uint8_t[]){ 0x00, 0x18 }, 2);
+    /* Display Function Control */
+    send_cmd(CMD_DISCTRL);
+    send_data((const uint8_t[]){ 0x08, 0x82, 0x27 }, 3);
+    /* 3-Gamma disable */
+    send_cmd(0xF2); send_data8(0x00);
 
     /* Gamma correction */
     send_cmd(CMD_GAMSET);

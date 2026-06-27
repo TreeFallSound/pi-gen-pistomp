@@ -1,3 +1,9 @@
+lcd-splash (1.0-16) trixie; urgency=medium
+
+  * Full ILI9341 init sequence matching Adafruit driver; fixes gamma and power control register defaults.
+
+ -- pi-gen-pistomp <noreply@github.com>  Sat, 27 Jun 2026 01:32:43 +0000
+
 lcd-splash (1.0-15) trixie; urgency=medium
 
   * Fix silent pipefail on ls glob; use find for lg .deb lookup.
