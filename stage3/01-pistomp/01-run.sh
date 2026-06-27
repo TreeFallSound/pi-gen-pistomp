@@ -59,14 +59,37 @@ ln -s /home/${FIRST_USER_NAME}/data/.pedalboards /home/${FIRST_USER_NAME}/.pedal
 # here, not by whatever the pi-stomp repo happens to have checked in.
 
 # LV2 plugins (from cache/, bind-mounted at /pistomp-cache)
+#
+# Factory plugins are delivered two ways:
+#   * package-delivered -> /usr/lib/lv2, owned by a .deb and containing a .so
+#                          somewhere in the bundle (cabsim-lv2, sfizz-pistomp).
+#                          Maintained and updated via apt + OTA.
+#   * tarball-delivered -> ~/.lv2, shipped by lv2plugins.tar.gz.
+# mod-host and mod-ui scan ~/.lv2 before /usr/lib/lv2 (LV2_PATH in their service
+# units), so a tarball copy of a package-delivered plugin would shadow the
+# maintained one. Compute the set of package-delivered plugin bundles, record it
+# for pistomp-recovery (which applies the same exclusion when it re-extracts the
+# tarball on a factory plugin reset), and exclude it from this extraction. A user
+# can still install their own copy into ~/.lv2 via mod-ui and have it win — this
+# only stops the *factory tarball* from overriding the packaged plugin.
+mkdir -p /etc/pistomp
+for bundle in /usr/lib/lv2/*/; do
+    [ -d "\$bundle" ] || continue
+    so=\$(find "\$bundle" -name '*.so' -print -quit 2>/dev/null)
+    [ -n "\$so" ] || continue                  # spec/ontology bundle, not a plugin
+    dpkg -S "\$so" >/dev/null 2>&1 || continue # not delivered by a package
+    basename "\$bundle"
+done | sort -u > /etc/pistomp/factory-lv2-system-bundles.list
+
 rm -rf /home/${FIRST_USER_NAME}/.lv2
 rm -f /home/${FIRST_USER_NAME}/data/.lv2
-tar -zxf /pistomp-cache/lv2plugins.tar.gz -C /home/${FIRST_USER_NAME}/
+tar_excludes=( --anchored )
+while IFS= read -r b; do
+    [ -n "\$b" ] || continue
+    tar_excludes+=( --exclude=".lv2/\$b" --exclude=".lv2/\$b/*" )
+done < /etc/pistomp/factory-lv2-system-bundles.list
+tar "\${tar_excludes[@]}" -zxf /pistomp-cache/lv2plugins.tar.gz -C /home/${FIRST_USER_NAME}/
 ln -s /home/${FIRST_USER_NAME}/.lv2 /home/${FIRST_USER_NAME}/data/.lv2
-# cabsim-lv2 deb installs a fixed version to /usr/lib/lv2; remove the
-# tar.gz copy so it doesn't shadow the package (mod-host scans ~/.lv2 first).
-rm -rf /home/${FIRST_USER_NAME}/.lv2/cabsim.lv2
-mkdir -p /etc/pistomp
 ls /home/${FIRST_USER_NAME}/.lv2/ > /etc/pistomp/factory-lv2-bundles.list
 
 # NAM reamp signal (from cache/, bind-mounted at /pistomp-cache)

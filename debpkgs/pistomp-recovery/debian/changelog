@@ -1,3 +1,15 @@
+pistomp-recovery (0.1.0-17) trixie; urgency=medium
+
+  * Skip package-delivered LV2 bundles when performing a factory plugin reset
+    so the apt/OTA-maintained copy in /usr/lib/lv2 is never shadowed by the
+    older factory tarball. The image builder records the affected bundle names
+    to /etc/pistomp/factory-lv2-system-bundles.list at build time; recovery
+    reads that list at runtime and skips matching members during streaming
+    tar extraction. Older images without the list fall back to plain additive
+    extraction with no bundles excluded.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 27 Jun 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-16) trixie; urgency=medium
 
   * Bump to track upstream branch HEAD.
