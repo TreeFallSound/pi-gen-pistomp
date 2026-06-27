@@ -1,0 +1,15 @@
+cabsim-lv2 (1.1.1-pistomp1) trixie; urgency=medium
+
+  * Generalize overlap-add to support arbitrary JACK period sizes.
+    The upstream plugin only handled 128- and 256-sample periods; a
+    JACK period of 64 samples caused silence because multiplier defaulted
+    to 1 and the output branch was never executed. The fix computes
+    multiplier = SIZE / n_samples and uses a single overlap buffer that
+    works for any block size dividing SIZE (512).
+  * Remove dead commented-out libsndfile loading code and its include.
+  * Fix memset(IR, 0, sizeof(SIZE)) bug (cleared 4 bytes, not the full
+    IR buffer); the memset was redundant so it has been removed.
+  * Change overlap buffer allocation from malloc to calloc so the first
+    audio block is not mixed with uninitialised data.
+
+ -- pistomp <pistomp@example.com>  Thu, 26 Jun 2026 00:00:00 +0000

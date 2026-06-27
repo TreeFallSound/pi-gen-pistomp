@@ -1,0 +1,164 @@
+--- a/cabsim/source/cabsim.c
++++ b/cabsim/source/cabsim.c
+@@ -5,7 +5,6 @@
+ #include "fftw3.h"
+ #include "lv2/lv2plug.in/ns/lv2core/lv2.h"
+ #include "IRdata.h"
+-#include "sndfile.h"
+ 
+ /**********************************************************************************************************************************************************/
+ #define REAL 0
+@@ -43,9 +42,6 @@
+     float *inbuf;
+     float *IR;
+     float *overlap;
+-    float *oA;
+-    float *oB;
+-    float *oC;
+     //float *impulseResponse;
+     const float *attenuation;
+ } Cabsim;
+@@ -86,50 +82,17 @@
+ void activate(LV2_Handle instance)
+ {
+     Cabsim* const cabsim = (Cabsim*)instance;
+-/*
+-    cabsim->impulseResponse = (float *) malloc((SIZE)*sizeof(float)); 
+ 
+-    SF_INFO sndInfo;
+-    SNDFILE *sndFile = sf_open("/root/.lv2/cabsim.lv2/test2_48000.wav", SFM_READ, &sndInfo);
+-    int channelsCount = sndInfo.channels;
+-
+-    int bufferSize = 256;
+-    float buffer[bufferSize * channelsCount];
+-    
+-    cabsim->impulseResponse = (float*) malloc(
+-        sndInfo.frames * channelsCount * sizeof(float)
+-    );
+-
+-    int length = sndInfo.frames;
+-    int offset = 0;
+-
+-    while (length) {
+-        int n = (length > bufferSize) ? bufferSize : length;
+-
+-        n = sf_readf_float(sndFile, buffer, n);
+-
+-        for (int i = 0; i < n * channelsCount; i++) {
+-            cabsim->impulseResponse[offset + i] = buffer[i];
+-        }
+-
+-        offset += n * channelsCount;
+-        length -= n;
+-    }
+-    sf_close(sndFile);
+-*/
+     outComplex = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex)*(SIZE));
+     IRout =  (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex)*(SIZE));
+     convolved =  (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex)*(SIZE));
+ 
+-    cabsim->overlap = (float *) malloc((SIZE)*sizeof(float));
++    cabsim->overlap = (float *) calloc(SIZE, sizeof(float));
+     cabsim->outbuf = (float *) malloc((SIZE)*sizeof(float));
+     cabsim->inbuf = (float *) malloc((SIZE)*sizeof(float));
+     cabsim->IR = (float *) malloc((SIZE)*sizeof(float));
+-    cabsim->oA = (float *) malloc((SIZE)*sizeof(float));
+-    cabsim->oB = (float *) malloc((SIZE)*sizeof(float));
+-    cabsim->oC = (float *) malloc((SIZE)*sizeof(float));
+ 
+-    fft = fftwf_plan_dft_r2c_1d(SIZE, cabsim->inbuf, outComplex, FFTW_ESTIMATE); 
++    fft = fftwf_plan_dft_r2c_1d(SIZE, cabsim->inbuf, outComplex, FFTW_ESTIMATE);
+     IRfft = fftwf_plan_dft_r2c_1d(SIZE, cabsim->IR, IRout, FFTW_ESTIMATE);
+     ifft = fftwf_plan_dft_c2r_1d(SIZE, convolved, cabsim->outbuf, FFTW_ESTIMATE);
+ }
+@@ -137,31 +100,24 @@
+ /**********************************************************************************************************************************************************/
+ void run(LV2_Handle instance, uint32_t n_samples)
+ {
+-    Cabsim* const cabsim = (Cabsim*)instance;    
++    Cabsim* const cabsim = (Cabsim*)instance;
+ 
+-    const float const *in = cabsim->in;
++    const float *in = cabsim->in;
+     float *out = cabsim->out;
+     float *outbuf = cabsim->outbuf;
+     float *inbuf = cabsim->inbuf;
+     float *IR = cabsim->IR;
+     float *overlap = cabsim->overlap;
+-    float *oA = cabsim->oA;
+-    float *oB = cabsim->oB;
+-    float *oC = cabsim->oC;
+     //float *impulseResponse = cabsim->impulseResponse;
+     int model = (int)(*(cabsim->model));
+-    const float attenuation = *cabsim->attenuation; 
++    const float attenuation = *cabsim->attenuation;
+ 
+     const float coef = DB_CO(attenuation);
+ 
+     uint32_t i, j, m;
+-    
+-    int multiplier = 1;
+ 
+-    if(n_samples == 128)
+-        multiplier = 4;
+-    else if(n_samples == 256)
+-        multiplier = 2;
++    /* Works for any n_samples that divides SIZE (e.g. 64, 128, 256). */
++    int multiplier = SIZE / (int)n_samples;
+ 
+     //copy inputbuffer and IR buffer with zero padding.
+     for ( i = 0; i < n_samples * multiplier; i++)
+@@ -184,39 +140,21 @@
+ 
+     fftwf_execute(ifft);
+ 
+-    //normalize output with overlap add.
+-    if(n_samples == 256)
+-    {
+-        for ( j = 0; j < n_samples * multiplier; j++)
+-        {
+-            if(j < n_samples)
+-            {
+-                out[j] = ((outbuf[j] / (n_samples * multiplier)) + overlap[j]);
+-            }
+-            else
+-            {
+-                overlap[j - n_samples] = outbuf[j]  / (n_samples * multiplier);
+-            }
+-        }
+-    }
+-    else if (n_samples == 128)      //HIER VERDER GAAN!!!!!! oA, oB, oC changed malloc to calloc. (initiate buffer with all zeroes)
+-    {
+-        for ( j = 0; j < n_samples * multiplier; j++)
+-        {
+-            if(j < n_samples)   //runs 128 times filling the output buffer with overap add
+-            {
+-                out[j] = (outbuf[j] / (n_samples * multiplier) + oA[j] + oB[j] + oC[j]);
+-            }
+-            else   
+-            {
+-                oC[j - n_samples] = oB[j]; // 128 samples of usefull data
+-                oB[j - n_samples] = oA[j];  //filled with samples 128 to 255 of usefull data
+-                oA[j - n_samples] = (outbuf[j] / (n_samples * multiplier)); //filled with 384 samples
+-            }
+-        }
+-    }
+-    memset(IR, 0, sizeof(SIZE));
++    /* Normalize (FFTW IFFT is unscaled) and output with generalized overlap-add.
++     * Works for any block size: out[j] = outbuf[j]/SIZE + accumulated overlap,
++     * then shift the overlap window forward by n_samples. */
++    for (j = 0; j < (uint32_t)SIZE; j++)
++        outbuf[j] /= (float)SIZE;
+ 
++    for (j = 0; j < n_samples; j++)
++        out[j] = outbuf[j] + overlap[j];
++
++    for (j = 0; j < (uint32_t)(SIZE - (int)n_samples); j++) {
++        uint32_t src = j + n_samples;
++        overlap[j] = outbuf[src];
++        if (src < (uint32_t)(SIZE - (int)n_samples))
++            overlap[j] += overlap[src];
++    }
+ }
+ 
+ /**********************************************************************************************************************************************************/

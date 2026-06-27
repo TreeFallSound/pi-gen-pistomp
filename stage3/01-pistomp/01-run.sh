@@ -63,6 +63,9 @@ rm -rf /home/${FIRST_USER_NAME}/.lv2
 rm -f /home/${FIRST_USER_NAME}/data/.lv2
 tar -zxf /pistomp-cache/lv2plugins.tar.gz -C /home/${FIRST_USER_NAME}/
 ln -s /home/${FIRST_USER_NAME}/.lv2 /home/${FIRST_USER_NAME}/data/.lv2
+# cabsim-lv2 deb installs a fixed version to /usr/lib/lv2; remove the
+# tar.gz copy so it doesn't shadow the package (mod-host scans ~/.lv2 first).
+rm -rf /home/${FIRST_USER_NAME}/.lv2/cabsim.lv2
 
 # NAM reamp signal (from cache/, bind-mounted at /pistomp-cache)
 mkdir -p /opt/pistomp/pi-stomp/setup/nam
@@ -80,14 +83,17 @@ dpkg-query -W -f='{"${Package}": "${Version}"}\n' \
     sfizz-pistomp \
     fluidsynth-headless \
     lcd-splash \
+    lg-pistomp \
     jack-capture \
+    libfluidsynth2-compat \
     pi-stomp \
     mod-ui \
     pistomp-recovery \
     jackbridge \
     browsepy \
     touchosc2midi \
-    jack-example-tools \
+    ffmpeg-pistomp \
+    cabsim-lv2 \
     | python3 -c "
 import sys, json
 pkgs = {}
@@ -141,6 +147,20 @@ chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/.pistomp
 chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /home/${FIRST_USER_NAME}/data/.pedalboards
 
 EOF
+
+# Stash factory .deb files so pistomp-recovery can rollback to factory versions
+# even after reprepro has replaced them with newer OTA releases.
+# The apt cache still contains these debs from the stage2 install; they are
+# cleaned by export-image/02-set-sources/01-run.sh, which runs later.
+install -d -m 755 "${ROOTFS_DIR}/opt/pistomp/factory-debs"
+for pkg in \
+    hylia jack2-pistomp mod-host-pistomp amidithru mod-midi-merger \
+    mod-ttymidi sfizz-pistomp fluidsynth-headless lcd-splash lg-pistomp \
+    jack-capture libfluidsynth2-compat browsepy touchosc2midi mod-ui \
+    pi-stomp pistomp-recovery jackbridge ffmpeg-pistomp cabsim-lv2; do
+    find "${ROOTFS_DIR}/var/cache/apt/archives" -maxdepth 1 -name "${pkg}_*.deb" \
+        -exec install -m 644 {} "${ROOTFS_DIR}/opt/pistomp/factory-debs/" \; 2>/dev/null || true
+done
 
 # Version info — use dpkg-query since the source tree is deb-managed (no .git)
 software_version=$(on_chroot <<EOF

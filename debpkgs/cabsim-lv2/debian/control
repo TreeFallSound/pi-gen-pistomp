@@ -1,0 +1,14 @@
+Source: cabsim-lv2
+Section: sound
+Priority: optional
+Maintainer: pistomp <pistomp@example.com>
+Build-Depends: debhelper-compat (= 13), libfftw3-dev, lv2-dev, quilt
+Standards-Version: 4.6.2
+
+Package: cabsim-lv2
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}, libfftw3-single3
+Description: VeJa Cabinet Simulator LV2 plugin (pistomp fork)
+ Guitar cabinet impulse response convolver with 13 speaker models
+ embedded as compiled data. Patched to support arbitrary JACK period
+ sizes (64, 128, 256+) via a generalized overlap-add implementation.

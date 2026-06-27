@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+export DH_VERBOSE = 1
+export QUILT_PATCHES = debian/patches
+
+%:
+	dh $@ --with quilt
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	$(MAKE) -C cabsim/source
+
+override_dh_auto_install:
+	$(MAKE) -C cabsim/source install \
+		DESTDIR=$(CURDIR)/debian/cabsim-lv2 \
+		PREFIX=/usr
+
+override_dh_auto_test:

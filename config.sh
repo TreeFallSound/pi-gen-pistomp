@@ -92,6 +92,10 @@ JACK_CAPTURE_REPO="https://github.com/kmatheussen/jack_capture.git"
 # The tag 0.9.73 (2017) is missing ARM build fixes, C99 compatibility, and more.
 JACK_CAPTURE_REF="a539d444d388c4cfed7279e385830e7767d59c41"
 
+# --- VeJa Cabinet Simulator LV2 plugin (pistomp fork) ---
+CABSIM_LV2_REPO="https://github.com/VeJa-Plugins/Cabinet-Simulator.git"
+CABSIM_LV2_REF="master"
+
 # --- LV2 plugins tarball ---
 LV2_PLUGINS_URL="https://www.treefallsound.com/downloads/lv2plugins.tar.gz"
 LV2_PLUGINS_SHA256=""
