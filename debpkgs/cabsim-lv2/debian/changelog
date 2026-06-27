@@ -1,11 +1,11 @@
-cabsim-lv2 (1.1.1-pistomp2) trixie; urgency=medium
+cabsim-lv2 (1.1.1-2) trixie; urgency=medium
 
   * Add missing Build-Depends: libsndfile1-dev, libsamplerate0-dev.
   * Add libsndfile1, libsamplerate0 to runtime Depends.
 
  -- pi-gen-pistomp <noreply@github.com>  Thu, 26 Jun 2026 01:35:00 +0000
 
-cabsim-lv2 (1.1.1-pistomp1) trixie; urgency=medium
+cabsim-lv2 (1.1.1-1) trixie; urgency=medium
 
   * Generalize overlap-add to support arbitrary JACK period sizes.
     The upstream plugin only handled 128- and 256-sample periods; a
@@ -19,4 +19,4 @@ cabsim-lv2 (1.1.1-pistomp1) trixie; urgency=medium
   * Change overlap buffer allocation from malloc to calloc so the first
     audio block is not mixed with uninitialised data.
 
- -- pistomp <pistomp@example.com>  Thu, 26 Jun 2026 00:00:00 +0000
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 26 Jun 2026 00:00:00 +0000
