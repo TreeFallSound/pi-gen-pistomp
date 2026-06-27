@@ -59,6 +59,10 @@ gcc -O2 -Wall -Wextra \
 cp "${ROOT_DIR}/stage2/05-pistomp/files/splash.rgb565" \
     "${DEB_DIR}/usr/share/pistomp/splash.rgb565"
 
+# Generate md5sums so dpkg --verify can detect modified files after install.
+(cd "${DEB_DIR}" && find . -type f ! -path './DEBIAN/*' -exec md5sum {} \; \
+    | sed 's|^\./||' > DEBIAN/md5sums)
+
 dpkg-deb --build --root-owner-group "${DEB_DIR}" "${CACHE_DIR}/${PKG}_${VERSION}_arm64.deb"
 
 echo "==> Built ${PKG} → ${CACHE_DIR}"
