@@ -1,3 +1,10 @@
+cabsim-lv2 (1.1.1-pistomp2) trixie; urgency=medium
+
+  * Add missing Build-Depends: libsndfile1-dev, libsamplerate0-dev.
+  * Add libsndfile1, libsamplerate0 to runtime Depends.
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 26 Jun 2026 01:35:00 +0000
+
 cabsim-lv2 (1.1.1-pistomp1) trixie; urgency=medium
 
   * Generalize overlap-add to support arbitrary JACK period sizes.
