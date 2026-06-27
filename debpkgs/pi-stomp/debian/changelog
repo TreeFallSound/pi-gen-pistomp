@@ -1,3 +1,10 @@
+pi-stomp (3.0-10) trixie; urgency=medium
+
+  * NAM capture: fix silence detection and capture exit codes.
+  * NAM capture: 2s of silence; show a status message.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 27 Jun 2026 05:34:36 +0000
+
 pi-stomp (3.0-9) trixie; urgency=medium
 
   * Bump to track upstream branch HEAD.
