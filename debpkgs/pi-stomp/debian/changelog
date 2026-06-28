@@ -1,3 +1,9 @@
+pi-stomp (3.0-13) trixie; urgency=medium
+
+  * NAM capture: fix silence expiration decay and add hardware analog clipping detection.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 28 Jun 2026 16:05:00 -0400
+
 pi-stomp (3.0-12) trixie; urgency=medium
 
   * Fix inverted Q value visualization in x42 eq panel
