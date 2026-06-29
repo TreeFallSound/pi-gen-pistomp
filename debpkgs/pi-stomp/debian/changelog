@@ -1,3 +1,14 @@
+pi-stomp (3.0-14) trixie; urgency=medium
+
+  * Ethernet Audio Interface dialog: stop rebuilding every 2s and on every
+    button press. Fixes unresponsive buttons and SPI-blit visual glitches.
+  * Analytic rounded rects for plugins and selection reticule
+  * NAM plugins get their own distinct "T3K" visual style / subtitle / label.
+  * X42 EQ Panel: Fixed inverted "Q" factor (thanks @maarthome!)
+  * New plugin customization scheme and custom subtitles
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 28 Jun 2026 19:11:48 -0400
+
 pi-stomp (3.0-13) trixie; urgency=medium
 
   * NAM capture: fix silence expiration decay and add hardware analog clipping detection.
