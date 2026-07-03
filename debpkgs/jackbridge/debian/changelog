@@ -1,3 +1,25 @@
+jackbridge (1.0-4) trixie; urgency=medium
+
+  * jackbridge-pi-up: read /run/jackbridge.iface (set by
+    jackbridge-pin-route ExecStartPre) as source of truth for the
+    wired interface, falling back to $JACKBRIDGE_IFACE then eth0.
+    Previously hardcoded to eth0, which breaks on boards with
+    multiple wired NICs (Pi 5 + USB-C dongle, dual-port hubs).
+  * jackbridge-pi-up: unload stale netadapter instances before
+    loading a fresh one, so a failed prior ExecStop doesn't leave
+    orphaned -01 instances that silently no-op the wiring.
+  * jackbridge-pi-up: add 3-second delay between jack_unload and
+    jack_load netadapter, giving the Mac's netmanager time to detect
+    the socket error and clean up the stale JackNetMaster entry
+    before the new SLAVE_AVAILABLE arrives. Without this, the new
+    connection gets a -01 suffix and produces WriteResample /
+    ringbuffer failure errors on the pi side and XRuns on both sides.
+  * jackbridge-pi-down: iterate all netadapter* clients (not just
+    netadapter), so stale -01 instances from failed prior runs are
+    cleaned up on service stop.
+
+ -- pi-gen-pistomp <noreply@github.com>  Sun, 28 Jun 2026 23:45:00 +0000
+
 jackbridge (1.0-3) trixie; urgency=medium
 
   * Bump to track upstream branch HEAD.

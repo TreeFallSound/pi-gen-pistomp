@@ -15,7 +15,10 @@ cache_check() { :; }
 # whether the remote branch has moved since the last build.
 record_upstream_sha() {
     local dir="${1:-${UPSTREAM_DIR}}"
+    echo ">>>DEBUG record_upstream_sha: CACHE_DIR=${CACHE_DIR} PKG=${PKG} dir=${dir}" >&2
     git -C "$dir" rev-parse HEAD > "${CACHE_DIR}/${PKG}.built-sha"
+    echo ">>>DEBUG record_upstream_sha: exit=$? target=${CACHE_DIR}/${PKG}.built-sha" >&2
+    ls -la "${CACHE_DIR}/" >&2
 }
 
 # Move built .deb(s) from a parent directory into CACHE_DIR.
