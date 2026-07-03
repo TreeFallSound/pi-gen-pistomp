@@ -1,3 +1,9 @@
+pi-stomp (3.0-16) trixie; urgency=medium
+
+  * Re-ordered system menu; most useful things up top.
+ 
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 02 Jul 2026 22:30:00 -0400
+
 pi-stomp (3.0-15) trixie; urgency=medium
 
   * Footswitch preset switches: show the snapshot name on the label and light
