@@ -1,3 +1,9 @@
+pi-stomp (3.0-17) trixie; urgency=medium
+
+  * Re-build.
+ 
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 03 Jul 2026 22:30:00 -0400
+
 pi-stomp (3.0-16) trixie; urgency=medium
 
   * Re-ordered system menu; most useful things up top.
