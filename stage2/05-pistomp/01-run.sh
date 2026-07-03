@@ -68,6 +68,9 @@ ln -sf /usr/lib/systemd/system/firstboot.service /etc/systemd/system/multi-user.
 ln -sf /usr/lib/systemd/system/zram.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/rtirq.service /etc/systemd/system/multi-user.target.wants
 
+# mask the base image's rpi-swap-generated zram0 unit in favour of our own
+ln -sf /dev/null /etc/systemd/system/systemd-zram-setup@zram0.service
+
 mkdir -p /etc/systemd/system/sysinit.target.wants
 ln -sf /usr/lib/systemd/system/pistomp-lcd-splash.service /etc/systemd/system/sysinit.target.wants/pistomp-lcd-splash.service
 ln -sf /usr/lib/systemd/system/pistomp-ro-recovery.service /etc/systemd/system/sysinit.target.wants/pistomp-ro-recovery.service
