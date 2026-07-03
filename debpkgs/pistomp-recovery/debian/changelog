@@ -1,3 +1,16 @@
+pistomp-recovery (0.1.0-20) trixie; urgency=medium
+
+  * Restrict apt-get update to the pistomp repo only when checking for
+    package updates, avoiding a full Debian Trixie index fetch (~30-90s).
+  * Replace the frozen progress bar with a live-scrolling text area that
+    streams apt output line-by-line so the user sees progress immediately.
+  * Add a Cancel button in the header during the update check; clicking it
+    kills the apt subprocess and returns to the main menu.
+  * Pause 500ms after the update check completes so the user can read the
+    output before the package list appears.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 02 Jul 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-19) trixie; urgency=medium
 
   * Release LCD GPIO pins before starting pi-Stomp services so mod-ui's
