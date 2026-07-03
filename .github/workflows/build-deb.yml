@@ -168,6 +168,39 @@ jobs:
           path: ${{ github.workspace }}/cache/${{ inputs.pkg }}_*_arm64.deb
           if-no-files-found: error
 
+      - name: Assemble release assets
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        id: assets
+        run: |
+          PKG="${{ inputs.pkg }}"
+          CACHE="$GITHUB_WORKSPACE/cache"
+          echo "== contents of $CACHE =="
+          ls -la "$CACHE"
+
+          # The .deb is mandatory; fail hard if the build didn't produce one.
+          deb=$(ls "$CACHE/${PKG}_"*"_arm64.deb" 2>/dev/null | head -1)
+          if [ -z "$deb" ]; then
+            echo "ERROR: no ${PKG}_*_arm64.deb in $CACHE" >&2
+            exit 1
+          fi
+
+          # Only git-backed packages emit a .built-sha (via record_upstream_sha);
+          # include it only when present so tag-pinned packages don't fail below.
+          files="$deb"
+          sidecar="$CACHE/${PKG}.built-sha"
+          if [ -f "$sidecar" ]; then
+            echo "sidecar present: $sidecar"
+            files="${files}"$'\n'"${sidecar}"
+          else
+            echo "no .built-sha sidecar for ${PKG} (not git-backed) — skipping"
+          fi
+
+          {
+            echo "files<<__EOF__"
+            echo "$files"
+            echo "__EOF__"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Extract changelog entry
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         id: changelog
@@ -189,14 +222,14 @@ jobs:
           tag_name: debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}
           name: "${{ inputs.pkg }} ${{ steps.version.outputs.version }}"
           body: ${{ steps.changelog.outputs.body }}
-          # The .built-sha sidecar records which upstream commit this release was
-          # built from, so check-upstream-staleness.sh can compare it against the
-          # current branch tip. Only git-backed packages produce one (via
-          # record_upstream_sha); fail_on_unmatched_files=false skips the rest.
-          files: |
-            ${{ github.workspace }}/cache/${{ inputs.pkg }}_*_arm64.deb
-            ${{ github.workspace }}/cache/${{ inputs.pkg }}.built-sha
-          fail_on_unmatched_files: false
+          # File list is assembled (and existence-verified) in the "Assemble
+          # release assets" step: always the .deb, plus the .built-sha sidecar
+          # for git-backed packages. The sidecar lets check-upstream-staleness.sh
+          # compare the released commit against the current branch tip. Every
+          # listed path is known to exist, so fail_on_unmatched_files: true now
+          # turns any missing asset into a hard failure instead of a silent skip.
+          files: ${{ steps.assets.outputs.files }}
+          fail_on_unmatched_files: true
           draft: false
           prerelease: false
         env:
