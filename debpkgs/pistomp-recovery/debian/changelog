@@ -1,3 +1,23 @@
+pistomp-recovery (0.1.0-19) trixie; urgency=medium
+
+  * Release LCD GPIO pins before starting pi-Stomp services so mod-ui's
+    ExecStartPre=lcd-splash can claim them without a GPIO-busy error.
+  * Add tweak1 encoder support (GPIO 12/25) for horizontal scrolling of
+    crash log lines. Tweak1 events wired through InputManager, emulator,
+    and test backends.
+  * Rewrite CrashScreen: show service states, a 6-line log textarea with
+    --- separators, and RESUME | RECOVERY actions. Tweak1 scrolls the
+    textarea horizontally; click opens a fullscreen log view.
+  * Add LogViewScreen: fullscreen log viewer with nav encoder for line
+    selection (wrapping through header), tweak1 for horizontal scroll,
+    LONG_CLICK or header back icon to exit. Starts at the last log line.
+  * Fetch 100 journal lines (crash_log_full) for the fullscreen view
+    alongside the existing 10-line summary (crash_log).
+  * Fix crash screen textarea height accounting so RESUME | RECOVERY
+    row is not clipped off-screen.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 02 Jul 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-18) trixie; urgency=medium
 
   * Fix crash recovery going unnoticed: _service_crashed only checked systemd's
