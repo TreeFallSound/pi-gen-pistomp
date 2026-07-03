@@ -1,3 +1,9 @@
+pistomp-recovery (0.1.0-21) trixie; urgency=medium
+
+  * Re-build.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 02 Jul 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-20) trixie; urgency=medium
 
   * Restrict apt-get update to the pistomp repo only when checking for
