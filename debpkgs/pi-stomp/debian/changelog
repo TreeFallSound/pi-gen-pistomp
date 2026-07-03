@@ -1,3 +1,24 @@
+pi-stomp (3.0-15) trixie; urgency=medium
+
+  * Footswitch preset switches: show the snapshot name on the label and light
+    the LCD indicator for the active snapshot.
+  * Footswitch preset bindings no longer leak across pedalboard loads.
+  * Plugin panels can now render as non-fullscreen dialogs.
+  * New plugin panels: CAPS Noisegate, DISTRHO Compressor, Reverb (with mode
+    selector), GX Cabinet.
+  * More EQ plugin types (parametric, graphic, custom).
+  * Window decorations use analytic curves for consistent visuals.
+  * Analytic rounded edges for dialogs.
+  * Plugin windows match the visual style of regular windows.
+  * Plugin window UI consistent with menus; vertical centering for large dialogs.
+  * Analog controls aligned to pedal columns.
+  * (v3) Fix plugin panels not refreshing bypass on main screen.
+  * Quicker, less aggressive subtitle.
+  * Fix non-idempotent plugin tile renders.
+  * Fix dirty corner invalidation.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 02 Jul 2026 22:30:00 -0400
+
 pi-stomp (3.0-14) trixie; urgency=medium
 
   * Ethernet Audio Interface dialog: stop rebuilding every 2s and on every
