@@ -1,3 +1,48 @@
+loopjefe-lv2 (1.1.0-1) trixie; urgency=medium
+
+  * Add modgui/ (HTML + CSS) for both bundles so MOD-UI renders a custom
+    pedal instead of the generic control-port panel. Hub shows the icon
+    for the *next* state on tap (rec dot in Empty, check in Recording,
+    stop square in Playback, play triangle in Stopped), with a colored
+    ring indicating the *current* state (red/green/white). Undo, Reset,
+    and Redo sit below the hub as labelled square buttons.
+  * Collapse the surface state cycle to 4 states (Empty -> Recording ->
+    Playback <-> Stopped). The one-footswitch UX cannot disambiguate
+    "exit overdub" from "start a second overdub" so the surface never
+    routes a tap to SURFACE_OVERDUB. The full Overdub engine path
+    (STATE_OVERDUB, beginOverdub, per-sample overdub branch) is kept
+    in src/shared.h for the day a second footswitch reintroduces it
+    on the surface; the SURFACE_OVERDUB case in the state-port switch
+    is preserved as a safety-net that bounces back to SURFACE_PLAYBACK.
+  * Mode-aware reset: reset while Recording aborts the take and lands
+    on Empty (the only state with a transition back to Recording, so a
+    single tap re-arms on the next bar boundary); reset while Overdub
+    pops the most-recent overdub chunk via undoLoop -- which hands its
+    dCurrPos to srcloop so the playback cursor is preserved -- and
+    lands on Playback; reset from any other state wipes everything to
+    Empty.
+  * Fix tap during STATE_TRIG_START: a tap arriving before the bar
+    boundary ever fired previously left the engine in STATE_TRIG_START
+    while the surface advertised SURFACE_OVERDUB. Now aborts cleanly to
+    SURFACE_EMPTY (same shape as reset-during-Recording).
+  * Fix undo/redo surface desync: undo and redo previously forced
+    pLS->state to STATE_PLAY but left surface_state on whatever it was
+    (e.g. SURFACE_OVERDUB), so the next state-port tap walked a stale
+    surface. They now also normalize surface_state to SURFACE_PLAYBACK
+    (or SURFACE_EMPTY if the chunk list is now drained).
+  * Refactor: extract the shared engine (audio loop, state machine,
+    LoopChunk, undoLoop, beginOverdub, etc.) into src/shared.h and
+    shrink loopjefe/src/loopjefe.cpp and loopjefe-2x2/src/loopjefe.cpp
+    down to bundle-specific glue (PLUGIN_URI, port symbol mapping,
+    Makefile-difference). Future state-machine or beat-sync fixes now
+    land in one place instead of two.
+  * Remove dead code: the plugin->recording, plugin->playing, and
+    plugin->started member fields (and all writes to them) -- the
+    audio loop keys entirely off pLS->state, and these were carried
+    over from the original two-port design.
+
+ -- pi-gen-pistomp <noreply@github.com>  Sat, 04 Jul 2026 04:30:00 +0000
+
 loopjefe-lv2 (1.0.0-1) trixie; urgency=medium
 
   * Initial package. Forked from mod-audio/sooperlooper-lv2-plugin
