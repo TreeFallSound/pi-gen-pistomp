@@ -1,0 +1,10 @@
+loopjefe-lv2 (1.0.0-1) trixie; urgency=medium
+
+  * Initial package. Forked from mod-audio/sooperlooper-lv2-plugin
+    (itself derived from Jesse Chappell's SooperLooper). Adds beat-synced
+    (bar-quantized) recording via the LV2 time extension and a single-CC
+    5-state cycle (state/reset control ports, replacing the old
+    play_pause/record pair) for the pi-Stomp multitrack looper workflow.
+    Ships both the mono (loopjefe) and stereo (loopjefe-2x2) bundles.
+
+ -- pi-gen-pistomp <noreply@github.com>  Sat, 04 Jul 2026 01:18:54 +0000

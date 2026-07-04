@@ -31,7 +31,8 @@ apt-get install -y -qq \
     ffmpeg-pistomp \
     cabsim-lv2 \
     veja-bass-cab-lv2 \
-    veja-1960-cab-lv2
+    veja-1960-cab-lv2 \
+    loopjefe-lv2
 
 # ps-record-lcd: convenience symlink so record_lcd.py is on PATH.
 # pi-stomp.deb postinst creates /home/pistomp/pi-stomp → /opt/pistomp/pi-stomp.
