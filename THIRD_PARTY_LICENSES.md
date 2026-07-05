@@ -24,7 +24,7 @@ These are the core audio/MIDI services and supporting tools built from source an
 |---|---|---|---|---|
 | amidithru | 1.0-3 | GPL v2+ | BlokasLabs | [github.com/BlokasLabs/amidithru](https://github.com/BlokasLabs/amidithru.git) |
 | browsepy | 0.5 | MIT | mod-audio | [github.com/micahvdm/browsepy](https://github.com/micahvdm/browsepy.git) |
-| cabsim-lv2 | (VeJa Cabinet Simulator) | Unattributed¹ | VeJa-Plugins | [github.com/VeJa-Plugins/Cabinet-Simulator](https://github.com/VeJa-Plugins/Cabinet-Simulator.git) |
+| cabsim-lv2 | (VeJa Cabinet Simulator) | ISC (assumed) ³ | VeJa-Plugins (Jan Janssen) | [github.com/VeJa-Plugins/Cabinet-Simulator](https://github.com/VeJa-Plugins/Cabinet-Simulator.git) |
 | ffmpeg-pistomp | 7.1.1 | GPL-3.0+ ² | FFmpeg team | [ffmpeg.org](https://ffmpeg.org) |
 | fluidsynth-headless / libfluidsynth2-compat | 2.5.2 | LGPL-2.1+ | FluidSynth contributors | [github.com/FluidSynth/fluidsynth](https://github.com/FluidSynth/fluidsynth) |
 | hylia | 1.0.1 | GPL v2+ | FalkTX | [github.com/falkTX/Hylia](https://github.com/falkTX/Hylia.git) |
@@ -40,12 +40,12 @@ These are the core audio/MIDI services and supporting tools built from source an
 | pi-gen | 2025-11-24-raspios-bookworm-arm64 | BSD-3-Clause ([full text](./LICENSE-pi-gen)) | RPi-Distro | [github.com/RPi-Distro/pi-gen](https://github.com/RPi-Distro/pi-gen) |
 | sfizz-pistomp (sfizz-ui) | 1.2.3 | BSD-2-Clause | sfztools | [github.com/sfztools/sfizz-ui](https://github.com/sfztools/sfizz-ui.git) |
 | touchosc2midi | 0.0.12 | MIT | BlokasLabs | [github.com/BlokasLabs/touchosc2midi](https://github.com/BlokasLabs/touchosc2midi.git) |
-| veja-1960-cab-lv2 | (Marshall 1960) | Unattributed¹ | VeJa-Plugins | [github.com/VeJa-Plugins/Marshall-1960](https://github.com/VeJa-Plugins/Marshall-1960.git) |
-| veja-bass-cab-lv2 | (Bass Cabinets) | Unattributed¹ | VeJa-Plugins | [github.com/VeJa-Plugins/Bass-Cabinets](https://github.com/VeJa-Plugins/Bass-Cabinets.git) |
+| veja-1960-cab-lv2 | (Marshall 1960) | ISC (assumed) ³ | VeJa-Plugins (Jan Janssen) | [github.com/VeJa-Plugins/Marshall-1960](https://github.com/VeJa-Plugins/Marshall-1960.git) |
+| veja-bass-cab-lv2 | (Bass Cabinets) | ISC (assumed) ³ | VeJa-Plugins (Jan Janssen) | [github.com/VeJa-Plugins/Bass-Cabinets](https://github.com/VeJa-Plugins/Bass-Cabinets.git) |
 
 > **Note:** `mod-ui` is distributed from this project's own fork (TreeFallSound/mod-ui), tracking upstream mod-audio/mod-ui, AGPL-3.0. `jackbridge` packages this project's own fork of `madhatter68/JackRouter` (MIT), which provides the netJACK2 bridge helper scripts.
 >
-> ¹ **VeJa-Plugins repos carry no LICENSE file or in-source license header.** They are LV2 audio plugins forked/patched by this project (`cabsim-lv2`, `veja-1960-cab-lv2`, `veja-bass-cab-lv2`) for arbitrary JACK period-size support. Treated here as all-rights-reserved-by-default pending clarification from the upstream author; if you are the rights holder and can clarify licensing terms, please [open an issue](../../issues).
+> ³ **`cabsim-lv2`, `veja-1960-cab-lv2`, and `veja-bass-cab-lv2`'s upstream repos have no LICENSE file, which appears to be an oversight** — every other plugin in the VeJa-Plugins org (e.g. [Noise-Gate](https://github.com/VeJa-Plugins/Noise-Gate/blob/master/LICENSE)) ships the same ISC-style notice ("VEJA \<Plugin\>, Copyright (C) Jan Janssen \<jan@moddevices.com\>"). Assumed to carry the same license pending confirmation from the author; `debian/copyright` in each package records this assumption.
 >
 > ² `ffmpeg-pistomp` is built with `--enable-gpl --enable-version3 --enable-libx264`, which places the resulting binary under GPL-3.0-or-later (not LGPL).
 
