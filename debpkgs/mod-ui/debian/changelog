@@ -1,3 +1,11 @@
+mod-ui (3.0-9) trixie; urgency=medium
+
+  * Set PYTHONUNBUFFERED=1 in the service unit so print()-based error
+    paths and Python tracebacks reach journald on crash instead of
+    being lost to block-buffered stdout when piped to systemd.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 05 Jul 2026 00:00:00 +0000
+
 mod-ui (3.0-8) trixie; urgency=medium
 
   * Sync browser tab title with the active pedalboard and snapshot:

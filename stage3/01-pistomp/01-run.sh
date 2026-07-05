@@ -189,7 +189,7 @@ for pkg in \
         -exec install -m 644 {} "${ROOTFS_DIR}/opt/pistomp/factory-debs/" \; 2>/dev/null || true
 done
 
-# Version info — use dpkg-query since the source tree is deb-managed (no .git)
+# Version info for .osbuild — use the dpkg package version (no .git shipped).
 software_version=$(on_chroot <<EOF
 dpkg-query -W -f='\${Version}' pi-stomp
 EOF

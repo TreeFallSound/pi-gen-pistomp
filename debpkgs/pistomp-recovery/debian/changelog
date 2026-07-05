@@ -1,3 +1,41 @@
+pistomp-recovery (0.1.0-23) trixie; urgency=medium
+
+  * Crash screen now reports "crashed" instead of the misleading
+    "activating" ActiveState when a service has crashed and Restart=always
+    has already queued the next attempt. The label is driven by systemd's
+    Result property (exit-code, signal, core-dump, ...) which persists
+    across ActiveState transitions and only resets on a successful start,
+    so the root-cause service is identifiable even mid-restart-loop.
+  * Pin the "<--" crash marker to the first failed service in the chain
+    (the actual root cause) rather than only firing on ActiveState=failed,
+    which almost never shows up in practice due to the OnFailure race.
+  * Capture per-service Result in CrashInfo.service_results so the screen
+    can distinguish "crashed and restarting" from "clean inactive wait".
+  * Fetch 100 journal lines for the on-screen log textarea (was 10) so the
+    last-6 slice catches the actual traceback even when a restart loop has
+    filled the journal with systemd's own Starting/Started lines above it.
+    The deeper fullscreen log viewer already fetched 100; both now match.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 05 Jul 2026 00:00:00 +0000
+
+pistomp-recovery (0.1.0-22) trixie; urgency=medium
+
+  * Refuse pi-stomp apt updates when its source tree is git-expanded
+    (e.g. via util/expand-git.sh); apt would otherwise overwrite the
+    developer's git-managed checkout. The System updates row for pi-stomp
+    shows the local short hash (suffixed with '*' if the working tree is
+    dirty) instead of the apt version, and the version-upgrade badge is
+    rendered in red to flag the blocked upgrade.
+  * When pi-stomp is filtered from an "Update All" run, the badge on the
+    Update All row reflects the actual install count rather than the total
+    update count, and the confirm dialog notes that pi-stomp is being
+    skipped because the user is working from git.
+  * Add Target.info: when set, the row opens an OK-only info dialog
+    (centered OK button, click to dismiss) instead of a No/Yes confirm.
+    Used for the "Cannot update pi-stomp" informational case.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 05 Jul 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-21) trixie; urgency=medium
 
   * Re-build.
