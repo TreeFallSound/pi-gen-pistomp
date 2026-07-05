@@ -1,3 +1,10 @@
+pi-stomp (3.0-18) trixie; urgency=medium
+
+  * Ship .git-meta instead of a synthetic git repo; util/expand-git.sh now
+    seeds the repo and util/contract-git.sh just removes it.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 04 Jul 2026 04:34:07 +0000
+
 pi-stomp (3.0-17) trixie; urgency=medium
 
   * Re-build.

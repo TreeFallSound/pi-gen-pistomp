@@ -19,20 +19,25 @@ override_dh_auto_test:
 	true
 
 override_dh_auto_configure:
-	# Clone pi-stomp source if not already present
+	# Clone pi-stomp source if not already present (build.sh normally does
+	# this; this is a fallback for direct dpkg-buildpackage invocations).
 	if [ ! -d "$(PISTOMP_SRC_DIR)" ]; then \
 		git clone --branch "$(PISTOMP_BRANCH)" --depth 1 \
 			"$(PISTOMP_REPO)" \
 			"$(PISTOMP_SRC_DIR)"; \
+		mkdir -p "$(PISTOMP_SRC_DIR)/.git-meta"; \
+		printf '%s\n' "$(PISTOMP_REPO)" > "$(PISTOMP_SRC_DIR)/.git-meta/origin-url"; \
+		printf '%s\n' "$(PISTOMP_BRANCH)" > "$(PISTOMP_SRC_DIR)/.git-meta/branch"; \
+		git -C "$(PISTOMP_SRC_DIR)" rev-parse HEAD > "$(PISTOMP_SRC_DIR)/.git-meta/built-sha"; \
 	fi
 
 override_dh_auto_build:
 	true
 
 override_dh_auto_install:
-	# Install source tree
+	# Install source tree (including .git-meta/ dotdir for on-device git init)
 	mkdir -p "$(SRC_INSTALL_DIR)"
-	cp -a "$(PISTOMP_SRC_DIR)"/* "$(SRC_INSTALL_DIR)/"
+	cp -a "$(PISTOMP_SRC_DIR)/." "$(SRC_INSTALL_DIR)/"
 	# Remove git metadata and test snapshots to keep the package clean
 	rm -rf "$(SRC_INSTALL_DIR)"/.git
 	rm -rf "$(SRC_INSTALL_DIR)"/tests
