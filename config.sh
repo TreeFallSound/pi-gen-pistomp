@@ -25,7 +25,7 @@ HYLIA_REF="master"  # no stable tag; pin by commit when needed
 
 # --- mod-host ---
 MOD_HOST_REPO="https://github.com/TreeFallSound/mod-host.git"
-MOD_HOST_BRANCH="fix/effect-drain-midi"
+MOD_HOST_BRANCH="master"
 
 # --- mod-ui ---
 MOD_UI_REPO="https://github.com/TreeFallSound/mod-ui.git"
