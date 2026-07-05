@@ -1,11 +1,11 @@
-pi-stomp (3.2.0) trixie; urgency=medium
+pi-stomp (3.2.0-1) trixie; urgency=medium
 
   * Official v3.2.0 release: migrate the pi-Stomp ecosystem back to the
     TreeFallSound org. Source repos and the OTA apt repo now live under
     github.com/TreeFallSound.
 
  -- Cam Gorrie <sastraxi@gmail.com>  Sun, 05 Jul 2026 12:00:00 -0400
- 
+
 pi-stomp (3.0-18) trixie; urgency=medium
 
   * Ship .git-meta instead of a synthetic git repo; util/expand-git.sh now
