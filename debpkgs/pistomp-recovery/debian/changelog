@@ -1,3 +1,21 @@
+pistomp-recovery (0.1.0-22) trixie; urgency=medium
+
+  * Refuse pi-stomp apt updates when its source tree is git-expanded
+    (e.g. via util/expand-git.sh); apt would otherwise overwrite the
+    developer's git-managed checkout. The System updates row for pi-stomp
+    shows the local short hash (suffixed with '*' if the working tree is
+    dirty) instead of the apt version, and the version-upgrade badge is
+    rendered in red to flag the blocked upgrade.
+  * When pi-stomp is filtered from an "Update All" run, the badge on the
+    Update All row reflects the actual install count rather than the total
+    update count, and the confirm dialog notes that pi-stomp is being
+    skipped because the user is working from git.
+  * Add Target.info: when set, the row opens an OK-only info dialog
+    (centered OK button, click to dismiss) instead of a No/Yes confirm.
+    Used for the "Cannot update pi-stomp" informational case.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 05 Jul 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-21) trixie; urgency=medium
 
   * Re-build.
