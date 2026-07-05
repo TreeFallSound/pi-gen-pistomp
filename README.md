@@ -1,8 +1,6 @@
 # pi-gen-pistomp
 
-> **Not the official pi-Stomp distribution.** This is an independent community build of the OS image for [pi-Stomp v2/v3](https://github.com/TreeFallSound/pi-stomp) hardware, based on [pi-gen](https://github.com/RPI-Distro/pi-gen) (Raspberry Pi OS image builder). For the official installer, see [TreeFallSound/pi-gen-pistomp](https://github.com/TreeFallSound/pi-gen-pistomp).
-
-Builds `deploy/pistompOS-<date>.img.xz` — a bootable Raspberry Pi OS image with the realtime kernel, JACK2 audio stack, and pi-Stomp application pre-installed.
+Builds `deploy/pistompOS-<date>.img.xz` — a bootable Raspberry Pi OS image with the realtime kernel, [MOD audio](https://github.com/TreeFallSound/mod-ui) stack, and [pi-Stomp](https://github.com/TreeFallSound/pi-stomp) application pre-installed.
 
 ## Quick start
 
