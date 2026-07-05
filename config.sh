@@ -24,13 +24,11 @@ HYLIA_REPO="https://github.com/falkTX/Hylia.git"
 HYLIA_REF="master"  # no stable tag; pin by commit when needed
 
 # --- mod-host ---
-MOD_HOST_REPO="https://github.com/sastraxi/mod-host.git"
+MOD_HOST_REPO="https://github.com/TreeFallSound/mod-host.git"
 MOD_HOST_BRANCH="fix/effect-drain-midi"
 
 # --- mod-ui ---
-# MOD_UI_REPO="https://github.com/TreeFallSound/mod-ui.git"
-# MOD_UI_BRANCH="master"
-MOD_UI_REPO="https://github.com/sastraxi/mod-ui.git"
+MOD_UI_REPO="https://github.com/TreeFallSound/mod-ui.git"
 MOD_UI_BRANCH="main"
 
 # --- browsepy ---
@@ -54,17 +52,15 @@ MOD_TTYMIDI_REPO="https://github.com/moddevices/mod-ttymidi.git"
 MOD_TTYMIDI_REF="master"
 
 # --- pi-stomp (application) ---
-# PISTOMP_REPO="https://github.com/TreeFallSound/pi-stomp.git"
-# PISTOMP_BRANCH="pistomp-v3"
-PISTOMP_REPO="https://github.com/sastraxi/pi-stomp.git"
+PISTOMP_REPO="https://github.com/TreeFallSound/pi-stomp.git"
 PISTOMP_BRANCH="main"
 
 # --- pistomp-recovery ---
-PISTOMP_RECOVERY_REPO="https://github.com/sastraxi/pistomp-recovery.git"
+PISTOMP_RECOVERY_REPO="https://github.com/TreeFallSound/pistomp-recovery.git"
 PISTOMP_RECOVERY_BRANCH="main"
 
 # --- JackBridge (netJACK2 DAW recording over Ethernet) ---
-JACKROUTER_REPO="https://github.com/sastraxi/JackRouter.git"
+JACKROUTER_REPO="https://github.com/TreeFallSound/JackRouter.git"
 JACKROUTER_REF="master"
 
 # --- Pedalboards / user files ---
@@ -119,7 +115,7 @@ MOD_UI_PYTHON_VERSION="3.11"
 # /etc/apt/sources.list.d/pistomp.list is built from this in
 # stage2/05-pistomp/05-run.sh. Must match the Pages URL of the repo that
 # publishes via .github/workflows/publish-apt-repo.yml.
-APT_REPO_URL="https://sastraxi.github.io/pi-gen-pistomp"
+APT_REPO_URL="https://treefallsound.github.io/pi-gen-pistomp"
 APT_REPO_SUITE="trixie"
 APT_REPO_COMPONENT="main"
 APT_REPO_ARCH="arm64"

@@ -134,7 +134,7 @@ Devices flashed before `pistomp.list` was baked in need the source added once:
 
 ```bash
 ssh pistomp@pistomp.local
-echo "deb [arch=arm64 trusted=yes] https://sastraxi.github.io/pi-gen-pistomp trixie main" \
+echo "deb [arch=arm64 trusted=yes] https://treefallsound.github.io/pi-gen-pistomp trixie main" \
   | sudo tee /etc/apt/sources.list.d/pistomp.list
 sudo apt-get update
 sudo apt-get install --only-upgrade pistomp-recovery

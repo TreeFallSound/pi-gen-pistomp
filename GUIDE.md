@@ -278,7 +278,7 @@ device /etc/apt/sources.list.d/pistomp.list  →  apt update  →  apt install -
 
 | Var | Meaning |
 | :--- | :--- |
-| `APT_REPO_URL` | Base URL of the Pages site (e.g. `https://sastraxi.github.io/pi-gen-pistomp`). Written to `pistomp.list` by `stage2/00-dummy-packages/01-run.sh`. |
+| `APT_REPO_URL` | Base URL of the Pages site (e.g. `https://treefallsound.github.io/pi-gen-pistomp`). Written to `pistomp.list` by `stage2/00-dummy-packages/01-run.sh`. |
 | `APT_REPO_SUITE` | Debian suite served by the repo (`trixie`). |
 | `APT_REPO_COMPONENT` | apt component (`main`). |
 | `APT_REPO_ARCH` | apt architecture (`arm64`). |
@@ -314,7 +314,7 @@ Devices flashed before the `pistomp.list` source was baked in need it added once
 
 ```bash
 ssh pistomp@pistomp.local
-echo "deb [arch=arm64 trusted=yes] https://sastraxi.github.io/pi-gen-pistomp trixie main" \
+echo "deb [arch=arm64 trusted=yes] https://treefallsound.github.io/pi-gen-pistomp trixie main" \
   | sudo tee /etc/apt/sources.list.d/pistomp.list
 sudo apt-get update
 sudo apt-get install --only-upgrade pistomp-recovery   # or whichever package you're shipping
