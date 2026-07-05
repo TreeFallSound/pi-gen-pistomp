@@ -7,6 +7,12 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	$(MAKE) PREFIX=/usr DESTDIR=$(CURDIR)/debian/mod-host-pistomp install
+	install -Dm 644 debian/mod-host-pistomp.mod-host.service \
+		$(CURDIR)/debian/mod-host-pistomp/lib/systemd/system/mod-host.service
+
+override_dh_installsystemd:
+	# Service enablement is handled by stage2/05-pistomp/01-run.sh ln -sf,
+	# not by deb-systemd-helper.
 
 override_dh_shlibdeps:
 	# Trixie's shlibs still maps liblilv-0-0.so.0 to the old liblilv0 name,

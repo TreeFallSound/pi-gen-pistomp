@@ -1,3 +1,17 @@
+mod-host-pistomp (0.10.6-3) trixie; urgency=medium
+
+  * Ship mod-host.service from the .deb (was installed untracked by
+    stage2/05-pistomp/01-run.sh, so apt upgrades never updated it).
+    Enablement still via the stage2 ln -sf to multi-user.target.wants.
+  * Add PIDFile=/tmp/mod-host.pid so systemd tracks the forked daemon
+    (Type=forking) and can attribute crashes to the unit instead of
+    staying stuck in 'activating' with Result=success.
+  * Wrap ExecStart with 'stdbuf -oL -eL' so printf/fprintf reaches
+    journald on crash instead of sitting in a block-buffered stdout pipe,
+    giving pistomp-recovery's log viewer actual tracebacks to show.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 05 Jul 2026 00:00:00 +0000
+
 mod-host-pistomp (0.10.6-2) trixie; urgency=medium
 
   * Bump to track upstream branch HEAD.
