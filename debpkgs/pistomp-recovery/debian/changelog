@@ -1,3 +1,23 @@
+pistomp-recovery (0.1.0-23) trixie; urgency=medium
+
+  * Crash screen now reports "crashed" instead of the misleading
+    "activating" ActiveState when a service has crashed and Restart=always
+    has already queued the next attempt. The label is driven by systemd's
+    Result property (exit-code, signal, core-dump, ...) which persists
+    across ActiveState transitions and only resets on a successful start,
+    so the root-cause service is identifiable even mid-restart-loop.
+  * Pin the "<--" crash marker to the first failed service in the chain
+    (the actual root cause) rather than only firing on ActiveState=failed,
+    which almost never shows up in practice due to the OnFailure race.
+  * Capture per-service Result in CrashInfo.service_results so the screen
+    can distinguish "crashed and restarting" from "clean inactive wait".
+  * Fetch 100 journal lines for the on-screen log textarea (was 10) so the
+    last-6 slice catches the actual traceback even when a restart loop has
+    filled the journal with systemd's own Starting/Started lines above it.
+    The deeper fullscreen log viewer already fetched 100; both now match.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 05 Jul 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-22) trixie; urgency=medium
 
   * Refuse pi-stomp apt updates when its source tree is git-expanded
