@@ -1,0 +1,7 @@
+Origin: pistomp
+Label: pistomp
+Suite: trixie
+Codename: trixie
+Architectures: arm64
+Components: main
+Description: pi-Stomp custom packages
