@@ -1,0 +1,410 @@
+Package: amidithru
+Version: 1.0-2
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 116
+Depends: libasound2t64 (>= 1.0.16), libc6 (>= 2.34), libasound2
+Priority: optional
+Section: sound
+Filename: pool/main/a/amidithru/amidithru_1.0-2_arm64.deb
+Size: 11576
+SHA256: 1dcfd9829786c0039e6d29b3dab2155662377e31e691d51f86d49135f63f8ac7
+SHA1: bd06d9ba22aeb1d03c8f34c0aac46f234344975c
+MD5sum: 6040f05b460c6b4774e5e27c028a622b
+Description: ALSA MIDI thru tool
+ A simple ALSA MIDI thru utility that routes MIDI input to output.
+
+Package: browsepy
+Version: 0.5.6-2
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 31553
+Depends: python3
+Priority: optional
+Section: web
+Filename: pool/main/b/browsepy/browsepy_0.5.6-2_arm64.deb
+Size: 4979996
+SHA256: 4dca19e970402ba28c3884b25dacba032d3337da909018b907fe0e6c86a8d83c
+SHA1: 925ecbb0efb6e597cd10c182bba8b1923e099e7c
+MD5sum: dec87cba9a2778a5453df2f9425fc99c
+Description: File browser for pi-Stomp user files
+ A simple web-based file browser for browsing and uploading user files
+ on pi-Stomp. Runs on port 8081, serving /home/pistomp/data/user-files.
+
+Package: cabsim-lv2
+Version: 1.1.1-5
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 411
+Depends: libc6 (>= 2.27), libfftw3-single3 (>= 3.3.10), libsndfile1, libsamplerate0
+Priority: optional
+Section: sound
+Filename: pool/main/c/cabsim-lv2/cabsim-lv2_1.1.1-5_arm64.deb
+Size: 360088
+SHA256: 8a3d328825834620e40044223e53fc872401aaf22e377d1f2603d3cb3bd0e353
+SHA1: bee48b389170ad5015a40cb47e6e8eb134e61f0a
+MD5sum: 0bbd32a484da025f2880c9b01ff4399f
+Description: VeJa Cabinet Simulator LV2 plugin (pistomp fork)
+ Guitar cabinet impulse response convolver with 13 speaker models
+ embedded as compiled data. Patched to support arbitrary JACK period
+ sizes (64, 128, 256+) via a generalized overlap-add implementation.
+
+Package: ffmpeg-pistomp
+Version: 7.1.1-2
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 7675
+Depends: libc6 (>= 2.38), libvorbis0a (>= 1.1.2), libx264-164 (>= 2:0.164.3108+git31e19f9)
+Conflicts: ffmpeg
+Replaces: ffmpeg
+Provides: ffmpeg
+Priority: optional
+Section: video
+Filename: pool/main/f/ffmpeg-pistomp/ffmpeg-pistomp_7.1.1-2_arm64.deb
+Size: 2322400
+SHA256: 0dfeae4abf9c6409f397a2a47cd8d34c2f9485190e0417bab7cf550c0318e250
+SHA1: 5d2be647bc36547d88b1b0bf1eb05b608db7a9ec
+MD5sum: 13fabed882c86ad961389c0c715d0f9e
+Description: Minimal ffmpeg build for pi-Stomp
+ A stripped-down ffmpeg build intended for pi-Stomp's ps-record-lcd
+ utility. Supports rawvideo input and H.264 (libx264) output to MP4,
+ plus Vorbis decoding, without any SDL2, X11, OpenGL, PulseAudio,
+ ALSA, network protocols, or other display/audio-output device
+ dependencies.
+
+Package: fluidsynth-headless
+Version: 2.5.2-2
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 815
+Depends: libasound2t64 (>= 1.0.16), libc6 (>= 2.34), libdbus-1-3 (>= 1.10), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.32.0), libgomp1 (>= 4.9), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125, libreadline8t64 (>= 6.0), libsndfile1 (>= 1.0.20), libstdc++6 (>= 14), libsystemd0
+Conflicts: libfluidsynth3
+Replaces: libfluidsynth3
+Provides: libfluidsynth3
+Priority: optional
+Section: sound
+Filename: pool/main/f/fluidsynth-headless/fluidsynth-headless_2.5.2-2_arm64.deb
+Size: 242564
+SHA256: cfe2b75ea5818b8c4e1e28a2750f188bfb03f4f39cc7c99b503b6dfb6ee4b1ea
+SHA1: f6d1456315eecd371c7343add57339490721cefd
+MD5sum: 656dc20f21c64b8f7e2dc10c880e43d0
+Description: FluidSynth CLI + headless shared library
+ A headless build of FluidSynth with only JACK and ALSA audio
+ support (no PulseAudio, no PortAudio, no SDL3).  Ships both the
+ fluidsynth CLI binary and libfluidsynth.so.3, replacing the
+ Debian Trixie libfluidsynth3 package to avoid its SDL/PulseAudio
+ dependencies.
+
+Package: hylia
+Version: 1.0-2
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 986
+Priority: optional
+Section: libs
+Filename: pool/main/h/hylia/hylia_1.0-2_arm64.deb
+Size: 107980
+SHA256: 8953bbba444184d78a325ed090f297869b1a145fa88c138b2a909e526987b24e
+SHA1: 0f503ce6de0fc9732f2c748c6e43864967b12e31
+MD5sum: 4d29d5a9d1d938b51dde93dc2aa91659
+Description: JACK-aware Ableton Link wrapper
+ Provides libhylia for synchronising JACK transports with Ableton Link
+ sessions. Required by mod-host-pistomp at build time.
+
+Package: jack-capture
+Version: 0.9.73-2
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 142
+Depends: libc6 (>= 2.38), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125, liblo7 (>= 0.26~repack), libmp3lame0 (>= 3.100), libsndfile1 (>= 1.0.20)
+Priority: optional
+Section: sound
+Filename: pool/main/j/jack-capture/jack-capture_0.9.73-2_arm64.deb
+Size: 30868
+SHA256: baaba5877973c693327ed40a6332e9498d40175902c42f55714ccdfcc030624e
+SHA1: d02fba9c485f73f921fd3e9fe982dcfd27f74473
+MD5sum: 5aeed801ba0ce542529c68cbbc7b3236
+Description: Record JACK audio output to a file
+ Captures audio from any JACK port and writes it to a WAV, FLAC, or
+ MP3 file. Useful for debugging and recording sessions on pi-Stomp.
+
+Package: jack2-pistomp
+Version: 1.9.22-2
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 2512
+Depends: libasound2t64 (>= 1.0.29), libc6 (>= 2.38), libdb5.3t64, libdbus-1-3 (>= 1.10), libexpat1 (>= 2.0.1), libgcc-s1 (>= 3.0), libopus0 (>= 1.3.1-2~), libsamplerate0 (>= 0.1.7), libstdc++6 (>= 14), libsystemd0, libasound2, libdb5.3
+Conflicts: jack2, jackd2, libjack-jackd2-0
+Replaces: jack2, jackd2, libjack-jackd2-0
+Provides: jackd2, libjack-dev, libjack-jackd2-0 (= 1.9.22~dfsg-4)
+Priority: optional
+Section: sound
+Filename: pool/main/j/jack2-pistomp/jack2-pistomp_1.9.22-2_arm64.deb
+Size: 450160
+SHA256: c76f6c9375077bed277c83d35e2157091bb12afe2d29eb18a046f55ee9f67d29
+SHA1: a1b051e317f64400d0a4ec870707d6846df03ad5
+MD5sum: a57acc4ea7589bb00d725ea7b644a4fd
+Description: JACK Audio Connection Kit v2 (pi-Stomp build)
+ JACK is a low-latency audio server. This build includes the
+ pi-controller-reset stability fix and links against libdb 5.3.
+
+Package: jackbridge
+Version: 1.0-4
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 31
+Depends: jack2-pistomp, jack-example-tools, iproute2
+Priority: optional
+Section: sound
+Filename: pool/main/j/jackbridge/jackbridge_1.0-4_arm64.deb
+Size: 8380
+SHA256: 6c9f0f99af4c15e6a4fc364f4ab493cd305ae00fac0fff3dde48e655213182d8
+SHA1: 3ee5038f1fe293dd85bfbe4bd68081626314e551
+MD5sum: c9de3c88dfa8f3552db7482864d5dd28
+Description: netJACK2 client for DAW recording over Ethernet
+ Installs the pi-side JackBridge service: 6 helper scripts under
+ /usr/local/libexec/jackbridge/ plus pi-stomp-jackbridge.service.
+ The service is on-demand only (not enabled at boot); the LCD UI
+ starts/stops it via systemctl.
+
+Package: lcd-splash
+Version: 1.0-17
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Depends: lg-pistomp
+Priority: optional
+Section: misc
+Filename: pool/main/l/lcd-splash/lcd-splash_1.0-17_arm64.deb
+Size: 12080
+SHA256: 6228d41668073aca6b874e8a1caca018749bcd90725fe75569415688c5cfcfe8
+SHA1: 0f85a331311814fe2e73dc2fc23c38b773824ac5
+MD5sum: c59a9a0103af5a16fade9971accc932c
+Description: Fast ILI9341 LCD boot splash for pi-Stomp
+ Drives the 320x240 SPI LCD directly (spidev + lgpio) with no
+ Python/interpreter overhead. Displays a pre-converted RGB565 image
+ with optional text overlay.
+
+Package: lg-pistomp
+Version: 0.2.2-5
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 418
+Depends: libc6 (>= 2.34), python3
+Conflicts: lg, liblgpio1, python3-lgpio, python3-rpi-lgpio
+Replaces: lg, liblgpio1, python3-lgpio, python3-rpi-lgpio
+Provides: lg
+Priority: optional
+Section: libs
+Filename: pool/main/l/lg-pistomp/lg-pistomp_0.2.2-5_arm64.deb
+Size: 73056
+SHA256: 05dc5bf16554a71570065ad743b169970ba4661599d39c131a60ff0c5e247d71
+SHA1: f161a81941cc194e4966b3e53df84c2151545fdc
+MD5sum: a68ed9f13f204de255eff9a082c46395
+Description: Linux C library and Python bindings for GPIO (lgpio/rgpio)
+ Provides liblgpio.so.1, C headers, and Python SWIG bindings for GPIO
+ on Raspberry Pi. Built from joan2937/lg v0.2.2.
+
+Package: libfluidsynth2-compat
+Version: 2.3.4-3
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Depends: fluidsynth-headless
+Priority: optional
+Section: libs
+Filename: pool/main/libf/libfluidsynth2-compat/libfluidsynth2-compat_2.3.4-3_arm64.deb
+Size: 1092
+SHA256: 95edf0011f5fd0607675a4a33897d86392be6e42390055a2e9045fb29b127ff1
+SHA1: 4a2a875a35146a16f763743c0a6971814fc3ad6f
+MD5sum: 84ab0db17574449b7da75c101db61543
+Description: FluidSynth .so.2 compatibility shim for prebuilt LV2 plugins
+ Creates a libfluidsynth.so.2 symlink pointing to the real .so.3 library
+ (shipped by fluidsynth-headless) so that prebuilt LV2 plugins compiled
+ against libfluidsynth.so.2 can load on Trixie.
+
+Package: mod-host-pistomp
+Version: 0.10.6-3
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 934
+Depends: libc6 (>= 2.38), libfftw3-double3 (>= 3.3.10), libfftw3-single3 (>= 3.3.10), libgcc-s1 (>= 3.0), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125, liblilv-0-0 (>= 0.22.0~dfsg0), libreadline8t64 (>= 6.0), libstdc++6 (>= 14), liblo7, libreadline8, hylia
+Conflicts: mod-host
+Replaces: mod-host
+Provides: mod-host
+Priority: optional
+Section: sound
+Filename: pool/main/m/mod-host-pistomp/mod-host-pistomp_0.10.6-3_arm64.deb
+Size: 168704
+SHA256: d926eb4890255f6cc07b94bc5e18d384ea3bebee4a24bfd05f522032ce1e00d3
+SHA1: 7891a0afa99acbffa7a4fb88ca6865068031b212
+MD5sum: d46b29abec5d941a67b2df723aa3a190
+Description: MOD Host — LV2 plugin host for JACK (pi-Stomp fork)
+ Forked from moddevices/mod-host with the fix/effect-drain-midi branch
+ for proper MIDI effect drain on pedalboard changes.
+
+Package: mod-midi-merger
+Version: 1.0-4
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 144
+Depends: libc6 (>= 2.34), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125
+Priority: optional
+Section: sound
+Filename: pool/main/m/mod-midi-merger/mod-midi-merger_1.0-4_arm64.deb
+Size: 6056
+SHA256: b03e6500ffd63d8e02fa4f9e4dfef9a209f5c18217e291e0720682c03a17500b
+SHA1: da9b29e6200f3b75cf081dc4570e242452c7e978
+MD5sum: 17327bda262a6e609efd4123f83f3de6
+Description: MOD MIDI Merger — merge multiple MIDI inputs into one JACK port
+ Part of the MOD ecosystem. Merges multiple ALSA MIDI inputs into a single
+ JACK MIDI output port.
+
+Package: mod-ttymidi
+Version: 1.0-3
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 146
+Depends: libc6 (>= 2.34), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125
+Priority: optional
+Section: sound
+Filename: pool/main/m/mod-ttymidi/mod-ttymidi_1.0-3_arm64.deb
+Size: 9388
+SHA256: f1cc109fd77ccc0685cd73f721be573ac10e54ac81355d0bd4c380fbc1d797ee
+SHA1: 96ac2e3ca104b0afbcb3582408db95bfb92a9c54
+MD5sum: cd49e72918b05b3586e6e7b7b35d3264
+Description: MOD ttymidi — serial MIDI bridge
+ A simple serial port to ALSA/JACK MIDI bridge, part of the MOD ecosystem.
+
+Package: mod-ui
+Version: 3.0-10
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 177749
+Depends: python3, jack2-pistomp, mod-host-pistomp
+Priority: optional
+Section: web
+Filename: pool/main/m/mod-ui/mod-ui_3.0-10_arm64.deb
+Size: 48572016
+SHA256: b4932a31f9f9bde5e8b6c60971d66b35a9c595631e4f48e885ad8a965b5d4def
+SHA1: d6eccb9f889ef69fe452852ae4697d7d61296105
+MD5sum: da5c16f5f9ba56e171a6f6fa93ea321b
+Description: MOD Web UI — web-based pedalboard interface for pi-Stomp
+ MOD UI is a web-based interface for managing pedalboards on MOD
+ devices. This build runs in a Python 3.11 venv (required by
+ tornado==4.3) and is configured for pi-Stomp.
+
+Package: pi-stomp
+Version: 3.2.0-1
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 168881
+Depends: python3, lg-pistomp, python3-lilv, mod-host-pistomp, mod-ui, mod-midi-merger, mod-ttymidi, amidithru, jack2-pistomp, hylia, sfizz-pistomp, lcd-splash, jack-capture
+Priority: optional
+Section: sound
+Filename: pool/main/p/pi-stomp/pi-stomp_3.2.0-1_arm64.deb
+Size: 33906344
+SHA256: e125a596689ad7ba0682cf89a2df8b098f736aee13a841b6e313d2f28e0e8cb9
+SHA1: 80d779c17630ef0282696539a5d7edacc074e9a6
+MD5sum: 2322d6ae87048ccdf07853cd02b84b52
+Description: pi-Stomp application — guitar effects pedalboard software
+ The pi-Stomp application code, uv-managed venv, and systemd service.
+ Installs to /opt/pistomp/pi-stomp/ with a symlink at
+ /home/pistomp/pi-stomp for deploy.sh compatibility.
+ .
+ Ships .git-meta/ (origin URL, branch, built-sha) instead of a .git
+ directory. Run util/expand-git.sh on the device to seed a real git repo,
+ fetch full history and tags, and enable `git describe --dirty=*`.
+
+Package: pistomp-recovery
+Version: 0.1.0-23
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 119031
+Depends: python3, jack2-pistomp, lg-pistomp, libasound2, libfreetype6
+Priority: optional
+Section: utils
+Filename: pool/main/p/pistomp-recovery/pistomp-recovery_0.1.0-23_arm64.deb
+Size: 22782868
+SHA256: 3fff1ccae805edb146e8283e6c4b2105c2d16e855981d7de788b6e64ed9cd141
+SHA1: b5d9cd8feb5d50c5cbeabd7437ee5204459fd04f
+MD5sum: 45811ab6f28625faeb552adaebe659a2
+Description: Package update and recovery service for pi-Stomp
+ Recovery service that provides LCD-based factory reset, package rollback,
+ and OTA update management. Runs as a systemd service triggered on
+ mod-ala-pi-stomp failure (3 crashes in 3 minutes).
+
+Package: sfizz-pistomp
+Version: 1.2.3-8
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 6381
+Depends: libc6 (>= 2.40), libgcc-s1 (>= 3.3.1), libstdc++6 (>= 14)
+Conflicts: sfizz, sfizz-lv2
+Replaces: sfizz, sfizz-lv2
+Provides: sfizz, sfizz-lv2
+Homepage: https://github.com/sfztools/sfizz-ui
+Priority: optional
+Section: sound
+Filename: pool/main/s/sfizz-pistomp/sfizz-pistomp_1.2.3-8_arm64.deb
+Size: 1051516
+SHA256: 5b389431beac41e159133c6096bceb150167805491911ec8c801dcdea6c813b2
+SHA1: 9edc5920f37e74f669626f2b1ee22694a78df1fd
+MD5sum: 86c61775ad66e490312545361c4d968d
+Description: SFZ library and LV2 plugin (minimal, headless)
+ sfizz is an SFZ parser and synth C++ library and set of plugins.
+ This build is a minimal headless LV2-only variant for pi-Stomp, with
+ MOD Audio file type annotations for the SFZ file browser.
+
+Package: touchosc2midi
+Version: 1.0-4
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 25644
+Depends: python3, python3-venv
+Priority: optional
+Section: sound
+Filename: pool/main/t/touchosc2midi/touchosc2midi_1.0-4_arm64.deb
+Size: 5791984
+SHA256: ce4835f01c654176d7a6323d9a6a0295b6587bdb68de5a3d231dc58c8468b68d
+SHA1: f513c5414ad1ba2addbd3a8a3f987c6cac9f4622
+MD5sum: 4bb2876f56853d57475c5e6d3414a94a
+Description: TouchOSC to MIDI bridge
+ Bridges TouchOSC (iOS/Android) OSC messages to ALSA/JACK MIDI.
+ Installed in an isolated venv at /opt/pistomp/venvs/touchosc2midi.
+
+Package: veja-1960-cab-lv2
+Version: 1.0-2
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 3659
+Depends: libc6 (>= 2.27), libfftw3-single3 (>= 3.3.10), libsndfile1 (>= 1.0.20)
+Priority: optional
+Section: sound
+Filename: pool/main/v/veja-1960-cab-lv2/veja-1960-cab-lv2_1.0-2_arm64.deb
+Size: 2763896
+SHA256: 883938777d45994a04b63d65a6cca78e8016277bcfbde1f43dab9e277bd00b4e
+SHA1: 35098dbcfac6f89f06422d683a0a0a0943e4b350
+MD5sum: 42d7ff90d2765351a2afd9759572898d
+Description: VeJa Marshall 1960 Cabinet LV2 plugin (pistomp fork)
+ Marshall 1960A guitar cabinet convolver that loads IR .wav files from
+ the bundle directory at runtime. Patched to support arbitrary JACK
+ period sizes and to use bundle_path instead of a hardcoded /root/.lv2/
+ prefix so the plugin works when installed anywhere.
+
+Package: veja-bass-cab-lv2
+Version: 1.0-2
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 452
+Depends: libc6 (>= 2.27), libfftw3-single3 (>= 3.3.10)
+Priority: optional
+Section: sound
+Filename: pool/main/v/veja-bass-cab-lv2/veja-bass-cab-lv2_1.0-2_arm64.deb
+Size: 329632
+SHA256: 519fb7c4a4f5aba223f96c4fc15d8589b3cd7a3caaef7a13503b2344d34f01ed
+SHA1: b566d629e416b5d85da95ed3c08099a833e2119a
+MD5sum: 487299a037a52029240787ea7ff03780
+Description: VeJa Bass Cabinets LV2 plugin (pistomp fork)
+ Bass guitar cabinet impulse response convolver with multiple speaker
+ models embedded as compiled data. Patched to support arbitrary JACK
+ period sizes (64, 128, 256+) via a generalized overlap-add implementation.
+
