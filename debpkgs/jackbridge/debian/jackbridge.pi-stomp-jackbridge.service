@@ -1,6 +1,6 @@
 [Unit]
 Description=JackBridge — netJACK2 client for DAW recording over Ethernet
-Documentation=https://github.com/sastraxi/JackRouter
+Documentation=https://github.com/TreeFallSound/JackRouter
 # Attaches as a client to the stock pi-stomp jack stack. We don't replace it.
 Requires=jack.service
 After=jack.service mod-host.service

@@ -31,7 +31,7 @@ These are the core audio/MIDI services and supporting tools built from source an
 | jack-capture | git a539d44 | GPL-2.0+ | kmatheussen | [github.com/kmatheussen/jack_capture](https://github.com/kmatheussen/jack_capture.git) |
 | jack-example-tools | Debian release 4-4 | GPL 2 | Debian Multimedia Team | [salsa.debian.org/multimedia-team/jack-example-tools](https://salsa.debian.org/multimedia-team/jack-example-tools.git) |
 | jack2 | 1.9.22 | GPL 2 | jackaudio | [github.com/jackaudio/jack2](https://github.com/jackaudio/jack2.git) |
-| jackbridge | (JackRouter fork) | MIT | sastraxi, orig. madhatter68 | [github.com/sastraxi/JackRouter](https://github.com/sastraxi/JackRouter.git) |
+| jackbridge | (JackRouter fork) | MIT | TreeFallSound, orig. madhatter68 | [github.com/TreeFallSound/JackRouter](https://github.com/TreeFallSound/JackRouter.git) |
 | lg-pistomp | v0.2.2 | Unlicense | joan2937 | [github.com/joan2937/lg](https://github.com/joan2937/lg.git) |
 | mod-host | 0.10.6 | GPL v3+ | mod-audio | [github.com/mod-audio/mod-host](https://github.com/mod-audio/mod-host) |
 | mod-midi-merger | None | ISC | mod-audio | [github.com/mod-audio/mod-midi-merger](https://github.com/mod-audio/mod-midi-merger) |

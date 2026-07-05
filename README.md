@@ -86,7 +86,7 @@ To change which pi-stomp branch is baked in, edit `PISTOMP_BRANCH` in `config.sh
 
 ## Workflow for pi-stomp code changes
 
-1. Push changes to `sastraxi/pi-stomp` on the `main` branch.
+1. Push changes to `TreeFallSound/pi-stomp` on the `main` branch.
 2. Run `./build-docker.sh -f && ./compress-img.sh` — Stage 3 clones the branch fresh at build time.
 
 To use a different branch (or fork) during development, see [config.sh](./config.sh).
