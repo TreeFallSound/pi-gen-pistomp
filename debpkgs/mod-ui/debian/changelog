@@ -1,3 +1,11 @@
+mod-ui (3.0-10) trixie; urgency=medium
+
+  * Fix crash when opening plugins whose lv2:project maintainer lacks
+    a foaf:homepage (AMS Envelope, Ratatouille, guitarix distortion
+    pedals, and 24 others).
+
+ -- pi-gen-pistomp <noreply@github.com>  Sun, 05 Jul 2026 20:15:55 +0000
+
 mod-ui (3.0-9) trixie; urgency=medium
 
   * Set PYTHONUNBUFFERED=1 in the service unit so print()-based error
