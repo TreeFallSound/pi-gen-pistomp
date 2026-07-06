@@ -1,3 +1,9 @@
+pi-stomp (3.2.0-2) trixie; urgency=medium
+
+  * Gate NAM capture panel on reamp WAV presence instead of crashing.
+
+ -- pi-gen-pistomp <noreply@github.com>  Mon, 06 Jul 2026 01:56:29 +0000
+
 pi-stomp (3.2.0-1) trixie; urgency=medium
 
   * Official v3.2.0 release: migrate the pi-Stomp ecosystem back to the
