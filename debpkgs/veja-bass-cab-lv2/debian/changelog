@@ -1,3 +1,9 @@
+veja-bass-cab-lv2 (1.0-2) trixie; urgency=medium
+
+  * Add debian/copyright documenting assumed ISC license.
+
+ -- pi-gen-pistomp <noreply@github.com>  Sun, 05 Jul 2026 15:45:51 +0000
+
 veja-bass-cab-lv2 (1.0-1) trixie; urgency=medium
 
   * Initial package: VeJa Bass Cabinets LV2 plugin (pistomp fork).

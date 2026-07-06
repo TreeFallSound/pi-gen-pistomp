@@ -27,7 +27,7 @@ source "${ROOT_DIR}/config.sh"
 # shellcheck source=./pkg-sources.sh
 source "${ROOT_DIR}/scripts/pkg-sources.sh"
 
-REPO_OWNER="${GH_REPO_OWNER:-sastraxi}"
+REPO_OWNER="${GH_REPO_OWNER:-TreeFallSound}"
 REPO_NAME="${GH_REPO_NAME:-pi-gen-pistomp}"
 REPO_SLUG="${REPO_OWNER}/${REPO_NAME}"
 
