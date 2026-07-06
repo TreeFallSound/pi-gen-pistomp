@@ -21,7 +21,7 @@ Flash the `.img.xz` you just downloaded to a microSD card using the latest versi
 
 ### Step 2 — Configure `pistomp.conf` (before first boot)
 
-After flashing, the card's boot partition mounts as a small FAT volume (named `boot` or `bootfs`). Open `pistomp.conf` on it and edit the values for your setup. The file lives at the root of the boot partition:
+After flashing, the card's boot partition mounts as a small FAT volume (named `BOOTFS`). Open `pistomp.conf` on it and edit the values for your setup. The file lives at the root of the boot partition:
 
 | Setting | Meaning | Default |
 | :--- | :--- | :--- |
