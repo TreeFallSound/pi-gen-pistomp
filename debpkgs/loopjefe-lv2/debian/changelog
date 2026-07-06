@@ -1,3 +1,35 @@
+loopjefe-lv2 (1.2.0-1) trixie; urgency=medium
+
+  * Tempo-follow: recorded loops now follow the host transport tempo,
+    pitch-preserved, via Rubber Band R3 real-time stretching. Change the
+    BPM in MOD and existing loops retune to match without changing pitch.
+  * New advance/reset footswitch model: the state port is now read-only
+    feedback (for the LED / MOD UI); a new momentary advance input steps
+    the cycle (Empty -> Recording -> Playback <-> Stopped). reset is
+    mode-aware: abort the take while recording, pop the last layer while
+    overdubbing (cursor preserved), or wipe everything from other states.
+    Overdub is armed from Playback via reset (RC-505 two-button-per-track
+    model: shortpress = advance, longpress = reset).
+  * Beat-synced record lifecycle: record start quantizes to the next
+    downbeat; stop rounds the loop to the nearest whole bar (sub-half-bar
+    takes are discarded). Overdub arm/commit quantize to the next loop
+    wrap. Free-run fallback when transport is stopped or absent.
+  * Tempo-change-mid-capture abort: changing the transport BPM while
+    recording or overdubbing drops the in-progress take/layer cleanly
+    (Recording -> Empty; Overdub -> Playback, cursor preserved) rather
+    than committing a stretched or fractional-length capture.
+  * Phase anchoring: loops now stay bar-locked to the transport at
+    constant tempo (the old free-running counter drifted ~0.5
+    sample/loop against a fractional true bar length). The playback
+    cursor re-seeds from time:bar / time:barBeat every block.
+  * Overdub layering is pure-additive by default (OVERDUB_DECAY = 1.0,
+    matching the RC-505 "ensemble" mode). Repeated overdubs can push past
+    0dBFS -- put a limiter after loopjefe if you need level control.
+  * Renamed SooperLooper -> LoopJefe throughout (URIs, modgui, brand,
+    labels). Jesse Chappell's copyright headers retained (GPL).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 06 Jul 2026 00:00:00 +0000
+
 loopjefe-lv2 (1.1.0-1) trixie; urgency=medium
 
   * Add modgui/ (HTML + CSS) for both bundles so MOD-UI renders a custom
