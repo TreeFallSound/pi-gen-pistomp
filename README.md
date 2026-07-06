@@ -1,6 +1,6 @@
 # pi-gen-pistomp
 
-Builds `deploy/<date>-pistompOS.img.xz` — a bootable Raspberry Pi OS image with the realtime kernel, [MOD audio](https://github.com/TreeFallSound/mod-ui) stack, and [pi-Stomp](https://github.com/TreeFallSound/pi-stomp) application pre-installed.
+Builds the OS that [pi-Stomp](https://github.com/TreeFallSound/pi-stomp) runs on: a bootable Raspberry Pi OS image with real-time kernel, the [MOD audio](https://github.com/TreeFallSound/mod-ui) stack, and pi-Stomp! (hardware controller) application pre-installed.
 
 ## Quick start
 
