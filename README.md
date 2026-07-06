@@ -1,12 +1,12 @@
 # pi-gen-pistomp
 
-Builds `deploy/pistompOS-<date>.img.xz` — a bootable Raspberry Pi OS image with the realtime kernel, [MOD audio](https://github.com/TreeFallSound/mod-ui) stack, and [pi-Stomp](https://github.com/TreeFallSound/pi-stomp) application pre-installed.
+Builds `deploy/<date>-pistompOS.img.xz` — a bootable Raspberry Pi OS image with the realtime kernel, [MOD audio](https://github.com/TreeFallSound/mod-ui) stack, and [pi-Stomp](https://github.com/TreeFallSound/pi-stomp) application pre-installed.
 
 ## Quick start
 
-| Image | Link |
-| :--- | :--- |
-| `pistompOS-<date>.img.xz` | [Download](https://...) |
+| Hardware | Image | Link |
+| :--  | :--- | :--- |
+| v2/v3 | `pistompOS-v3.2.0-rc4.img.xz` | [Download](https://github.com/TreeFallSound/pi-gen-pistomp/releases/tag/v3.2.0-rc4) |
 
 If you just built your pi-Stomp! and are looking for the official software, you've come to the right place. Start by downloading the image above.
 
