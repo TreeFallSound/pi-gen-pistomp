@@ -1,3 +1,54 @@
+loopjefe-lv2 (1.3.0-1) trixie; urgency=medium
+
+  * Tempo-follow stretch is now a hand-rolled WSOLA voice (src/wsola.h),
+    replacing the Rubber Band R3 render cache. librubberband-dev is no
+    longer a build dependency -- tempo-follow ships self-contained. The
+    code is derived from SoundTouch's WSOLA (Olli Parviainen) and is
+    LGPL-2.1-licensed; the rest of the plugin stays GPL. Source:
+    https://www.surina.net/soundtouch/.
+  * pkg-config is no longer a build dependency: the bundle Makefiles only
+    shell out to `pkg-config --cflags lv2` under MACOS=true (the macOS dev
+    path); the Linux/MOD-device build uses the system lv2 headers from
+    lv2-dev directly.
+  * State machine unification: the engine's 9-state enum (STATE_EMPTY
+    through STATE_OVERDUB_CLOSE) is now written directly to the `state`
+    output port. The 1.2.0-era 5-value surface wrapper
+    (SURFACE_EMPTY/RECORDING/OVERDUB/PLAYBACK/STOPPED) is gone; the
+    .ttl scalePoints now expose all 9 states (Record Arm, Record Close,
+    Overdub Arm, Overdub Close are visible). The `state` port is a pure
+    read-only feedback port -- the engine state is the single source of
+    truth for both the LED/UI display and the advance/reset logic.
+  * modgui: the hub no longer walks a client-side surface cycle on tap;
+    it fires the `advance` input port, and the engine drives the visible
+    state from `state` on the next block. The hub's port role is now
+    `output-control-port` (the previously-misrouted `input-control-port`
+    was a latent bug -- the hub never actually wrote the value; only the
+    engine does).
+  * MOD Desktop support: new `make mod-desktop` target builds .dylib
+    bundles and installs them to ~/Library/Audio/Plug-Ins/LV2, with
+    manifest.ttl rewritten to point at the .dylib. tools/resign-mod-desktop.sh
+    re-signs a copy of MOD Desktop with
+    com.apple.security.cs.disable-library-validation so it will load
+    unsigned third-party LV2s (the original /Applications copy is signed
+    with library-validation on and is SIP-protected; can't be re-signed
+    in place). docs/running-on-mod-desktop.md walks the full workflow.
+  * Bundle validation: `make validate` runs `lv2info`/`lv2ls` (lilv)
+    against a staged install of both bundles and asserts the port count
+    matches what the TTL declares -- catches TTL/manifest breakage and
+    C++-enum-vs-.ttl drift that the in-process engine tests can't see.
+    lv2_validate is too noisy for MOD-style TTLs (it flags every mod:
+    property as undefined) so lilv is what we actually need.
+  * New engine tests: test_wsola.cpp (search/OLA correctness across the
+    0.5x-2x tempo range, mono+stereo), test_seam_continuity.cpp (the
+    anti-click crossfade at the loop wrap -- nothing else exercised this),
+    test_bpm_ramp_tracking.cpp (cursor pinning under a continuously
+    changing transport tempo -- reseeded from phase01 every block, so it
+    doesn't drift regardless of how the BPM ramps), and
+    test_overdub_tempo_follow.cpp (overdub layered against a
+    tempo-shifted loop, and the recorded_bpm / length invariants).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 06 Jul 2026 14:30:00 +0000
+
 loopjefe-lv2 (1.2.0-1) trixie; urgency=medium
 
   * Tempo-follow: recorded loops now follow the host transport tempo,
