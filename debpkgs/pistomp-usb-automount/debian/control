@@ -1,0 +1,11 @@
+Package: pistomp-usb-automount
+Version: 1.0.0-1
+Section: admin
+Priority: optional
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Description: Lightweight udev-based USB automount for pi-Stomp
+ Mounts USB mass-storage partitions under /media/<label> (falling back to
+ /media/<kernel-dev>) on insertion, and unmounts them on removal. Replaces
+ udisks2/usbmount; used by pi-Stomp to discover USB content storage
+ (backups, LV2 plugins, NAM models).

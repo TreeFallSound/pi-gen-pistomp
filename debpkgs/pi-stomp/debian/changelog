@@ -1,3 +1,10 @@
+pi-stomp (3.2.0-3) trixie; urgency=medium
+
+  * Discover USB mounts under /media instead of hard-coding /media/usb0
+    and the removed usbmount@dev-sda1 service.
+
+ -- pi-gen-pistomp <noreply@github.com>  Tue, 07 Jul 2026 20:08:30 +0000
+
 pi-stomp (3.2.0-2) trixie; urgency=medium
 
   * Gate NAM capture panel on reamp WAV presence instead of crashing.
