@@ -78,6 +78,15 @@ mkdir -p /etc/default
 # Unset keys are written empty; jackdrc supplies a default for each.
 # NOTE: re-running firstboot (mv firstboot.done firstboot.sh) rewrites this file
 # from pistomp.conf, discarding any edits made to /etc/default/jack directly.
+
+# reduce memory requirements while still supporting reasonable
+# pedalboard sizes. See jackdrc for the actual jackd command line.
+if grep -q 'Pi 5' /proc/device-tree/model 2>/dev/null; then
+    JACK_PORT_MAX=512
+else
+    JACK_PORT_MAX=256
+fi
+
 cat > /etc/default/jack <<EOF
 JACK_SAMPLE_RATE="${JACK_SAMPLE_RATE}"
 JACK_PERIOD="${JACK_PERIOD:-}"

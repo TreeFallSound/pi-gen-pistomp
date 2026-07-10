@@ -6,11 +6,7 @@ export DH_VERBOSE=1
 
 override_dh_auto_configure:
 	# Use bundled waf with patched waflib (imp → types for Python 3.12+)
-	#
-	# --clients / --ports-per-application size JackConnectionManager, which the
-	# graph double-buffers into the shm segment. Upstream's 256/2048 defaults cost
-	# a 36MB fixed base before a single port exists; 64/512 brings that to 8MB.
-	# A loaded pedalboard uses ~15 clients and ~42 ports. See jackdrc for --port-max.
+	# Builds with 64 clients / 512 ports per application, systemd unit, and dbus support.
 	CXXFLAGS="$(CXXFLAGS) -I/usr/include/db5.3" \
 	LDFLAGS="$(LDFLAGS) -ldb-5.3" \
 	./waf configure \
