@@ -1,0 +1,55 @@
+#!/bin/sh
+# JACK startup script. Parameters are read from /etc/default/jack, which is
+# written by firstboot.sh from /boot/pistomp.conf. If firstboot hasn't run
+# yet, this exits with an error and systemd's Restart=always will retry.
+#
+# Ships in jack2-pistomp rather than the image so it reaches devices over OTA,
+# and lives under /usr/lib rather than /etc so it is not a dpkg conffile (a
+# conffile prompt would hang the unattended `apt-get install -f -y -qq` that
+# pistomp-recovery runs).
+#
+# DO NOT EDIT: package upgrades overwrite this file. Every knob below is settable in
+# /etc/default/jack, which no package owns and dpkg never touches. To change the unit
+# itself, drop a file in /etc/systemd/system/jack.service.d/.
+set -e
+
+if [ ! -f /etc/default/jack ]; then
+    echo "ERROR: /etc/default/jack not found — firstboot.sh has not run yet" >&2
+    exit 1
+fi
+
+. /etc/default/jack
+
+if [ -z "${JACK_SAMPLE_RATE}" ]; then
+    echo "ERROR: JACK_SAMPLE_RATE not set in /etc/default/jack" >&2
+    exit 2
+fi
+
+# Defaults when /etc/default/jack has no value
+JACK_DEVICE="${JACK_DEVICE:-hw:0}"
+JACK_NPERIODS="${JACK_NPERIODS:-2}"
+JACK_RTPRIO="${JACK_RTPRIO:-75}"
+
+# A Pi 5 has both the CPU headroom for a shorter period and the RAM for more ports.
+# Everything else is a Pi 3/4, where a 512MB Pi 3A+ sets the floor.
+if grep -q 'Pi 5' /proc/device-tree/model 2>/dev/null; then
+    default_period=128
+    default_port_max=512
+else
+    default_period=256
+    default_port_max=256
+fi
+
+JACK_PERIOD="${JACK_PERIOD:-$default_period}"
+
+# JACK preallocates an 8k framebuffer per port regardless of JACK_PERIOD
+# default of 2048 => 102MB — 22% of RAM on a Pi 3A+
+# vs the ~60 ports a large pedalboard uses.
+JACK_PORT_MAX="${JACK_PORT_MAX:-$default_port_max}"
+
+# jackd splits its arguments at the first -d
+# use targeted JACK_EXTRA_ARGS / JACK_DRIVER_ARGS
+exec env JACK_DRIVER_DIR=/usr/lib/aarch64-linux-gnu/jack /usr/bin/jackd \
+    -t 2000 -R -P "${JACK_RTPRIO}" --port-max "${JACK_PORT_MAX}" ${JACK_EXTRA_ARGS:-} \
+    -d alsa -d "${JACK_DEVICE}" -r "${JACK_SAMPLE_RATE}" -p "${JACK_PERIOD}" \
+    -n "${JACK_NPERIODS}" -X seq -s ${JACK_DRIVER_ARGS:-}
