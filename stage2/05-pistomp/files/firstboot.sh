@@ -75,9 +75,8 @@ fi
 
 mkdir -p /etc/default
 
-# JACK preallocates ~33KB of shm per port regardless of period size. 256 ports is
-# ~6x what a loaded pedalboard uses and keeps the segment small enough for a 512MB
-# Pi 3A+ (v2); a Pi 5 (v3) has RAM to spare, so give it more headroom.
+# reduce memory requirements while still supporting reasonable
+# pedalboard sizes. See jackdrc for the actual jackd command line.
 if grep -q 'Pi 5' /proc/device-tree/model 2>/dev/null; then
     JACK_PORT_MAX=512
 else
