@@ -1,0 +1,18 @@
+[Unit]
+Description=Diagnostic: probe GPIO5 (LCD RESET) pull state
+Documentation=man:pinctrl(1)
+# Runs while the boot splash owns the panel: after lcd-splash has drawn it,
+# before jack.service's ExecStartPre redraws it and long before
+# mod-ala-pi-stomp.service claims the LCD.
+After=pistomp-lcd-splash.service
+Before=jack.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/pistomp/lcd-gpio5-probe.sh
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

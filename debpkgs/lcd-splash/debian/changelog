@@ -1,3 +1,10 @@
+lcd-splash (1.0-18) trixie; urgency=medium
+
+  * Detect Pi 5 vs Pi 3/4 to set correct ILI9341 MADCTL orientation (v2=flip 180, v3=normal);
+    fixes upside-down boot splash on pi-Stomp Core (v2).
+
+ -- pi-gen-pistomp <noreply@github.com>  Thu, 09 Jul 2026 23:53:13 +0000
+
 lcd-splash (1.0-17) trixie; urgency=medium
 
   * Generate DEBIAN/md5sums so dpkg --verify can detect post-install file modifications.

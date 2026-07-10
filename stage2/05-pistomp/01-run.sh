@@ -33,6 +33,10 @@ install -m 755 files/zram-stop.sh ${ROOTFS_DIR}/usr/lib/pistomp/zram-stop.sh
 # read-only rootfs recovery — detects ext4 errors and reboots to trigger fsck
 install -m 755 files/pistomp-ro-recovery.sh ${ROOTFS_DIR}/usr/lib/pistomp/pistomp-ro-recovery.sh
 
+# TEMPORARY diagnostic — remove along with lcd-gpio5-probe.service once we know
+# whether GPIO5 (LCD RESET) has an external pull-up on v2 vs v3.
+install -m 755 files/lcd-gpio5-probe.sh ${ROOTFS_DIR}/usr/lib/pistomp/lcd-gpio5-probe.sh
+
 # lcd-splash binary + splash.rgb565 are installed by the lcd-splash .deb
 # (see 02-run.sh dpkg -i /pistomp-cache/lcd-splash.deb).
 
@@ -67,6 +71,8 @@ ln -sf /usr/lib/systemd/system/wifi-check.service /etc/systemd/system/multi-user
 ln -sf /usr/lib/systemd/system/firstboot.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/zram.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/rtirq.service /etc/systemd/system/multi-user.target.wants
+# TEMPORARY diagnostic — see files/lcd-gpio5-probe.sh
+ln -sf /usr/lib/systemd/system/lcd-gpio5-probe.service /etc/systemd/system/multi-user.target.wants
 
 # mask the base image's rpi-swap-generated zram0 unit in favour of our own
 ln -sf /dev/null /etc/systemd/system/systemd-zram-setup@zram0.service
