@@ -1,3 +1,23 @@
+pistomp-recovery (0.1.0-26) trixie; urgency=medium
+
+  * Package detail screen (click a package in Updates) now has selectable
+    text rows so the nav encoder can scroll through the description/changelog
+    before reaching the Install button. Text-only rows with no targets are
+    navigable when Row.selectable=True; click is a no-op.
+  * Horizontal scroll (tweak1/tweak2) on selectable text rows: all text-only
+    rows share one _hscroll offset, matching the crash textarea behavior.
+    LEFT (CCW) scrolls text left, RIGHT (CW) scrolls text right — consistent
+    across MenuScreen, CrashScreen, and LogViewScreen.
+  * Add TWEAK2_LEFT / TWEAK2_RIGHT InputEvent variants and wire them through
+    InputManager, FakeInputManager, FakeInputBackend, and the emulator
+    (keyboard: W/S, GUI buttons). TWEAK2 is accepted everywhere TWEAK1 is.
+  * Remove textwrap from _show_package_detail; long lines are now scrollable
+    horizontally instead of wrapped.
+  * MenuScreen._build_nav now prefers the first real Target (not a text-only
+    row) so selection starts on the action button, not the description.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 10 Jul 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-25) trixie; urgency=medium
 
   * Fix nav-encoder click not registering on pi-Stomp Core (v2): the button
