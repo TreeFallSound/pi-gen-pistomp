@@ -1,3 +1,10 @@
+jack2-pistomp (1.9.22-3) trixie; urgency=medium
+
+  * Shrink JACK shm segment: build with --clients=64
+    --ports-per-application=512 (36MB fixed base -> 8MB).
+
+ -- pi-gen-pistomp <noreply@github.com>  Fri, 10 Jul 2026 03:31:46 +0000
+
 jack2-pistomp (1.9.22-2) trixie; urgency=medium
 
   * Conflicts/Replaces/versioned-Provides libjack-jackd2-0 so Debian's stock
