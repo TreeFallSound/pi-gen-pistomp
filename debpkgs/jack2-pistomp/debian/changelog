@@ -1,3 +1,13 @@
+jack2-pistomp (1.9.22-6) trixie; urgency=medium
+
+  * Conflict with, replace and provide libjack-jackd2-dev. The package
+    ships /usr/include/jack, jack.pc and the libjack*.so dev symlinks,
+    which libjack-jackd2-dev owns; without the relationship dpkg refuses
+    to install jack2-pistomp on any system that already has Debian's dev
+    package (e.g. the pi-gen build container).
+
+ -- pi-gen-pistomp <noreply@github.com>  Sat, 11 Jul 2026 19:43:37 +0000
+
 jack2-pistomp (1.9.22-5) trixie; urgency=medium
 
   * Derive JACK_PERIOD from board (128 on Pi 5, 256 otherwise) when unset.
