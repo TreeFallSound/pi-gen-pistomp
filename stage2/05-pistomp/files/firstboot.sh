@@ -42,7 +42,7 @@ if [[ -f "${CONF}" ]]; then
         nmcli connection delete "preconfigured" 2>/dev/null || true
         nmcli connection add type wifi ifname wlan0 con-name "preconfigured" \
             ssid "${WIFI_SSID}" \
-            wifi-sec.key-mgmt wpa-psk wifi-sec.psk "${WIFI_PASSWORD}" \
+            wifi-sec.key-mgmt sae wifi-sec.psk "${WIFI_PASSWORD}" \
             ipv4.route-metric 700 ipv6.route-metric 700 \
             connection.autoconnect yes || true
     fi
