@@ -53,7 +53,7 @@ MOD_TTYMIDI_REF="master"
 
 # --- pi-stomp (application) ---
 PISTOMP_REPO="https://github.com/TreeFallSound/pi-stomp.git"
-PISTOMP_BRANCH="main"
+PISTOMP_BRANCH="prerelease-for-v2"
 
 # --- pistomp-recovery ---
 PISTOMP_RECOVERY_REPO="https://github.com/TreeFallSound/pistomp-recovery.git"
