@@ -57,16 +57,45 @@ ${DOCKER} run --rm ${TTY_FLAG} \
     bash -c '
         set -e
         mkdir -p /tmp/build-pkg
+
+        # dpkg -s exits 0 for a package that is merely *known* to dpkg
+        # ("install ok not-installed"), so match the status field instead.
+        is_installed() {
+            [ "$(dpkg-query -W -f="\${db:Status-Status}" "$1" 2>/dev/null)" = "installed" ]
+        }
+
+        # The Build-Depends field of the package we are building, flattened to one
+        # line. Cached debs outside this set are installed opportunistically; only
+        # a failure inside it is fatal.
+        control=/pistomp/debpkgs/'"${PKG}"'/debian/control
+        build_deps=$(awk "/^Build-Depends:/{f=1} f{print} f&&!/^(Build-Depends:| )/{exit}" "$control" | tr "\n," "  ")
+        is_build_dep() {
+            case " $build_deps " in *" $1 "*|*" $1("*) return 0 ;; *) return 1 ;; esac
+        }
+
         # Install cached debs for build dependencies (mirrors CI build-deb.yml).
-        # dpkg -i may fail on conflicts; || true + apt-get -f resolves what it can.
+        # dpkg -i may fail on install ordering; || true + apt-get -f resolves that.
+        # A build dep still not installed afterwards is a real failure (e.g. an
+        # unresolvable conflict) — re-run dpkg -i with stderr visible and abort,
+        # rather than letting build.sh die later with a confusing unmet build-dep.
+        # Others (e.g. pi-stomp, whose runtime deps are not in this container) are
+        # expected to fail here and are not needed to build anything.
         for deb in /pistomp-cache/debpkgs/*_arm64.deb; do
             [ -f "$deb" ] || continue
             dep=$(basename "$deb" | sed "s/_.*//")
             [ "$dep" = "'"${PKG}"'" ] && continue
-            dpkg -s "$dep" >/dev/null 2>&1 && continue
+            is_installed "$dep" && continue
             echo "Installing: $dep"
             dpkg -i "$deb" 2>/dev/null || true
             apt-get install -f -y -qq 2>/dev/null || true
+            if ! is_installed "$dep"; then
+                if is_build_dep "$dep"; then
+                    echo "ERROR: build dependency $dep failed to install from $deb" >&2
+                    dpkg -i "$deb" || true
+                    exit 1
+                fi
+                echo "Skipped: $dep (not a build dependency of '"${PKG}"')"
+            fi
         done
         exec bash /pistomp/debpkgs/'"${PKG}"'/build.sh
     '
