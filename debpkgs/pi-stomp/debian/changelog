@@ -1,3 +1,15 @@
+pi-stomp (3.2.0-3) trixie; urgency=medium
+
+  * Encoder: initialise decoder state before wiring GPIO callbacks. On a
+    recovery->pi-stomp handoff, recovery releasing its pull-up on a shared
+    encoder pin (nav 17/4, tweak1 12/25) glitches the line just as pi-stomp
+    constructs its Encoder; gpiozero's initial event could fire the callback
+    before prevNextCode existed, raising AttributeError in the lgpio callback
+    thread and killing every rotary encoder (switches, being ADC-polled,
+    still worked).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 10 Jul 2026 18:05:44 -0400
+
 pi-stomp (3.2.0-2) trixie; urgency=medium
 
   * Gate NAM capture panel on reamp WAV presence instead of crashing.
