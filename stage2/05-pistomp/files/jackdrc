@@ -16,9 +16,8 @@ if [ -z "${JACK_SAMPLE_RATE}" ] || [ -z "${JACK_PERIOD}" ]; then
     exit 2
 fi
 
-# JACK preallocates an 8192-frame buffer per port regardless of JACK_PERIOD, so the
-# shm segment costs ~33KB/port on top of a ~36MB fixed base. The 2048-port default
-# means 102MB resident — 22% of RAM on a 512MB Pi 3A+. A loaded pedalboard uses ~42.
-JACK_PORT_MAX="${JACK_PORT_MAX:-256}"
+# Fallback for images predating firstboot.sh writing JACK_PORT_MAX
+# This is a conservative value that still saves a ton of RAM
+JACK_PORT_MAX="${JACK_PORT_MAX:-512}"
 
 exec env JACK_DRIVER_DIR=/usr/lib/aarch64-linux-gnu/jack /usr/bin/jackd -t 2000 -R -P 75 --port-max "${JACK_PORT_MAX}" -d alsa -d hw:0 -r "${JACK_SAMPLE_RATE}" -p "${JACK_PERIOD}" -n 2 -X seq -s
