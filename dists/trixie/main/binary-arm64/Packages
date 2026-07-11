@@ -332,6 +332,23 @@ Description: Package update and recovery service for pi-Stomp
  and OTA update management. Runs as a systemd service triggered on
  mod-ala-pi-stomp failure (3 crashes in 3 minutes).
 
+Package: pistomp-usb-automount
+Version: 1.0.0-1
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Priority: optional
+Section: admin
+Filename: pool/main/p/pistomp-usb-automount/pistomp-usb-automount_1.0.0-1_arm64.deb
+Size: 2024
+SHA256: b97e5600e458661ac31bc46e0eb137df7e5efa428dc3bc79fa54636a558fb990
+SHA1: 1aef41202e0b32d1404d7b3308da1877d71222eb
+MD5sum: f6f533ef797fd55e8c7148399c73fb5b
+Description: Lightweight udev-based USB automount for pi-Stomp
+ Mounts USB mass-storage partitions under /media/<label> (falling back to
+ /media/<kernel-dev>) on insertion, and unmounts them on removal. Replaces
+ udisks2/usbmount; used by pi-Stomp to discover USB content storage
+ (backups, LV2 plugins, NAM models).
+
 Package: sfizz-pistomp
 Version: 1.2.3-8
 Architecture: arm64
