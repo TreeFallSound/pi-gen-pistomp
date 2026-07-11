@@ -58,8 +58,11 @@
 #define CMD_PGAMCTRL    0xE0
 #define CMD_NGAMCTRL    0xE1
 
-/* MADCTL for landscape, BGR panel (MY=1, MX=1, MV=1, BGR=1) */
-#define MADCTL_LANDSCAPE 0xE8
+/* MADCTL for landscape, BGR panel.
+ * v3 (Pi 4/5, flip=False): MY=1, MX=1, MV=1, BGR=1 → 0xE8
+ * v2 (Pi 3, pistompcore, flip=True): MV=1, BGR=1 → 0x28 */
+#define MADCTL_V3 0xE8
+#define MADCTL_V2 0x28
 
 /* Text rendering — black in RGB565-BE */
 #define MSG_COLOR       __builtin_bswap16(0x0000)
@@ -118,9 +121,25 @@ static void send_data8(uint8_t val)
     send_data(&val, 1);
 }
 
+/* ── hardware detection ───────────────────────────────────── */
+
+/* Returns MADCTL for the detected hardware */
+static uint8_t detect_madctl(void)
+{
+    FILE *f = fopen("/proc/device-tree/model", "r");
+    if (f) {
+        char model[128] = {0};
+        (void)fgets(model, sizeof(model) - 1, f);
+        fclose(f);
+        if (strstr(model, "Pi 5"))
+            return MADCTL_V3;
+    }
+    return MADCTL_V2;
+}
+
 /* ── ILI9341 init ─────────────────────────────────────────── */
 
-static void lcd_init(void)
+static void lcd_init(uint8_t madctl)
 {
     if (access(INIT_STAMP, F_OK) != 0) {
         /* First call this boot: wake display */
@@ -159,7 +178,7 @@ static void lcd_init(void)
     send_cmd(CMD_PIXFMT);
     send_data8(0x55);
     send_cmd(CMD_MADCTL);
-    send_data8(MADCTL_LANDSCAPE);
+    send_data8(madctl);
 
     /* Frame rate ~79 Hz */
     send_cmd(CMD_FRMCTR1);
@@ -327,7 +346,8 @@ int main(int argc, char *argv[])
     if (gpio_h < 0) { close(spi_fd); return 1; }
 
     /* Initialise LCD if first time this boot */
-    lcd_init();
+    uint8_t madctl = detect_madctl();
+    lcd_init(madctl);
 
     /* Load pre-converted framebuffer */
     uint16_t *fb = load_image(image_path);
