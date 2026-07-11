@@ -27,6 +27,7 @@ apt-get install -y -qq \
     mod-ui \
     pi-stomp \
     pistomp-recovery \
+    pistomp-usb-automount \
     jackbridge \
     ffmpeg-pistomp \
     cabsim-lv2 \
