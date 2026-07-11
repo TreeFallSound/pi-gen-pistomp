@@ -39,10 +39,14 @@ if [[ -f "${CONF}" ]]; then
     printf 'options brcmfmac roamoff=1\n' > /etc/modprobe.d/brcmfmac.conf
 
     if [[ -n "${WIFI_SSID:-}" ]]; then
+        # wpa-psk covers WPA2 + WPA3-transition APs.
+        # WPA3-only (SAE) networks are not supported by firstboot;
+        # connect via "Nearby networks..." instead which detects them.
         nmcli connection delete "preconfigured" 2>/dev/null || true
         nmcli connection add type wifi ifname wlan0 con-name "preconfigured" \
             ssid "${WIFI_SSID}" \
-            wifi-sec.key-mgmt sae wifi-sec.psk "${WIFI_PASSWORD}" \
+            wifi-sec.key-mgmt wpa-psk wifi-sec.psk "${WIFI_PASSWORD}" \
+            wifi-sec.pmf optional \
             ipv4.route-metric 700 ipv6.route-metric 700 \
             connection.autoconnect yes || true
     fi
