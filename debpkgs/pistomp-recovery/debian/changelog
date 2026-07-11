@@ -1,3 +1,15 @@
+pistomp-recovery (0.1.0-27) trixie; urgency=medium
+
+  * Add PyYAML as a dependency via uv.
+  * Crash screen: show the failed service's journal. service_journal() ran
+    journalctl unprivileged, but the pistomp user cannot read
+    /run/log/journal, so the read failed to stderr and the crash log rendered
+    empty — recovery correctly detected the crash and then displayed nothing.
+    Run journalctl under sudo, log the failure, and render
+    '(no log available)' instead of a blank panel.
+
+ -- pi-gen-pistomp <noreply@github.com>  Sat, 11 Jul 2026 19:16:19 +0000
+
 pistomp-recovery (0.1.0-26) trixie; urgency=medium
 
   * Package detail screen (click a package in Updates) now has selectable
