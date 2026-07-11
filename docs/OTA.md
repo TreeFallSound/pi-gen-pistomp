@@ -65,7 +65,7 @@ If the tag already exists, nothing is pushed to GitHub Releases or `gh-pages`.
 
 ## Packages
 
-All 19 custom `.deb` packages have CI workflows and are published to the repo:
+All 20 custom `.deb` packages have CI workflows and are published to the repo:
 
 | Package | Notes |
 | :--- | :--- |
@@ -88,6 +88,10 @@ All 19 custom `.deb` packages have CI workflows and are published to the repo:
 | `pistomp-recovery` | python3, uv, swig, SDL2/freetype headers |
 | `jackbridge` | Shell scripts only; git |
 | `ffmpeg-pistomp` | cmake, many codec libs |
+| `cabsim-lv2` | cmake, lv2-dev |
+| `veja-bass-cab-lv2` | cmake, lv2-dev |
+| `veja-1960-cab-lv2` | cmake, lv2-dev |
+| `pistomp-usb-automount` | udev rule + shell script; no compilation |
 
 ## Adding a new package to OTA
 
@@ -134,7 +138,7 @@ Devices flashed before `pistomp.list` was baked in need the source added once:
 
 ```bash
 ssh pistomp@pistomp.local
-echo "deb [arch=arm64 trusted=yes] https://sastraxi.github.io/pi-gen-pistomp trixie main" \
+echo "deb [arch=arm64 trusted=yes] https://treefallsound.github.io/pi-gen-pistomp trixie main" \
   | sudo tee /etc/apt/sources.list.d/pistomp.list
 sudo apt-get update
 sudo apt-get install --only-upgrade pistomp-recovery

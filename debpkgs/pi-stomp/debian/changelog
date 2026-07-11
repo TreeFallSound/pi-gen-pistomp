@@ -1,3 +1,46 @@
+pi-stomp (3.2.0-4) trixie; urgency=medium
+
+  * Fix USB backup on trixie.
+  * Fix a crash on startup.
+  * Don't double-read last.json.
+  * Gate aggressive LCD reset/clear on v2 (flip=True) hardware only;
+    v3 was unaffected by the init-stamp bug that motivated it.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 11 Jul 2026 00:16:20 -0400
+
+pi-stomp (3.2.0-3) trixie; urgency=medium
+
+  * Encoder: initialise decoder state before wiring GPIO callbacks. On a
+    recovery->pi-stomp handoff, recovery releasing its pull-up on a shared
+    encoder pin (nav 17/4, tweak1 12/25) glitches the line just as pi-stomp
+    constructs its Encoder; gpiozero's initial event could fire the callback
+    before prevNextCode existed, raising AttributeError in the lgpio callback
+    thread and killing every rotary encoder (switches, being ADC-polled,
+    still worked).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 10 Jul 2026 18:05:44 -0400
+
+pi-stomp (3.2.0-2) trixie; urgency=medium
+
+  * Gate NAM capture panel on reamp WAV presence instead of crashing.
+
+ -- pi-gen-pistomp <noreply@github.com>  Mon, 06 Jul 2026 01:56:29 +0000
+
+pi-stomp (3.2.0-1) trixie; urgency=medium
+
+  * Official v3.2.0 release: migrate the pi-Stomp ecosystem back to the
+    TreeFallSound org. Source repos and the OTA apt repo now live under
+    github.com/TreeFallSound.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 05 Jul 2026 12:00:00 -0400
+
+pi-stomp (3.0-18) trixie; urgency=medium
+
+  * Ship .git-meta instead of a synthetic git repo; util/expand-git.sh now
+    seeds the repo and util/contract-git.sh just removes it.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 04 Jul 2026 04:34:07 +0000
+
 pi-stomp (3.0-17) trixie; urgency=medium
 
   * Re-build.

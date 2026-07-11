@@ -121,7 +121,7 @@ dpkg-query -W -f='{"${Package}": "${Version}"}\n' \
     cabsim-lv2 \
     veja-bass-cab-lv2 \
     veja-1960-cab-lv2 \
-    loopjefe-lv2 \
+    pistomp-usb-automount \
     | python3 -c "
 import sys, json
 pkgs = {}
@@ -185,13 +185,12 @@ for pkg in \
     hylia jack2-pistomp mod-host-pistomp amidithru mod-midi-merger \
     mod-ttymidi sfizz-pistomp fluidsynth-headless lcd-splash lg-pistomp \
     jack-capture libfluidsynth2-compat browsepy touchosc2midi mod-ui \
-    pi-stomp pistomp-recovery jackbridge ffmpeg-pistomp cabsim-lv2 veja-bass-cab-lv2 veja-1960-cab-lv2 \
-    loopjefe-lv2; do
+    pi-stomp pistomp-recovery jackbridge ffmpeg-pistomp cabsim-lv2 veja-bass-cab-lv2 veja-1960-cab-lv2 pistomp-usb-automount; do
     find "${ROOTFS_DIR}/var/cache/apt/archives" -maxdepth 1 -name "${pkg}_*.deb" \
         -exec install -m 644 {} "${ROOTFS_DIR}/opt/pistomp/factory-debs/" \; 2>/dev/null || true
 done
 
-# Version info — use dpkg-query since the source tree is deb-managed (no .git)
+# Version info for .osbuild — use the dpkg package version (no .git shipped).
 software_version=$(on_chroot <<EOF
 dpkg-query -W -f='\${Version}' pi-stomp
 EOF

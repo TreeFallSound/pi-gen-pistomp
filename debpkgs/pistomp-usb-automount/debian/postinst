@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+udevadm control --reload-rules 2>/dev/null || true
+udevadm trigger --subsystem-match=block 2>/dev/null || true
+
+#DEBHELPER#

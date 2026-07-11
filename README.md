@@ -1,10 +1,49 @@
 # pi-gen-pistomp
 
-> **Not the official pi-Stomp distribution.** This is an independent community build of the OS image for [pi-Stomp v2/v3](https://github.com/TreeFallSound/pi-stomp) hardware, based on [pi-gen](https://github.com/RPI-Distro/pi-gen) (Raspberry Pi OS image builder). For the official installer, see [TreeFallSound/pi-gen-pistomp](https://github.com/TreeFallSound/pi-gen-pistomp).
-
-Builds `deploy/pistompOS-<date>.img.xz` — a bootable Raspberry Pi OS image with the realtime kernel, JACK2 audio stack, and pi-Stomp application pre-installed.
+Builds the OS that [pi-Stomp](https://github.com/TreeFallSound/pi-stomp) runs on: a bootable Raspberry Pi OS image with real-time kernel, the [MOD audio](https://github.com/TreeFallSound/mod-ui) stack, and pi-Stomp! (hardware controller) application pre-installed.
 
 ## Quick start
+
+| Hardware | Image | Link |
+| :--  | :--- | :--- |
+| v2/v3 | `pistompOS-v3.2.0-rc4.img.xz` | [Download](https://github.com/TreeFallSound/pi-gen-pistomp/releases/tag/v3.2.0-rc4) |
+
+If you just built your pi-Stomp! and are looking for the official software, you've come to the right place. Start by downloading the image above.
+
+### Step 1 — Flash the image
+
+Flash the `.img.xz` you just downloaded to a microSD card using the latest version of [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
+
+1. Open Raspberry Pi Imager.
+2. **Choose OS** → **Use custom** → select the `pistompOS-<date>.img.xz` file.
+3. **Choose storage** → select your microSD card.
+4. Click **Write**.
+
+### Step 2 — Configure `pistomp.conf` (before first boot)
+
+After flashing, the card's boot partition mounts as a small FAT volume (named `BOOTFS`). Open `pistomp.conf` on it and edit the values for your setup. The file lives at the root of the boot partition:
+
+| Setting | Meaning | Default |
+| :--- | :--- | :--- |
+| `WIFI_SSID` | WiFi network name. Leave blank to skip WiFi. | `""` |
+| `WIFI_PASSWORD` | WiFi password (WPA2/WPA3 personal). | `""` |
+| `WIFI_COUNTRY` | ISO 3166-1 alpha-2 country code, e.g. `US`, `GB`, `DE`. Controls regulatory domain / allowed channels. | `"US"` |
+| `HOSTNAME` | Device hostname on the network (appended with `.local`). | `"pistomp"` |
+| `USER_PASSWORD` | Password for the `pistomp` user (used for SSH and console login). | `"pistomp"` |
+| `TIMEZONE` | `tz` database timezone, e.g. `US/Central`, `Europe/London`, `America/Toronto`. | `"US/Central"` |
+| `SSH_AUTHORIZED_KEY` | Paste your SSH public key here to enable key-based login. Leave blank to skip. | `""` |
+| `JACK_SAMPLE_RATE` | JACK audio sample rate in Hz. netJACK mirrors this rate. | `"48000"` |
+| `JACK_PERIOD` | JACK period (buffer frames). Lower = less latency, higher CPU cost. Powers-of-two typically: `64`, `128`, `256`. | `"64"` |
+
+These settings are applied on first boot by `firstboot.sh` and then left in place for reference. To re-apply changed settings later, delete `/boot/firmware/firstboot.done` on the booted device and reboot.
+
+### Step 3 — Install the card and boot
+
+The microSD card slot on the pi-Stomp is on the **mainboard inside the enclosure** — you'll need to open the enclosure to access it. Insert the flashed card, close the enclosure, and power on.
+
+**First boot takes up to a minute** to complete. During this time `firstboot.sh` writes your `pistomp.conf` settings to system files, expands the filesystem to fill the card, and initializes audio services. The LCD will update to let you know what it's working on, but keep in mind that the LCD will never turn off as long as there is power, so the display may be stale.
+
+## Building an image from scratch
 
 ### Prerequisites
 
@@ -33,38 +72,9 @@ This is a no-op if cached packages already exist in `cache/kernel/`. Re-run only
 * [`build-docker.sh`](./build-docker.sh) leaves the uncompressed `.img` in `deploy/`;
 * [`compress-img.sh`](./compress-img.sh) produces the dated `pistompOS-<date>.img.xz` you'll flash.
 
-### Step 3 — Flash the image
+### Step 3 - Flash the image
 
-Flash `deploy/pistompOS-<date>.img.xz` to a microSD card using the latest version of [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
-
-1. Open Raspberry Pi Imager.
-2. **Choose OS** → **Use custom** → select the `pistompOS-<date>.img.xz` file.
-3. **Choose storage** → select your microSD card.
-4. Click **Write**.
-
-### Step 4 — Configure `pistomp.conf` (before first boot)
-
-After flashing, the card's boot partition mounts as a small FAT volume (named `boot` or `bootfs`). Open `pistomp.conf` on it and edit the values for your setup. The file lives at the root of the boot partition:
-
-| Setting | Meaning | Default |
-| :--- | :--- | :--- |
-| `WIFI_SSID` | WiFi network name. Leave blank to skip WiFi. | `""` |
-| `WIFI_PASSWORD` | WiFi password (WPA2/WPA3 personal). | `""` |
-| `WIFI_COUNTRY` | ISO 3166-1 alpha-2 country code, e.g. `US`, `GB`, `DE`. Controls regulatory domain / allowed channels. | `"US"` |
-| `HOSTNAME` | Device hostname on the network (appended with `.local`). | `"pistomp"` |
-| `USER_PASSWORD` | Password for the `pistomp` user (used for SSH and console login). | `"pistomp"` |
-| `TIMEZONE` | `tz` database timezone, e.g. `US/Central`, `Europe/London`, `America/Toronto`. | `"US/Central"` |
-| `SSH_AUTHORIZED_KEY` | Paste your SSH public key here to enable key-based login. Leave blank to skip. | `""` |
-| `JACK_SAMPLE_RATE` | JACK audio sample rate in Hz. netJACK mirrors this rate. | `"48000"` |
-| `JACK_PERIOD` | JACK period (buffer frames). Lower = less latency, higher CPU cost. Powers-of-two typically: `64`, `128`, `256`. | `"64"` |
-
-These settings are applied on first boot by `firstboot.sh` and then left in place for reference. To re-apply changed settings later, delete `/boot/firmware/firstboot.done` on the booted device and reboot.
-
-### Step 5 — Install the card and boot
-
-The microSD card slot on the pi-Stomp is on the **mainboard inside the enclosure** — you'll need to open the enclosure to access it. Insert the flashed card, close the enclosure, and power on.
-
-**First boot takes up to a minute** to complete. During this time `firstboot.sh` writes your `pistomp.conf` settings to system files, expands the filesystem to fill the card, and initializes audio services. The LCD will update to let you know what it's working on, but keep in mind that the LCD will never turn off as long as there is power, so the display may be stale.
+Continue by following the [Quick start](#quick-start) instructions above.
 
 ## Configuration sources (build-time)
 
@@ -86,7 +96,7 @@ To change which pi-stomp branch is baked in, edit `PISTOMP_BRANCH` in `config.sh
 
 ## Workflow for pi-stomp code changes
 
-1. Push changes to `sastraxi/pi-stomp` on the `main` branch.
+1. Push changes to `TreeFallSound/pi-stomp` on the `main` branch.
 2. Run `./build-docker.sh -f && ./compress-img.sh` — Stage 3 clones the branch fresh at build time.
 
 To use a different branch (or fork) during development, see [config.sh](./config.sh).

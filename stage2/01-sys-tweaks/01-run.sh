@@ -5,11 +5,9 @@ install -m 644 files/50raspi		"${ROOTFS_DIR}/etc/apt/apt.conf.d/"
 # rpi-resize.service is not used — filesystem expansion is done inline in firstboot.sh
 # using growpart + resize2fs (faster, single-phase). The drop-in override is not needed.
 
-# Install lightweight USB auto-mount (replaces udisks2, no X11/GL deps).
-install -Dm 755 files/pistomp-usb-mount \
-    "${ROOTFS_DIR}/usr/local/libexec/pistomp-usb-mount"
-install -m 644 files/99-pistomp-usb-automount.rules \
-    "${ROOTFS_DIR}/etc/udev/rules.d/99-pistomp-usb-automount.rules"
+# USB auto-mount (replaces udisks2, no X11/GL deps) ships as the
+# pistomp-usb-automount .deb (installed in stage2/05-pistomp) so it also
+# reaches already-deployed devices via OTA.
 
 install -m 644 files/console-setup   	"${ROOTFS_DIR}/etc/default/"
 

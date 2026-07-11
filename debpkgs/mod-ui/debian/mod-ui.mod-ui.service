@@ -33,6 +33,7 @@ Environment=MOD_CLOUD_API=https://api.moddevices.com/v2
 Environment=MOD_HTML_DIR=/opt/pistomp/mod-ui/html
 Environment=MOD_DEFAULT_PEDALBOARD=/opt/pistomp/mod-ui/default.pedalboard
 Environment=JACK_PROMISCUOUS_SERVER=jack
+Environment=PYTHONUNBUFFERED=1
 Environment=PATCHSTORAGE_ENABLED=1
 Environment=PATCHSTORAGE_API_URL=https://patchstorage.com/api/beta/patches
 Environment=PATCHSTORAGE_PLATFORM_ID=8046

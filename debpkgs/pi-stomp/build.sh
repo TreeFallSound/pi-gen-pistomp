@@ -17,6 +17,15 @@ cache_check
     git clone --branch "${PISTOMP_BRANCH}" --depth 1 "${PISTOMP_REPO}" "${UPSTREAM_DIR}"
 record_upstream_sha
 
+# Record git metadata so the postinst can `git init` a local repo on the
+# device and scripts/expand-git.sh can later fetch full history. These
+# tiny text files ship inside the .deb (no .git directory needed).
+META_DIR="${UPSTREAM_DIR}/.git-meta"
+mkdir -p "${META_DIR}"
+printf '%s\n' "${PISTOMP_REPO}" > "${META_DIR}/origin-url"
+printf '%s\n' "${PISTOMP_BRANCH}" > "${META_DIR}/branch"
+git -C "${UPSTREAM_DIR}" rev-parse HEAD > "${META_DIR}/built-sha"
+
 # Install lg-pistomp from cache (build-time dep for liblgpio headers/library)
 dpkg -i "${CACHE_DIR}/lg-pistomp_"*"_arm64.deb" 2>/dev/null || true
 apt-get install -f -y -qq

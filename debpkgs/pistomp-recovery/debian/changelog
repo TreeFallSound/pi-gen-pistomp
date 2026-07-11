@@ -1,3 +1,91 @@
+pistomp-recovery (0.1.0-26) trixie; urgency=medium
+
+  * Package detail screen (click a package in Updates) now has selectable
+    text rows so the nav encoder can scroll through the description/changelog
+    before reaching the Install button. Text-only rows with no targets are
+    navigable when Row.selectable=True; click is a no-op.
+  * Horizontal scroll (tweak1/tweak2) on selectable text rows: all text-only
+    rows share one _hscroll offset, matching the crash textarea behavior.
+    LEFT (CCW) scrolls text left, RIGHT (CW) scrolls text right — consistent
+    across MenuScreen, CrashScreen, and LogViewScreen.
+  * Add TWEAK2_LEFT / TWEAK2_RIGHT InputEvent variants and wire them through
+    InputManager, FakeInputManager, FakeInputBackend, and the emulator
+    (keyboard: W/S, GUI buttons). TWEAK2 is accepted everywhere TWEAK1 is.
+  * Remove textwrap from _show_package_detail; long lines are now scrollable
+    horizontally instead of wrapped.
+  * MenuScreen._build_nav now prefers the first real Target (not a text-only
+    row) so selection starts on the action button, not the description.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 10 Jul 2026 00:00:00 +0000
+
+pistomp-recovery (0.1.0-25) trixie; urgency=medium
+
+  * Fix nav-encoder click not registering on pi-Stomp Core (v2): the button
+    is wired to a plain GPIO pin there (matching pi-stomp's
+    pistompcore.py sw_pin=1), not the MCP3008 ADC channel 4 used on Tre (v3).
+    GpioInputBackend now picks GpioSwitch on v2 and AdcSwitch on v3 via the
+    shared hardware/version.py::is_v2() detector.
+  * Support the Tweak knob on pi-Stomp Core, where it's a fixed-sweep
+    potentiometer on a builder-configured ADC channel rather than a rotary
+    encoder like Tre's fixed-pin tweak1. hardware/version.py::
+    tweak_adc_channels() reads the live default_config.yml's
+    hardware.analog_controllers so recovery works whether the box has Tweak 1,
+    Tweak 2, or both populated. The new TweakPot (hardware/tweak_pot.py) maps
+    the pot's absolute position directly to a step index (leftmost = step 0,
+    rightmost = step 39) and emits LEFT/RIGHT events to walk the current step
+    to match — since a bare pot doesn't spring back to center like a
+    joystick, this avoids a rate-based scheme getting stuck scrolling until
+    manually returned to an unmarked middle position. InputManager now polls
+    a list of tweak inputs instead of a single fixed one.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 09 Jul 2026 23:06:57 +0000
+
+pistomp-recovery (0.1.0-24) trixie; urgency=medium
+
+  * Detect hardware version (v2 vs v3) to set correct ILI9341 panel
+    orientation and enforce aggressive reset/clear on v2; fixes white
+    screen on recovery startup on pi-Stomp Core.
+
+ -- pi-gen-pistomp <noreply@github.com>  Fri, 10 Jul 2026 00:06:27 +0000
+
+pistomp-recovery (0.1.0-23) trixie; urgency=medium
+
+  * Crash screen now reports "crashed" instead of the misleading
+    "activating" ActiveState when a service has crashed and Restart=always
+    has already queued the next attempt. The label is driven by systemd's
+    Result property (exit-code, signal, core-dump, ...) which persists
+    across ActiveState transitions and only resets on a successful start,
+    so the root-cause service is identifiable even mid-restart-loop.
+  * Pin the "<--" crash marker to the first failed service in the chain
+    (the actual root cause) rather than only firing on ActiveState=failed,
+    which almost never shows up in practice due to the OnFailure race.
+  * Capture per-service Result in CrashInfo.service_results so the screen
+    can distinguish "crashed and restarting" from "clean inactive wait".
+  * Fetch 100 journal lines for the on-screen log textarea (was 10) so the
+    last-6 slice catches the actual traceback even when a restart loop has
+    filled the journal with systemd's own Starting/Started lines above it.
+    The deeper fullscreen log viewer already fetched 100; both now match.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 05 Jul 2026 00:00:00 +0000
+
+pistomp-recovery (0.1.0-22) trixie; urgency=medium
+
+  * Refuse pi-stomp apt updates when its source tree is git-expanded
+    (e.g. via util/expand-git.sh); apt would otherwise overwrite the
+    developer's git-managed checkout. The System updates row for pi-stomp
+    shows the local short hash (suffixed with '*' if the working tree is
+    dirty) instead of the apt version, and the version-upgrade badge is
+    rendered in red to flag the blocked upgrade.
+  * When pi-stomp is filtered from an "Update All" run, the badge on the
+    Update All row reflects the actual install count rather than the total
+    update count, and the confirm dialog notes that pi-stomp is being
+    skipped because the user is working from git.
+  * Add Target.info: when set, the row opens an OK-only info dialog
+    (centered OK button, click to dismiss) instead of a No/Yes confirm.
+    Used for the "Cannot update pi-stomp" informational case.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 05 Jul 2026 00:00:00 +0000
+
 pistomp-recovery (0.1.0-21) trixie; urgency=medium
 
   * Re-build.

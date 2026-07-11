@@ -16,3 +16,7 @@ Description: pi-Stomp application — guitar effects pedalboard software
  The pi-Stomp application code, uv-managed venv, and systemd service.
  Installs to /opt/pistomp/pi-stomp/ with a symlink at
  /home/pistomp/pi-stomp for deploy.sh compatibility.
+ .
+ Ships .git-meta/ (origin URL, branch, built-sha) instead of a .git
+ directory. Run util/expand-git.sh on the device to seed a real git repo,
+ fetch full history and tags, and enable `git describe --dirty=*`.

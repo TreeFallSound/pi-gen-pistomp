@@ -63,8 +63,8 @@ jobs:
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
-      - name: Check version not already published (PR only)
-        if: github.event_name == 'pull_request'
+      - name: Check version not already published
+        id: version-check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -72,12 +72,12 @@ jobs:
             -H "Authorization: Bearer ${GH_TOKEN}" \
             "https://api.github.com/repos/${{ github.repository }}/releases/tags/debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}")
           if [ "$STATUS" = "200" ]; then
-            echo "ERROR: version ${{ steps.version.outputs.version }} is already published." >&2
-            echo "Bump the version in debpkgs/${{ inputs.pkg }}/debian/changelog" >&2
-            echo "(or config.sh for pinned packages)." >&2
-            exit 1
+            echo "::warning::version ${{ steps.version.outputs.version }} is already published — bump debpkgs/${{ inputs.pkg }}/debian/changelog (or config.sh for pinned packages). Skipping publish so the existing GitHub Release isn't overwritten."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version ${{ steps.version.outputs.version }} is new, OK."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
-          echo "Version ${{ steps.version.outputs.version }} is new, OK."
 
       - name: Install build dependencies
         env:
@@ -169,7 +169,7 @@ jobs:
           if-no-files-found: error
 
       - name: Assemble release assets
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && steps.version-check.outputs.exists != 'true'
         id: assets
         run: |
           PKG="${{ inputs.pkg }}"
@@ -202,7 +202,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Extract changelog entry
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && steps.version-check.outputs.exists != 'true'
         id: changelog
         run: |
           PKG="${{ inputs.pkg }}"
@@ -216,7 +216,7 @@ jobs:
           fi
 
       - name: Publish to GitHub Releases
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && steps.version-check.outputs.exists != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}
@@ -236,7 +236,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trigger apt repo publish
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && steps.version-check.outputs.exists != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
