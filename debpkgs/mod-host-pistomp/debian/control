@@ -4,13 +4,13 @@ Priority: optional
 Maintainer: pistomp <pistomp@example.com>
 Build-Depends: debhelper-compat (= 13),
  libjack-jackd2-dev | libjack-dev,
- liblilv-dev, libfftw3-dev, liblo-dev, libreadline-dev,
+ liblilv-dev, libserd-dev, libfftw3-dev, liblo-dev, libreadline-dev,
  hylia (>= 1.0)
 Standards-Version: 4.6.2
 
 Package: mod-host-pistomp
 Architecture: arm64
-Depends: ${shlibs:Depends}, ${misc:Depends}, liblilv-0-0, libfftw3-single3,
+Depends: ${shlibs:Depends}, ${misc:Depends}, liblilv-0-0, libserd-0-0, libfftw3-single3,
  liblo7, libreadline8, hylia
 Provides: mod-host
 Conflicts: mod-host

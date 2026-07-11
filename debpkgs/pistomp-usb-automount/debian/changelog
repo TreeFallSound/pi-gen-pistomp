@@ -1,0 +1,6 @@
+pistomp-usb-automount (1.0.0-1) trixie; urgency=medium
+
+  * Initial release. Extracted from stage2/01-sys-tweaks so the fix reaches
+    already-deployed devices via OTA, not just new images.
+
+ -- pi-gen-pistomp <noreply@github.com>  Tue, 07 Jul 2026 00:00:00 +0000

@@ -54,7 +54,22 @@ ${DOCKER} run --rm ${TTY_FLAG} \
     -e "UV_PYTHON_INSTALL_DIR=/pistomp-cache/uv-python" \
     -e "PIP_CACHE_DIR=/pistomp-cache/pip-cache" \
     pi-gen \
-    bash "/pistomp/debpkgs/${PKG}/build.sh"
+    bash -c '
+        set -e
+        mkdir -p /tmp/build-pkg
+        # Install cached debs for build dependencies (mirrors CI build-deb.yml).
+        # dpkg -i may fail on conflicts; || true + apt-get -f resolves what it can.
+        for deb in /pistomp-cache/debpkgs/*_arm64.deb; do
+            [ -f "$deb" ] || continue
+            dep=$(basename "$deb" | sed "s/_.*//")
+            [ "$dep" = "'"${PKG}"'" ] && continue
+            dpkg -s "$dep" >/dev/null 2>&1 && continue
+            echo "Installing: $dep"
+            dpkg -i "$deb" 2>/dev/null || true
+            apt-get install -f -y -qq 2>/dev/null || true
+        done
+        exec bash /pistomp/debpkgs/'"${PKG}"'/build.sh
+    '
 
 echo "==> Done. Package is in cache/debpkgs/."
 echo "    The next image build will prefer it over the published version."
