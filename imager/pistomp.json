@@ -1,19 +1,70 @@
 {
+  "imager": {
+    "latest_version": "1.0",
+    "url": "https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp.json",
+    "devices": [
+      {
+        "name": "Raspberry Pi 5",
+        "tags": ["pi5-64bit", "pi5-32bit"],
+        "icon": "https://downloads.raspberrypi.com/imager/icons/RPi_5.png",
+        "description": "Raspberry Pi 5, 500 / 500+, and Compute Module 5",
+        "matching_type": "exclusive",
+        "capabilities": []
+      },
+      {
+        "name": "Raspberry Pi 4",
+        "tags": ["pi4-64bit", "pi4-32bit"],
+        "icon": "https://downloads.raspberrypi.com/imager/icons/RPi_4.png",
+        "description": "Raspberry Pi 4 Model B, 400, and Compute Module 4 / 4S",
+        "matching_type": "inclusive",
+        "capabilities": []
+      },
+      {
+        "name": "Raspberry Pi 3",
+        "tags": ["pi3-64bit", "pi3-32bit"],
+        "icon": "https://downloads.raspberrypi.com/imager/icons/RPi_3.png",
+        "description": "Raspberry Pi 3 Model A+ / B / B+ and Compute Module 3 / 3+",
+        "matching_type": "inclusive",
+        "capabilities": []
+      },
+      {
+        "name": "Raspberry Pi Zero 2 W",
+        "tags": ["pi3-64bit", "pi3-32bit"],
+        "icon": "https://downloads.raspberrypi.com/imager/icons/RPi_Zero_2_W.png",
+        "description": "Raspberry Pi Zero 2 W",
+        "matching_type": "inclusive",
+        "capabilities": []
+      },
+      {
+        "name": "No filtering",
+        "tags": [],
+        "description": "Show every possible image",
+        "matching_type": "inclusive",
+        "capabilities": []
+      }
+    ]
+  },
   "os_list": [
     {
-      "name": "pi-Stomp OS imager-test",
-      "description": "Low-latency audio OS for pi-Stomp guitar pedal hardware (Pi 3/4/5, Zero 2 W). Includes RT kernel, JACK audio, MOD-Host, MOD-UI.",
+      "name": "pi-Stomp OS",
+      "description": "Low-latency audio OS for pi-Stomp guitar pedal hardware",
       "icon": "https://treefallsound.github.io/pi-gen-pistomp/imager/icon.svg",
-      "url": "https://github.com/TreeFallSound/pi-gen-pistomp/releases/download/imager-test/pistompOS-imager-test.img.xz",
-      "extract_size": 4714397696,
-      "extract_sha256": "f25fa2c157c6c24af9175d7e83afa5d27aa8b9f23575a0e9d054abd26cb9f1d4",
-      "image_download_size": 1330260840,
-      "image_download_sha256": "6c1907a656776b4d7bc9621362b02f5d2346417a98eb6e80e8b85703498bc11b",
-      "release_date": "2026-07-12",
-      "devices": ["pi5-64bit", "pi4-64bit", "pi3-64bit"],
-      "init_format": "rpi-preseed",
-      "capabilities": ["i2c", "spi"],
-      "architecture": "armv8"
+      "random": false,
+      "subitems": [
+        {
+          "name": "pi-Stomp OS imager-test",
+          "description": "Includes RT kernel, JACK audio, MOD-Host, MOD-UI.",
+          "icon": "https://treefallsound.github.io/pi-gen-pistomp/imager/icon.svg",
+          "url": "https://github.com/TreeFallSound/pi-gen-pistomp/releases/download/imager-test/2026-07-12-pistompOS.img.xz",
+          "extract_size": 4714397696,
+          "extract_sha256": "f25fa2c157c6c24af9175d7e83afa5d27aa8b9f23575a0e9d054abd26cb9f1d4",
+          "image_download_size": 1330260840,
+          "release_date": "2026-07-12",
+          "init_format": "rpi-preseed",
+          "devices": ["pi5-64bit", "pi4-64bit", "pi3-64bit"],
+          "capabilities": ["i2c", "spi"]
+        }
+      ]
     }
   ]
 }
