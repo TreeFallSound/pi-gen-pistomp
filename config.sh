@@ -51,6 +51,10 @@ MOD_MIDI_MERGER_REF="master"
 MOD_TTYMIDI_REPO="https://github.com/moddevices/mod-ttymidi.git"
 MOD_TTYMIDI_REF="master"
 
+# --- rpi-preseed (Raspberry Pi Imager customisation handler) ---
+RPI_PRESEED_REPO="https://github.com/raspberrypi/rpi-preseed.git"
+RPI_PRESEED_REF="main"
+
 # --- pi-stomp (application) ---
 PISTOMP_REPO="https://github.com/TreeFallSound/pi-stomp.git"
 PISTOMP_BRANCH="main"

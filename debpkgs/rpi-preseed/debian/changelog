@@ -1,0 +1,6 @@
+rpi-preseed (0.1.0-pistomp1) trixie; urgency=medium
+
+  * Initial package for pi-Stomp: TOML-driven first-boot customisation
+    for Raspberry Pi Imager 2.x integration.
+
+ -- pistomp-bot <bot@treefallsound.com>  Sun, 12 Jul 2026 19:00:00 -0500
