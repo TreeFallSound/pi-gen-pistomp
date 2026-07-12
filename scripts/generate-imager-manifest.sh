@@ -87,12 +87,13 @@ cat > "$MANIFEST_FILE" <<JSONEOF
       "extract_size": ${EXTRACT_SIZE},
       "extract_sha256": "${EXTRACT_SHA256}",
       "image_download_size": ${COMPRESSED_SIZE},
-      "image_download_sha256": "${COMPRESSED_SHA256}",
       "release_date": "${RELEASE_DATE}",
-      "devices": ["pi5-64bit", "pi4-64bit", "pi3-64bit"],
       "init_format": "rpi-preseed",
-      "capabilities": ["i2c", "spi"],
-      "architecture": "armv8"
+      "devices": [
+        "pi5-64bit",
+        "pi4-64bit",
+        "pi3-64bit"
+      ]
     }
   ]
 }
@@ -110,7 +111,6 @@ echo "  Release date: ${RELEASE_DATE}"
 echo "  Extract size: ${EXTRACT_SIZE} bytes"
 echo "  Extract SHA256: ${EXTRACT_SHA256}"
 echo "  Compressed size: ${COMPRESSED_SIZE} bytes"
-echo "  Compressed SHA256: ${COMPRESSED_SHA256}"
 echo "  Devices:      pi5-64bit, pi4-64bit, pi3-64bit"
 echo "  Init format:  rpi-preseed"
 echo ""
