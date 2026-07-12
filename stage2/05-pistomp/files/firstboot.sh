@@ -79,18 +79,17 @@ fi
 
 mkdir -p /etc/default
 
-# reduce memory requirements while still supporting reasonable
-# pedalboard sizes. See jackdrc for the actual jackd command line.
-if grep -q 'Pi 5' /proc/device-tree/model 2>/dev/null; then
-    JACK_PORT_MAX=512
-else
-    JACK_PORT_MAX=256
-fi
-
+# Unset keys are written empty; jackdrc supplies the default for each at every
+# boot so that we can change defaults using OTA updates without touching pistomp.conf.
 cat > /etc/default/jack <<EOF
 JACK_SAMPLE_RATE="${JACK_SAMPLE_RATE}"
-JACK_PERIOD="${JACK_PERIOD}"
-JACK_PORT_MAX="${JACK_PORT_MAX}"
+JACK_PERIOD="${JACK_PERIOD:-}"
+JACK_DEVICE="${JACK_DEVICE:-}"
+JACK_NPERIODS="${JACK_NPERIODS:-}"
+JACK_RTPRIO="${JACK_RTPRIO:-}"
+JACK_PORT_MAX="${JACK_PORT_MAX:-}"
+JACK_EXTRA_ARGS="${JACK_EXTRA_ARGS:-}"
+JACK_DRIVER_ARGS="${JACK_DRIVER_ARGS:-}"
 EOF
 
 # ---------- hardware setup ----------

@@ -24,3 +24,17 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	./waf --destdir=$(CURDIR)/debian/jack2-pistomp install
+	# jackdrc's --port-max is coupled to the compile-time constants configured above,
+	# so the startup script ships with the engine it was sized for. /usr/lib, not /etc:
+	# it is a program, and a conffile prompt would hang an unattended OTA.
+	install -Dm 755 debian/extra/jackdrc \
+		$(CURDIR)/debian/jack2-pistomp/usr/lib/pistomp/jackdrc
+	install -Dm 644 debian/extra/jack.service \
+		$(CURDIR)/debian/jack2-pistomp/usr/lib/systemd/system/jack.service
+
+override_dh_installsystemd:
+	# Enablement is handled by stage2/05-pistomp/01-run.sh ln -sf, matching the
+	# pi-stomp package. Skipping deb-systemd-helper also means an OTA upgrade never
+	# restarts jackd — restarting it would take down mod-host, mod-ui and pi-stomp.
+	# The new unit is picked up by the daemon-reload in debian/postinst, and takes
+	# effect at the next boot.

@@ -1,7 +1,27 @@
+jack2-pistomp (1.9.22-5) trixie; urgency=medium
+
+  * Derive JACK_PERIOD from board (128 on Pi 5, 256 otherwise) when unset.
+
+ -- pi-gen-pistomp <noreply@github.com>  Fri, 10 Jul 2026 04:46:54 +0000
+
+jack2-pistomp (1.9.22-4) trixie; urgency=medium
+
+  * Expose JACK_DEVICE/NPERIODS/RTPRIO/PORT_MAX/EXTRA_ARGS/DRIVER_ARGS via
+    /etc/default/jack.
+
+ -- pi-gen-pistomp <noreply@github.com>  Fri, 10 Jul 2026 04:32:48 +0000
+
 jack2-pistomp (1.9.22-3) trixie; urgency=medium
 
   * Shrink JACK shm segment: build with --clients=64
     --ports-per-application=512 (36MB fixed base -> 8MB).
+  * Ship jackdrc and jack.service so JACK startup changes reach devices over
+    OTA. jackdrc moves to /usr/lib/pistomp/jackdrc so it is not a conffile;
+    postinst renames any pre-existing /etc/jackdrc to /etc/jackdrc.obsolete
+    with a header explaining the move.
+  * jackdrc passes --port-max, derived from the board model (512 on Pi 5, else
+    256) and overridable via JACK_PORT_MAX in /etc/default/jack. Upstream's
+    2048-port default cost 102MB of mlocked shm; a pedalboard uses ~42 ports.
 
  -- pi-gen-pistomp <noreply@github.com>  Fri, 10 Jul 2026 03:31:46 +0000
 
