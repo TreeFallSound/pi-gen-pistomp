@@ -129,7 +129,7 @@ Description: Record JACK audio output to a file
  MP3 file. Useful for debugging and recording sessions on pi-Stomp.
 
 Package: jack2-pistomp
-Version: 1.9.22-2
+Version: 1.9.22-3
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
 Installed-Size: 2512
@@ -139,11 +139,11 @@ Replaces: jack2, jackd2, libjack-jackd2-0
 Provides: jackd2, libjack-dev, libjack-jackd2-0 (= 1.9.22~dfsg-4)
 Priority: optional
 Section: sound
-Filename: pool/main/j/jack2-pistomp/jack2-pistomp_1.9.22-2_arm64.deb
-Size: 450160
-SHA256: c76f6c9375077bed277c83d35e2157091bb12afe2d29eb18a046f55ee9f67d29
-SHA1: a1b051e317f64400d0a4ec870707d6846df03ad5
-MD5sum: a57acc4ea7589bb00d725ea7b644a4fd
+Filename: pool/main/j/jack2-pistomp/jack2-pistomp_1.9.22-3_arm64.deb
+Size: 448956
+SHA256: 12baaaa80b899c0c5317649aceb0475dca584e867d2bdcc9ef9dd3774b1f71a6
+SHA1: 1bd2248ee9466a24b94565d4d37abecbb48816f6
+MD5sum: bb2bb7e7c20dc8c3d94f2df6d6cbbf1f
 Description: JACK Audio Connection Kit v2 (pi-Stomp build)
  JACK is a low-latency audio server. This build includes the
  pi-controller-reset stability fix and links against libdb 5.3.
