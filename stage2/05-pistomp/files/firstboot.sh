@@ -40,12 +40,6 @@ fi
 if [[ -f "${CONF}" ]]; then
     source "${CONF}"
 
-    # Regulatory domain and firmware roaming off are pi-Stomp hardware
-    # tweaks, not user preferences — always apply.
-    printf 'options cfg80211 ieee80211_regdom=%s\n' "${WIFI_COUNTRY:-US}" \
-        > /etc/modprobe.d/cfg80211.conf
-    iw reg set "${WIFI_COUNTRY:-US}" 2>/dev/null || true
-
     # Disable in-driver (firmware) roaming. The BCM43455 firmware can't do
     # 802.11r/FT, so on a band/AP-steering mesh (e.g. Bell Whole Home WiFi) its
     # driver-based roam attempts a WPA-PSK->FT-PSK cross-AKM transition that the
@@ -57,6 +51,10 @@ if [[ -f "${CONF}" ]]; then
     # OS-level settings: only apply if Imager/rpi-preseed didn't already handle them
     if [[ "${IMAGER_APPLIED}" != "true" ]]; then
         lcd "Configuring WiFi..."
+
+        printf 'options cfg80211 ieee80211_regdom=%s\n' "${WIFI_COUNTRY:-US}" \
+            > /etc/modprobe.d/cfg80211.conf
+        iw reg set "${WIFI_COUNTRY:-US}" 2>/dev/null || true
 
         if [[ -n "${WIFI_SSID:-}" ]]; then
             # wpa-psk covers WPA2 + WPA3-transition APs.
