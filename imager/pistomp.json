@@ -1,0 +1,19 @@
+{
+  "os_list": [
+    {
+      "name": "pi-Stomp OS imager-test",
+      "description": "Low-latency audio OS for pi-Stomp guitar pedal hardware (Pi 3/4/5, Zero 2 W). Includes RT kernel, JACK audio, MOD-Host, MOD-UI.",
+      "icon": "https://treefallsound.github.io/pi-gen-pistomp/imager/icon.svg",
+      "url": "https://github.com/TreeFallSound/pi-gen-pistomp/releases/download/imager-test/pistompOS-imager-test.img.xz",
+      "extract_size": 4714397696,
+      "extract_sha256": "f25fa2c157c6c24af9175d7e83afa5d27aa8b9f23575a0e9d054abd26cb9f1d4",
+      "image_download_size": 1330260840,
+      "image_download_sha256": "6c1907a656776b4d7bc9621362b02f5d2346417a98eb6e80e8b85703498bc11b",
+      "release_date": "2026-07-12",
+      "devices": ["pi5-64bit", "pi4-64bit", "pi3-64bit"],
+      "init_format": "rpi-preseed",
+      "capabilities": ["i2c", "spi"],
+      "architecture": "armv8"
+    }
+  ]
+}
