@@ -20,6 +20,8 @@ jobs:
     # Native arm64 runner: the build runs in an arm64 container, so no QEMU /
     # binfmt cross-arch shim is needed (build-docker.sh skips it on aarch64).
     runs-on: ubuntu-24.04-arm
+    outputs:
+      image_version: ${{ steps.version.outputs.version }}
 
     steps:
     - name: Clean Workspace Folder
@@ -60,8 +62,13 @@ jobs:
     - name: Compress image
       run: ./compress-img.sh
 
+    - name: Generate Imager 2.x JSON manifest
+      run: |
+        XZ_FILE=$(ls deploy/*pistompOS*.img.xz | head -1)
+        ./scripts/generate-imager-manifest.sh "$XZ_FILE" "${{ steps.version.outputs.version }}"
+
     - name: List output files
-      run: ls -lh deploy
+      run: ls -lh deploy pistomp-imager-manifest.json
 
     - name: Upload built image
       uses: actions/upload-artifact@v4
@@ -69,6 +76,13 @@ jobs:
         name: pistompOS
         path: ./deploy/*pistompOS*.img.xz
         compression-level: 6
+        if-no-files-found: error
+
+    - name: Upload Imager manifest
+      uses: actions/upload-artifact@v4
+      with:
+        name: imager-manifest
+        path: ./pistomp-imager-manifest.json
         if-no-files-found: error
 
     - name: Upload debug artifacts
@@ -93,8 +107,44 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: pistompOS
+          path: release-assets/
+      - uses: actions/download-artifact@v4
+        with:
+          name: imager-manifest
+          path: release-assets/
       - uses: softprops/action-gh-release@v2
         with:
-          files: '**/*'
+          files: release-assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-manifest:
+    # Deploy the Imager manifest to gh-pages so the latest version is always
+    # available at https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp.json
+    if: startsWith(github.ref, 'refs/tags/release/')
+    needs: [build]
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+      - uses: actions/download-artifact@v4
+        with:
+          name: imager-manifest
+          path: imager/
+      - name: Version-pin and deploy
+        run: |
+          cp imager/pistomp-imager-manifest.json imager/pistomp.json
+          cp imager/pistomp-imager-manifest.json "imager/pistomp-${{ needs.build.outputs.image_version }}.json"
+          git config user.name "pistomp-bot"
+          git config user.email "bot@treefallsound.com"
+          git add imager/
+          if git diff --cached --quiet; then
+            echo "No changes to gh-pages."
+          else
+            git commit -m "deploy imager manifest for ${{ needs.build.outputs.image_version }} [skip ci]"
+            git push
+          fi
