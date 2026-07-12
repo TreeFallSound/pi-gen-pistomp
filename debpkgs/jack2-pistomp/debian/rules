@@ -6,6 +6,7 @@ export DH_VERBOSE=1
 
 override_dh_auto_configure:
 	# Use bundled waf with patched waflib (imp → types for Python 3.12+)
+	# Builds with 64 clients / 512 ports per application, systemd unit, and dbus support.
 	CXXFLAGS="$(CXXFLAGS) -I/usr/include/db5.3" \
 	LDFLAGS="$(LDFLAGS) -ldb-5.3" \
 	./waf configure \
@@ -14,6 +15,8 @@ override_dh_auto_configure:
 		--autostart=none \
 		--systemd-unit \
 		--classic \
+		--clients=64 \
+		--ports-per-application=512 \
 		--dbus
 
 override_dh_auto_build:

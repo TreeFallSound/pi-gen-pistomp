@@ -78,9 +78,19 @@ fi
 # ---------- JACK audio configuration ----------
 
 mkdir -p /etc/default
+
+# reduce memory requirements while still supporting reasonable
+# pedalboard sizes. See jackdrc for the actual jackd command line.
+if grep -q 'Pi 5' /proc/device-tree/model 2>/dev/null; then
+    JACK_PORT_MAX=512
+else
+    JACK_PORT_MAX=256
+fi
+
 cat > /etc/default/jack <<EOF
 JACK_SAMPLE_RATE="${JACK_SAMPLE_RATE}"
 JACK_PERIOD="${JACK_PERIOD}"
+JACK_PORT_MAX="${JACK_PORT_MAX}"
 EOF
 
 # ---------- hardware setup ----------
@@ -89,10 +99,12 @@ lcd "Finishing setup..."
 
 chown -R pistomp:pistomp /home/pistomp/
 
-if grep -q 'Pi 3' /proc/cpuinfo 2>/dev/null; then
-    runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh 2.0 || true
-else
+# Hardware version: Pi 5 = v3 (pi-Stomp Tre), Pi 3/4 = v2 (pi-Stomp Core).
+# v1 is no longer supported.
+if grep -q 'Pi 5' /proc/device-tree/model 2>/dev/null; then
     runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh 3.0 || true
+else
+    runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh 2.0 || true
 fi
 
 if grep -q 'Pi 5' /proc/cpuinfo 2>/dev/null; then
