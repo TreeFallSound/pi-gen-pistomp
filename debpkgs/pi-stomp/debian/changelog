@@ -1,3 +1,10 @@
+pi-stomp (3.2.0-5~pre2) trixie; urgency=medium
+
+  * Prerelease from the feat/parameter-menu branch — pi-Stomp v2 hardware
+    support plus badges + one-nav-rules-them-all support.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 13 Jul 2026 18:00:00 -0400
+
 pi-stomp (3.2.0-5~pre1) trixie; urgency=medium
 
   * Prerelease from the prerelease-for-v2 branch — pi-Stomp v2 hardware
