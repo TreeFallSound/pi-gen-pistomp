@@ -22,7 +22,10 @@ chmod 644 "${ROOTFS_DIR}/etc/profile.d/pistomp.sh"
 # high-priority preferences pin). The GitHub Pages OTA repo is already in
 # pistomp.list (written by stage2/00-dummy-packages/01-run.sh) and is the
 # persistent source for OTA upgrades. The local override only exists during
-# the build when cache/debpkgs/ had .deb files present.
+# the build when overrides/ had .deb files present.
+#
+# pistomp-testing.list (written for --pre builds) is deliberately NOT removed:
+# a testing-channel image ships following the pre-release suite.
 on_chroot << EOF
 
 rm -f /etc/apt/sources.list.d/pistomp-local.list /etc/apt/preferences.d/pistomp-local

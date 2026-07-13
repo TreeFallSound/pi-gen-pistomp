@@ -11,17 +11,92 @@ on `gh-pages` — all automatically.
 push debpkgs/<pkg>/**  →  build-<pkg>.yml  →  GitHub Release (debpkg/<pkg>/<ver>)
                                                 ↓
                        publish-apt-repo.yml  →  gh-pages branch (reprepro index)
-                                                ↓
+                                                ↓         suite: trixie (stable)
+                                                          suite: trixie-testing (pre-release)
 device /etc/apt/sources.list.d/pistomp.list  →  apt update  →  apt upgrade <pkg>
 ```
+
+## Release channels
+
+The apt repository serves two suites from the same gh-pages site:
+
+| Suite | Fed by | Who follows it |
+| :--- | :--- | :--- |
+| `trixie` | Releases with `prerelease: false` | Every flashed device (production) |
+| `trixie-testing` | Releases with `prerelease: true` | Test devices that opt in |
+
+The channel is decided entirely by the **version in `debian/changelog`**: a
+`~` anywhere in the version (Debian's pre-release marker — `1.2-4~pre1`
+sorts *below* `1.2-4`) makes `build-deb.yml` publish the GitHub Release
+with `prerelease: true`, and `publish-apt-repo.yml` routes its `.deb` into
+`trixie-testing` instead of `trixie`. No branch logic, no extra inputs.
+
+```bash
+./scripts/bump-version.sh --pre <pkg> "What changed."   # 1.2-3 → 1.2-4~pre1
+./scripts/bump-version.sh --pre <pkg> "More changes."   # → 1.2-4~pre2
+./scripts/bump-version.sh <pkg> "Release."              # → 1.2-4 (promote)
+```
+
+This means experimental work can merge to `main` freely: as long as the
+bumped versions carry a `~`, production devices never see them. Promoting
+to production is a plain (non-`--pre`) bump to the final version, which
+supersedes every `~preN` build on both channels.
+
+Because git forbids `~` in refnames, the release **tag** encodes `~` as `_`
+(`debpkg/pi-stomp/3.3.0_rc1-1`); the release display name, the `.deb`
+filename, and the apt repo all keep the real Debian version. Everything
+that consumes these tags matches on the `debpkg/<pkg>/` prefix, so the
+encoding is invisible to the rest of the pipeline.
+
+### Opting a test device into pre-releases
+
+Add the testing suite *alongside* the production line:
+
+```bash
+echo "deb [arch=arm64 trusted=yes] https://treefallsound.github.io/pi-gen-pistomp trixie-testing main" \
+  | sudo tee /etc/apt/sources.list.d/pistomp-testing.list
+sudo apt-get update
+```
+
+With both sources, apt picks the highest version — and since `~` versions
+sort below their final release, a test device automatically converges back
+onto the production package the moment the real release ships. To leave
+the channel, delete `pistomp-testing.list`; already-installed pre-release
+packages are replaced at the next production release (apt won't downgrade
+on its own).
+
+### Pre-release images
+
+Images follow the same two channels, selected by `IMG_CHANNEL`
+(`stable`/`testing`):
+
+| How you build | Channel |
+| :--- | :--- |
+| `./build-docker.sh -f` | stable |
+| `./build-docker.sh -f --pre` (or `IMG_CHANNEL=testing`) | testing |
+| CI tag `release/3.4.0` | stable |
+| CI tag `release/3.4.0-rc1` (`-rc`/`-pre`/`-beta`/`-alpha` suffix) | testing |
+
+A testing-channel image build (a) enables `trixie-testing` during the build so
+pre-release packages land in the rootfs, (b) ships `pistomp-testing.list` so
+the flashed device stays on the pre-release channel, and (c) marks the output
+name (`<date>-pistompOS-pre.img` locally, the tag version in CI). CI publishes
+it as a GitHub **prerelease**, which `releases/latest` ignores — so anything
+generated from the latest release (download links, imager manifest) stays
+production-only automatically.
+
+**Promotion is a rebuild, not a re-tag**: a pre-release image's rootfs
+contains `~` packages and the testing sources line, so it is not the
+production artifact. Promote the packages first (plain `bump-version.sh`
+drops the `~preN` suffix), then push a fresh `release/<version>` tag.
 
 ## Workflows
 
 | File | Trigger | What it does |
 | :--- | :--- | :--- |
-| `.github/workflows/build-deb.yml` | `workflow_call` | Reusable: extract version from `debian/changelog`, install `Build-Depends` automatically (apt then GitHub Releases fallback, up to 5 passes), run `build.sh`, publish a Release tagged `debpkg/<pkg>/<ver>`. On PRs, fails if that tag already exists. |
+| `.github/workflows/build-deb.yml` | `workflow_call` | Reusable: extract version from `debian/changelog`, install `Build-Depends` automatically (apt then GitHub Releases fallback, up to 5 passes), run `build.sh`, publish a Release tagged `debpkg/<pkg>/<ver>` (`~` encoded as `_` in the tag; `prerelease: true` when the version contains `~`). On PRs, fails if that tag already exists. |
 | `.github/workflows/build-<pkg>.yml` | push/PR on `debpkgs/<pkg>/**` or `config.sh` | Thin wrapper calling `build-deb.yml`. One file per package. Template at `docs/package-template/build.yml`. |
-| `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` release asset, `reprepro includedeb trixie` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch on first run. |
+| `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` release asset, routes it by the release's prerelease flag into `reprepro includedeb trixie` or `trixie-testing` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch on first run. |
 
 All 19 packages have a `build-<pkg>.yml` workflow.
 
@@ -32,15 +107,22 @@ repo — no local package building required. `stage2/00-dummy-packages/01-run.sh
 writes `pistomp.list` pointing at `APT_REPO_URL` (defined in `config.sh`) as
 the primary source.
 
-If `cache/debpkgs/` contains locally-built `.deb` overrides (produced by
+A testing-channel build (`./build-docker.sh --pre`, or `IMG_CHANNEL=testing`)
+also writes `pistomp-testing.list` for the `trixie-testing` suite — used at
+build time *and* deliberately shipped in the image, so devices flashed from a
+pre-release image keep following the pre-release channel over OTA.
+
+If `overrides/` contains locally-built `.deb` overrides (produced by
 `build-package-docker.sh`), `build-docker.sh` runs `scripts/setup-apt-repo.sh`
 first to generate `cache/apt-repo/`, and `01-run.sh` adds it as a
 higher-priority source (`Pin-Priority: 1001`) via `pistomp-local.list`. This
 lets you test a locally-modified package without publishing a release.
+`build-docker.sh` refuses to build a **production** image while `overrides/`
+contains a pre-release (`~` version) package — pass `--pre` or remove it.
 
 `stage2/05-pistomp/05-run.sh` removes the local override files
 (`pistomp-local.list` and the preferences pin) before the image is
-finalized. The final image carries only `pistomp.list` pointing at
+finalized. A production image carries only `pistomp.list` pointing at
 `APT_REPO_URL` — no dead `file://` source, OTA works out of the box.
 
 ## Version gate: `debian/changelog` is the only trigger
@@ -51,7 +133,8 @@ The CI extracts the version from the changelog, tags the release
 If the tag already exists, nothing is pushed to GitHub Releases or `gh-pages`.
 
 ```bash
-./scripts/bump-version.sh <pkg> "Description of change."
+./scripts/bump-version.sh <pkg> "Description of change."          # production
+./scripts/bump-version.sh --pre <pkg> "Description of change."    # pre-release channel
 ```
 
 ### Duplicate-version protection (three layers)
@@ -104,12 +187,12 @@ All 20 custom `.deb` packages have CI workflows and are published to the repo:
 
 ```bash
 ./build-package-docker.sh <pkg>
-# .deb lands in cache/debpkgs/
+# .deb lands in overrides/
 ./build-docker.sh -f
 # image build uses it via the high-priority local override
 ```
 
-Remove the `.deb` from `cache/debpkgs/` to revert to the published version.
+Remove the `.deb` from `overrides/` to revert to the published version.
 
 ## Staleness check for branch-pinned packages
 
@@ -157,4 +240,4 @@ The `trusted=yes` flag skips signature verification. To sign the repo later:
 1. Generate a GPG key and export the public key to `pistomp-archive-keyring.gpg`.
 2. Install the keyring during image build (`stage2/05-pistomp/01-run.sh`).
 3. Change the source line to `signed-by=/usr/share/keyrings/pistomp-archive-keyring.gpg`.
-4. Sign `dists/trixie/Release` in `publish-apt-repo.yml` with `gpg --detach-sign`.
+4. Sign `dists/*/Release` (both suites) in `publish-apt-repo.yml` with `gpg --detach-sign`.
