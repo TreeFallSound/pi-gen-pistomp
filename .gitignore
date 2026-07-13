@@ -9,6 +9,10 @@ SKIP_IMAGES
 # Built .deb cache (populated by debpkgs/*/build.sh and build-rt-kernel-docker.sh)
 cache/
 
+# Local .deb overrides (populated by build-package-docker.sh) — installed by
+# the next image build in preference to the published apt repo
+overrides/
+
 # Binary-only .deb staging trees (created by build.sh, not source)
 # Matches debpkgs/<pkg>/debian/<pkg>/ — the staging subdir named after the package
 debpkgs/*/debian/*/usr/

@@ -3,7 +3,9 @@
 # shellcheck source=../config.sh
 source "${ROOT_DIR}/config.sh"
 
-CACHE_DIR="${CACHE_DIR:-${ROOT_DIR}/cache/debpkgs}"
+# Default output: overrides/ — a locally-built .deb is an override the next
+# image build prefers over the published repo. CI sets CACHE_DIR explicitly.
+CACHE_DIR="${CACHE_DIR:-${ROOT_DIR}/overrides}"
 WORKDIR="${WORKDIR:-/tmp}"
 
 mkdir -p "${CACHE_DIR}"

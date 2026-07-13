@@ -4,7 +4,11 @@ name: build-image
 #
 # Triggers ONLY on:
 #   - a pushed tag matching `release/<version>` (e.g. release/3.0.0) — produces
-#     a GitHub Release with the image attached, named pistompOS-<version>.img.xz
+#     a GitHub Release with the image attached, named pistompOS-<version>.img.xz.
+#     A version ending in a pre-release marker (e.g. release/3.3.0-rc1,
+#     -pre2, -beta1, -alpha1) builds a testing-channel image (IMG_CHANNEL=
+#     testing: installs from and ships the trixie-testing apt suite) and
+#     publishes it as a GitHub *prerelease*, keeping it out of releases/latest.
 #   - manual dispatch — produces a workflow artifact only (no release)
 #
 # Per-package OTA releases (tagged debpkg/<pkg>/<ver>) do NOT trigger this
@@ -22,6 +26,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     outputs:
       image_version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
 
     steps:
     - name: Clean Workspace Folder
@@ -43,7 +48,20 @@ jobs:
           VERSION="dev-$(git rev-parse --short HEAD)"
         fi
         echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-        echo "Image version: ${VERSION}"
+        # A pre-release marker in the version selects the testing channel:
+        # the image installs from (and ships) the trixie-testing apt suite,
+        # and the GitHub Release is flagged prerelease. Mirrors the package
+        # rule ('~' in the Debian version), which git tags can't express.
+        if [[ "${VERSION}" =~ -(rc|pre|beta|alpha)[0-9]*$ ]]; then
+          PRERELEASE=true
+          CHANNEL=testing
+        else
+          PRERELEASE=false
+          CHANNEL=stable
+        fi
+        echo "prerelease=${PRERELEASE}" >> "$GITHUB_OUTPUT"
+        echo "channel=${CHANNEL}" >> "$GITHUB_OUTPUT"
+        echo "Image version: ${VERSION} (channel: ${CHANNEL})"
 
     # Gate: the image installs custom packages from the published apt repo, so a
     # package whose upstream has moved past its last release would silently ship
@@ -57,6 +75,7 @@ jobs:
     - name: Run build-docker.sh
       env:
         IMG_VERSION: ${{ steps.version.outputs.version }}
+        IMG_CHANNEL: ${{ steps.version.outputs.channel }}
       run: ./build-docker.sh
 
     - name: Compress image
@@ -115,6 +134,9 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: release-assets/*
+          # Pre-release marker in the tag version (e.g. release/3.3.0-rc1)
+          # → GitHub prerelease, excluded from releases/latest.
+          prerelease: ${{ needs.build.outputs.prerelease == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

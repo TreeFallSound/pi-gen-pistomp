@@ -62,6 +62,20 @@ jobs:
             VERSION=$(grep '^Version:' "debpkgs/${PKG}/debian/control" | awk '{print $2}')
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          # Git refnames cannot contain '~', but Debian pre-release versions
+          # require it (1.2-3~pre1 sorts below 1.2-3). Encode '~' as '_' in
+          # the release tag only — '_' is invalid in Debian versions, so the
+          # mapping is unambiguous. Everything that consumes these tags
+          # matches on the debpkg/<pkg>/ prefix, never the version suffix.
+          echo "tag_version=${VERSION//\~/_}" >> $GITHUB_OUTPUT
+          # A '~' anywhere in the version marks a pre-release: the GitHub
+          # Release gets prerelease:true and publish-apt-repo.yml routes it
+          # into the trixie-testing suite instead of trixie.
+          if [[ "${VERSION}" == *"~"* ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check version not already published
         id: version-check
@@ -70,7 +84,7 @@ jobs:
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "Authorization: Bearer ${GH_TOKEN}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}")
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.tag_version }}")
           if [ "$STATUS" = "200" ]; then
             echo "::warning::version ${{ steps.version.outputs.version }} is already published — bump debpkgs/${{ inputs.pkg }}/debian/changelog (or config.sh for pinned packages). Skipping publish so the existing GitHub Release isn't overwritten."
             echo "exists=true" >> "$GITHUB_OUTPUT"
@@ -219,7 +233,10 @@ jobs:
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && steps.version-check.outputs.exists != 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.version }}
+          # tag_version is the changelog version with '~' encoded as '_'
+          # (git forbids '~' in refnames); the display name keeps the real
+          # Debian version.
+          tag_name: debpkg/${{ inputs.pkg }}/${{ steps.version.outputs.tag_version }}
           name: "${{ inputs.pkg }} ${{ steps.version.outputs.version }}"
           body: ${{ steps.changelog.outputs.body }}
           # File list is assembled (and existence-verified) in the "Assemble
@@ -231,7 +248,7 @@ jobs:
           files: ${{ steps.assets.outputs.files }}
           fail_on_unmatched_files: true
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.version.outputs.prerelease == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
