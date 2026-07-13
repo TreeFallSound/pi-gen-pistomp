@@ -117,5 +117,6 @@ MOD_UI_PYTHON_VERSION="3.11"
 # publishes via .github/workflows/publish-apt-repo.yml.
 APT_REPO_URL="https://treefallsound.github.io/pi-gen-pistomp"
 APT_REPO_SUITE="trixie"
+APT_REPO_TESTING_SUITE="trixie-testing"  # only used when IMG_CHANNEL=testing
 APT_REPO_COMPONENT="main"
 APT_REPO_ARCH="arm64"

@@ -15,7 +15,7 @@ source "${ROOT_DIR}/config.sh"
 # shellcheck source=./pkg-sources.sh
 source "${ROOT_DIR}/scripts/pkg-sources.sh"
 
-CACHE_DIR="${ROOT_DIR}/cache/debpkgs"
+CACHE_DIR="${ROOT_DIR}/overrides"
 
 dirty=()
 unknown=()
