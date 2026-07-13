@@ -1,4 +1,4 @@
-pi-stomp (3.3.0~rc1-1) trixie; urgency=medium
+pi-stomp (3.2.0-5~pre1) trixie; urgency=medium
 
   * Prerelease from the prerelease-for-v2 branch — pi-Stomp v2 hardware
     support plus the UI performance work.
