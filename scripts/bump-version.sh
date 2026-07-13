@@ -10,6 +10,9 @@
 # ~preN version promotes it: 1.2-4~pre2 → 1.2-4. Pre-release versions are
 # published to the trixie-testing apt suite instead of trixie (see
 # docs/OTA.md "Release channels").
+#
+# The changelog entry is signed with DEBFULLNAME/DEBEMAIL if set, otherwise the
+# git identity, otherwise pi-gen-pistomp <noreply@github.com>.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -42,7 +45,16 @@ else
     DATESTAMP="$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
 fi
 
-MAINTAINER="pi-gen-pistomp <noreply@github.com>"
+# Attribute the entry to a real person where we can, the way dch does: DEBFULLNAME/
+# DEBEMAIL win, then the git identity, then the bot (CI has no git identity).
+NAME="${DEBFULLNAME:-$(git -C "${ROOT_DIR}" config user.name 2>/dev/null || true)}"
+EMAIL="${DEBEMAIL:-$(git -C "${ROOT_DIR}" config user.email 2>/dev/null || true)}"
+
+if [ -n "${NAME}" ] && [ -n "${EMAIL}" ]; then
+    MAINTAINER="${NAME} <${EMAIL}>"
+else
+    MAINTAINER="pi-gen-pistomp <noreply@github.com>"
+fi
 
 # Parse current version and suite from the first line:
 #   package (1.2.3-1) trixie; urgency=medium
