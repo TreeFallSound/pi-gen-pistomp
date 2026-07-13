@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # Build a single debpkgs/<pkg> inside the pi-gen Docker container.
-# The built .deb is placed in cache/debpkgs/; the next image build will prefer
+# The built .deb is placed in overrides/; the next image build will prefer
 # it over the published GitHub Pages version via a high-priority apt override.
-# Remove the .deb from cache/debpkgs/ to revert to the released package.
+# Remove the .deb from overrides/ to revert to the released package.
+#
+# Note: if the package's changelog version contains '~' (a pre-release),
+# build-docker.sh refuses to build a production image while it sits in
+# overrides/ — pass --pre or remove it.
 #
 # Usage: ./build-package-docker.sh <pkg>
 #   e.g. ./build-package-docker.sh jack2-pistomp
@@ -35,11 +39,12 @@ if ! ${DOCKER} image inspect pi-gen &>/dev/null; then
     ${DOCKER} build -t pi-gen "${DIR}"
 fi
 
-mkdir -p "${DIR}/cache/debpkgs"
+mkdir -p "${DIR}/overrides" "${DIR}/cache"
 
-# Mount cache/ at /pistomp-cache (same as build-docker.sh).
-# Repo is mounted rw because lcd-splash and libfluidsynth2-compat write into
-# debpkgs/<pkg>/debian/ as their dpkg-deb staging tree.
+# Mount cache/ at /pistomp-cache and overrides/ at /pistomp-overrides (same as
+# build-docker.sh). Repo is mounted rw because lcd-splash and
+# libfluidsynth2-compat write into debpkgs/<pkg>/debian/ as their dpkg-deb
+# staging tree.
 echo "==> Building ${PKG} in Docker container..."
 TTY_FLAG=""
 if [ -t 0 ]; then
@@ -47,8 +52,9 @@ if [ -t 0 ]; then
 fi
 ${DOCKER} run --rm ${TTY_FLAG} \
     --volume "${DIR}/cache":/pistomp-cache:rw \
+    --volume "${DIR}/overrides":/pistomp-overrides:rw \
     --volume "${DIR}":/pistomp:rw \
-    -e "CACHE_DIR=/pistomp-cache/debpkgs" \
+    -e "CACHE_DIR=/pistomp-overrides" \
     -e "WORKDIR=/tmp/build-pkg" \
     -e "UV_CACHE_DIR=/pistomp-cache/uv-cache" \
     -e "UV_PYTHON_INSTALL_DIR=/pistomp-cache/uv-python" \
@@ -74,13 +80,8 @@ ${DOCKER} run --rm ${TTY_FLAG} \
         }
 
         # Install cached debs for build dependencies (mirrors CI build-deb.yml).
-        # dpkg -i may fail on install ordering; || true + apt-get -f resolves that.
-        # A build dep still not installed afterwards is a real failure (e.g. an
-        # unresolvable conflict) — re-run dpkg -i with stderr visible and abort,
-        # rather than letting build.sh die later with a confusing unmet build-dep.
-        # Others (e.g. pi-stomp, whose runtime deps are not in this container) are
-        # expected to fail here and are not needed to build anything.
-        for deb in /pistomp-cache/debpkgs/*_arm64.deb; do
+        # dpkg -i may fail on conflicts; || true + apt-get -f resolves what it can.
+        for deb in /pistomp-overrides/*_arm64.deb; do
             [ -f "$deb" ] || continue
             dep=$(basename "$deb" | sed "s/_.*//")
             [ "$dep" = "'"${PKG}"'" ] && continue
@@ -100,6 +101,6 @@ ${DOCKER} run --rm ${TTY_FLAG} \
         exec bash /pistomp/debpkgs/'"${PKG}"'/build.sh
     '
 
-echo "==> Done. Package is in cache/debpkgs/."
+echo "==> Done. Package is in overrides/."
 echo "    The next image build will prefer it over the published version."
-echo "    Remove it from cache/debpkgs/ to revert to the released package."
+echo "    Remove it from overrides/ to revert to the released package."

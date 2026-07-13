@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Pre-flight check: verify that every custom package (discovered from debpkgs/)
-# is available via 
-#   (a) cache/debpkgs/ local overrides, or
-#   (b) the GitHub Pages apt repo (origin/gh-pages Packages index)
+# is available via
+#   (a) overrides/ local overrides, or
+#   (b) the GitHub Pages apt repo (origin/gh-pages Packages index) — the
+#       stable suite, plus the testing suite when IMG_CHANNEL=testing
 #
-# Usage: CACHE_DIR=<path> bash scripts/check-packages.sh
+# Usage: OVERRIDES_DIR=<path> [IMG_CHANNEL=testing] bash scripts/check-packages.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -12,11 +13,12 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 source "${ROOT_DIR}/config.sh"
 
-CACHE_DIR="${CACHE_DIR:-${ROOT_DIR}/cache}"
+OVERRIDES_DIR="${OVERRIDES_DIR:-${ROOT_DIR}/overrides}"
+IMG_CHANNEL="${IMG_CHANNEL:-stable}"
 
-# --- packages available in cache/debpkgs/ (local overrides): name -> version ---
+# --- packages available in overrides/ (local overrides): name -> version ---
 declare -A cached_ver
-for deb in "${CACHE_DIR}/debpkgs"/*.deb; do
+for deb in "${OVERRIDES_DIR}"/*.deb; do
     [ -f "$deb" ] || continue
     base="$(basename "$deb")"
     name="${base%%_*}"
@@ -30,27 +32,53 @@ done
 # Read the *published CDN* Packages index — the exact same URL and moment-in-time
 # view the chroot's `apt-get update` will later fetch in stage2
 declare -A repo_ver
-packages_url="${APT_REPO_URL}/dists/${APT_REPO_SUITE}/${APT_REPO_COMPONENT}/binary-${APT_REPO_ARCH}/Packages"
-packages_file="$(curl -fsSL "${packages_url}" 2>/dev/null || true)"
-if [ -n "$packages_file" ]; then
-    cur_pkg=""
+
+# Fold one suite's Packages index into repo_ver. Where a package appears in
+# both suites, keep the higher version — that is what apt will install with
+# both sources enabled. dpkg's comparator is authoritative (it handles '~'
+# pre-release sorting); on hosts without dpkg (macOS), assume the later-read
+# suite (testing) wins, which is right except when a stale pre-release
+# lingers past its promoted release — a display-only inaccuracy here.
+read_suite() {
+    local suite="$1"
+    local packages_url="${APT_REPO_URL}/dists/${suite}/${APT_REPO_COMPONENT}/binary-${APT_REPO_ARCH}/Packages"
+    local packages_file
+    packages_file="$(curl -fsSL "${packages_url}" 2>/dev/null || true)"
+    if [ -z "$packages_file" ]; then
+        echo "WARNING: could not fetch ${packages_url} — apt repo version check skipped for suite ${suite}" >&2
+        return
+    fi
+    local cur_pkg="" ver prev
     while IFS= read -r line; do
         if [[ "$line" == Package:\ * ]]; then
             cur_pkg="${line#Package: }"
         elif [[ "$line" == Version:\ * ]] && [ -n "$cur_pkg" ]; then
-            repo_ver["$cur_pkg"]="${line#Version: }"
+            ver="${line#Version: }"
+            prev="${repo_ver[$cur_pkg]:-}"
+            if [ -z "$prev" ]; then
+                repo_ver["$cur_pkg"]="$ver"
+            elif command -v dpkg >/dev/null 2>&1; then
+                if dpkg --compare-versions "$ver" gt "$prev"; then
+                    repo_ver["$cur_pkg"]="$ver"
+                fi
+            else
+                repo_ver["$cur_pkg"]="$ver"
+            fi
             cur_pkg=""
         fi
     done <<< "$packages_file"
-else
-    echo "WARNING: could not fetch ${packages_url} — apt repo version check skipped" >&2
+}
+
+read_suite "${APT_REPO_SUITE}"
+if [ "${IMG_CHANNEL}" = "testing" ]; then
+    read_suite "${APT_REPO_TESTING_SUITE}"
 fi
 
 # --- discover required packages and versions from debpkgs/ ---
 # debian/changelog is the canonical version source (dpkg-buildpackage reads it).
 # For dpkg-deb packages (lcd-splash, libfluidsynth2-compat) that have no
 # changelog, fall back to the Version: field in debian/control.
-# The live repo (plus any cache/debpkgs override) is the source of truth for
+# The live repo (plus any overrides/ override) is the source of truth for
 # what actually lands in the image; this may be behind the local changelog.
 declare -A resolved_ver
 missing=()
@@ -71,7 +99,7 @@ while IFS= read -r control_file; do
     cached="${cached_ver[$pkg]:-}"
     in_repo="${repo_ver[$pkg]:-}"
 
-    # cache/debpkgs overrides win at install time (Pin-Priority 1001), so it is
+    # overrides/ wins at install time (Pin-Priority 1001), so it is
     # the version that will be installed when present; otherwise the repo's.
     if [ -n "$cached" ]; then
         resolved_ver["$pkg"]="$cached"
@@ -89,7 +117,7 @@ while IFS= read -r control_file; do
 done < <(find "${ROOT_DIR}/debpkgs" -name control -path "*/debian/control" | sort)
 
 if [ "${#missing[@]}" -gt 0 ]; then
-    echo "ERROR: the following packages are not available from the repo or cache/debpkgs:" >&2
+    echo "ERROR: the following packages are not available from the repo or overrides/:" >&2
     for pkg in "${missing[@]}"; do
         echo "  - $pkg" >&2
     done

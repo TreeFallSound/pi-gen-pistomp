@@ -133,7 +133,7 @@ See [`docs/OTA.md`](./docs/OTA.md) for the full pipeline, local override workflo
 | **2** | RT kernel, custom `.deb` packages, audio stack, networking, services |
 | **3** | pi-stomp app, pedalboards, LV2 plugins, factory state |
 
-The image build installs custom packages from the GitHub Pages apt repository (`APT_REPO_URL` in `config.sh`). Static assets (NAM reamp wav, LV2 plugins tarball) are downloaded by `scripts/fetch-assets.sh`. Persistent uv, pip, and apt caches are bind-mounted into the Docker build container at `/pistomp-cache`. Locally-built `.deb` overrides in `cache/debpkgs/` (produced by `build-package-docker.sh`) take precedence over the published versions when present.
+The image build installs custom packages from the GitHub Pages apt repository (`APT_REPO_URL` in `config.sh`). Static assets (NAM reamp wav, LV2 plugins tarball) are downloaded by `scripts/fetch-assets.sh`. Persistent uv, pip, and apt caches are bind-mounted into the Docker build container at `/pistomp-cache`. Locally-built `.deb` overrides in `overrides/` (produced by `build-package-docker.sh`) take precedence over the published versions when present.
 
 See **`GUIDE.md`** for full architecture detail, design decisions, debugging procedures, and kernel update instructions.
 
@@ -149,7 +149,7 @@ Iterate on one `debpkgs/<pkg>` without running the full image build:
 ./build-package-docker.sh jack2-pistomp
 ```
 
-Always rebuilds. The `.deb` lands in `cache/debpkgs/` and is preferred over the published version on the next `./build-docker.sh` run. Remove it from `cache/debpkgs/` to revert to the released package.
+Always rebuilds. The `.deb` lands in `overrides/` and is preferred over the published version on the next `./build-docker.sh` run. Remove it from `overrides/` to revert to the released package.
 
 ### Resume an interrupted build
 

@@ -15,8 +15,20 @@ apt-get install -f -y
 echo "deb [arch=${APT_REPO_ARCH} trusted=yes] ${APT_REPO_URL} ${APT_REPO_SUITE} ${APT_REPO_COMPONENT}" \
     > /etc/apt/sources.list.d/pistomp.list
 
+# Testing-channel image (./build-docker.sh --pre): also enable the pre-release
+# suite. This is used at build time AND deliberately left in the image (05-run.sh
+# does not remove it), so a device flashed from a --pre image keeps tracking
+# pre-release packages over OTA. apt picks the highest version across both
+# suites, and '~' pre-release versions sort below their final release, so the
+# device converges back to production packages once the real release ships.
+# Leave the channel by deleting this file.
+if [ "${IMG_CHANNEL:-stable}" = "testing" ]; then
+    echo "deb [arch=${APT_REPO_ARCH} trusted=yes] ${APT_REPO_URL} ${APT_REPO_TESTING_SUITE} ${APT_REPO_COMPONENT}" \
+        > /etc/apt/sources.list.d/pistomp-testing.list
+fi
+
 # Optional: local override for packages built via build-package-docker.sh.
-# When cache/debpkgs/ contains .deb files, setup-apt-repo.sh has already
+# When overrides/ contains .deb files, setup-apt-repo.sh has already
 # populated /pistomp-cache/apt-repo; add it as a higher-priority source.
 if ls /pistomp-cache/apt-repo/pool/main/*.deb >/dev/null 2>&1; then
     echo "deb [arch=${APT_REPO_ARCH} trusted=yes] file:/pistomp-cache/apt-repo ${APT_REPO_SUITE} ${APT_REPO_COMPONENT}" \
