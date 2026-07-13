@@ -33,6 +33,10 @@ jobs:
           # to keep the YAML block scalar valid while the generated file has
           # no leading whitespace (Debian control format treats leading
           # whitespace as a field continuation).
+          # Two suites: 'trixie' is the production channel every device
+          # follows; 'trixie-testing' receives pre-releases (GitHub Releases
+          # with prerelease:true, i.e. Debian '~' versions) and is only in
+          # sources.list on test devices.
           mkdir -p conf
           printf '%s\n' \
             "Origin: pistomp" \
@@ -42,6 +46,14 @@ jobs:
             "Architectures: arm64" \
             "Components: main" \
             "Description: pi-Stomp custom packages" \
+            "" \
+            "Origin: pistomp" \
+            "Label: pistomp" \
+            "Suite: trixie-testing" \
+            "Codename: trixie-testing" \
+            "Architectures: arm64" \
+            "Components: main" \
+            "Description: pi-Stomp custom packages (pre-release channel)" \
             > conf/distributions
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -57,19 +69,29 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p incoming
-          # REST API returns full release objects with .assets[].browser_download_url.
-          # Paginate to cover all releases (100 per page is the max).
+          # Route each release's assets by its prerelease flag: stable
+          # releases feed the 'trixie' suite, pre-releases 'trixie-testing'.
+          # REST API returns full release objects with .prerelease and
+          # .assets[].browser_download_url. Paginate to cover all releases
+          # (100 per page is the max); stop on the first empty page (a page
+          # of releases with no .deb assets is not the end of the list).
+          mkdir -p incoming/stable incoming/testing
           PAGE=1
           while :; do
-            URLS=$(curl -s -H "Authorization: Bearer ${GH_TOKEN}" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases?per_page=100&page=${PAGE}" \
-              | jq -r '.[].assets[].browser_download_url' 2>/dev/null \
-              | grep '_arm64\.deb$' || true)
-            if [ -z "$URLS" ]; then
+            RESP=$(curl -s -H "Authorization: Bearer ${GH_TOKEN}" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases?per_page=100&page=${PAGE}")
+            if [ "$(echo "$RESP" | jq 'length')" = "0" ]; then
               break
             fi
-            echo "$URLS" | xargs -r -n1 -I{} wget -q -P incoming/ {}
+            echo "$RESP" | jq -r '
+              .[]
+              | (if .prerelease then "testing" else "stable" end) as $channel
+              | .assets[].browser_download_url
+              | select(endswith("_arm64.deb"))
+              | "\($channel) \(.)"' \
+            | while read -r CHANNEL URL; do
+                wget -q -P "incoming/${CHANNEL}/" "$URL"
+              done
             PAGE=$((PAGE + 1))
           done
 
@@ -77,8 +99,13 @@ jobs:
         working-directory: repo
         run: |
           shopt -s nullglob
-          for deb in incoming/*.deb; do
+          for deb in incoming/stable/*.deb; do
             reprepro -b . includedeb trixie "$deb" || {
+              echo "::warning::reprepro refused $deb (duplicate name+version, or missing Section/Priority in debian/control)."
+            }
+          done
+          for deb in incoming/testing/*.deb; do
+            reprepro -b . includedeb trixie-testing "$deb" || {
               echo "::warning::reprepro refused $deb (duplicate name+version, or missing Section/Priority in debian/control)."
             }
           done

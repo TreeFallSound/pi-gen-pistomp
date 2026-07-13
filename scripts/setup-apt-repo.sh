@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build a local apt repository from the pistomp custom .deb packages in CACHE_DIR.
+# Build a local apt repository from the override .deb packages in OVERRIDES_DIR.
 # The repo is written to REPO_DIR and can be used with a file:// apt source.
 set -eu
 
@@ -8,7 +8,7 @@ ROOT_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
 # shellcheck source=config.sh
 source "${ROOT_DIR}/config.sh"
 
-CACHE_DIR="${CACHE_DIR:-${ROOT_DIR}/cache}"
+OVERRIDES_DIR="${OVERRIDES_DIR:-${ROOT_DIR}/overrides}"
 REPO_DIR="${REPO_DIR:-${ROOT_DIR}/cache/apt-repo}"
 
 echo "==> Building local apt repository in ${REPO_DIR}"
@@ -18,7 +18,7 @@ mkdir -p "${REPO_DIR}/pool/main"
 mkdir -p "${REPO_DIR}/dists/${APT_REPO_SUITE}/${APT_REPO_COMPONENT}/binary-${APT_REPO_ARCH}"
 
 # Copy locally built override .deb files into the pool (skip symlinks).
-for deb in "${CACHE_DIR}/debpkgs"/*.deb; do
+for deb in "${OVERRIDES_DIR}"/*.deb; do
     [ -f "$deb" ] || continue
     cp "$deb" "${REPO_DIR}/pool/main/"
 done
