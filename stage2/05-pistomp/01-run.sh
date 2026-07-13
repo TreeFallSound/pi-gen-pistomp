@@ -1,7 +1,12 @@
 #!/bin/bash -e
 
 install -m 644 files/services/*.service ${ROOTFS_DIR}/usr/lib/systemd/system/
-install -m 644 files/jackdrc ${ROOTFS_DIR}/etc/
+
+# jackdrc and jack.service ship in the jack2-pistomp package (so they reach devices
+# over OTA), not here. The ln -sf below still enables the unit.
+test -f "${ROOTFS_DIR}/usr/lib/systemd/system/jack.service"
+test -x "${ROOTFS_DIR}/usr/lib/pistomp/jackdrc"
+
 install -m 644 files/jack-env.sh ${ROOTFS_DIR}/etc/profile.d/
 install -Dm 644 files/rtirq.conf ${ROOTFS_DIR}/etc/default/rtirq
 

@@ -28,12 +28,27 @@ if [ -f "${DIR}/config" ]; then
 	CONFIG_FILE="${DIR}/config"
 fi
 
-# Handle --force before getopts (getopts does not support long options)
+# IMG_CHANNEL selects the apt channel the image builds from and follows:
+#   stable  (default) — production suite only (trixie)
+#   testing (--pre)   — adds the pre-release suite (trixie-testing) at build
+#                       time AND ships it in the image, so flashed devices
+#                       keep tracking pre-release packages over OTA.
+IMG_CHANNEL="${IMG_CHANNEL:-stable}"
+
+# Handle long options before getopts (getopts does not support them)
 for arg in "$@"; do
 	if [ "$arg" = "--force" ]; then
 		FORCE=1
 	fi
+	if [ "$arg" = "--pre" ]; then
+		IMG_CHANNEL="testing"
+	fi
 done
+
+if [ "${IMG_CHANNEL}" != "stable" ] && [ "${IMG_CHANNEL}" != "testing" ]; then
+	echo "IMG_CHANNEL must be 'stable' or 'testing' (got '${IMG_CHANNEL}')" 1>&2
+	exit 1
+fi
 
 while getopts "c:f" flag
 do
@@ -82,6 +97,10 @@ IMG_VERSION="${IMG_VERSION:-}"
 IMG_FILENAME_ENV=""
 if [ -n "${IMG_VERSION}" ]; then
 	IMG_FILENAME_ENV="-e IMG_FILENAME=${IMG_NAME}-${IMG_VERSION}"
+elif [ "${IMG_CHANNEL}" = "testing" ]; then
+	# No explicit version (local --pre build): mark the default date-based
+	# name so a testing image is never mistaken for a production one.
+	IMG_FILENAME_ENV="-e IMG_FILENAME=${IMG_DATE}-${IMG_NAME}-pre"
 fi
 
 # --- apt-cacher-ng (persistent package cache) ---
@@ -163,13 +182,26 @@ elif [ "${CONTAINER_EXISTS}" != "" ] && [ "${CONTINUE}" != "1" ]; then
 fi
 
 # Modify original build-options to allow config file to be mounted in the docker container
-BUILD_OPTS="$(echo "${BUILD_OPTS:-}" | sed -E 's@-c ?([^ ]+)@-c /config@; s/--force//g; s/(^| )-f( |$)/ /g')"
+BUILD_OPTS="$(echo "${BUILD_OPTS:-}" | sed -E 's@-c ?([^ ]+)@-c /config@; s/--force//g; s/--pre//g; s/(^| )-f( |$)/ /g')"
+
+# Local .deb overrides live in overrides/ (produced by build-package-docker.sh).
+mkdir -p "${DIR}/overrides"
+
+# Prerelease leak guard: a '~' in a Debian version marks a pre-release
+# (channel: trixie-testing). A stable build must NEVER install one, including
+# via local overrides — fail instead of silently shipping it to production.
+if [ "${IMG_CHANNEL}" != "testing" ] && ls "${DIR}/overrides"/*~*.deb >/dev/null 2>&1; then
+  echo "ERROR: overrides/ contains pre-release packages (version has '~'):" 1>&2
+  ls "${DIR}/overrides"/*~*.deb 1>&2
+  echo "       Pass --pre to build a testing-channel image, or remove them." 1>&2
+  exit 1
+fi
 
 # If there are no local .deb overrides, remove any stale cache/apt-repo/ left
 # from a previous build-package-docker.sh run.  Without this, apt silently
 # installs old versions from the leftover repo instead of fetching from the
 # published apt repo.
-if ! ls "${DIR}/cache/debpkgs"/*.deb >/dev/null 2>&1; then
+if ! ls "${DIR}/overrides"/*.deb >/dev/null 2>&1; then
   if [ -d "${DIR}/cache/apt-repo" ]; then
     echo "==> No local .deb overrides; removing stale cache/apt-repo/..."
     rm -rf "${DIR}/cache/apt-repo"
@@ -177,8 +209,10 @@ if ! ls "${DIR}/cache/debpkgs"/*.deb >/dev/null 2>&1; then
 fi
 
 # Pre-flight: verify every custom package is available before spending time on
-# the Docker build.  Checks cache/debpkgs/ AND the published apt repo.
-CACHE_DIR="${DIR}/cache" bash "${DIR}/scripts/check-packages.sh"
+# the Docker build.  Checks overrides/ AND the published apt repo (both suites
+# when IMG_CHANNEL=testing).
+OVERRIDES_DIR="${DIR}/overrides" IMG_CHANNEL="${IMG_CHANNEL}" \
+  bash "${DIR}/scripts/check-packages.sh"
 
 ${DOCKER} build --build-arg BASE_IMAGE=debian:trixie -t pi-gen "${DIR}"
 
@@ -244,7 +278,9 @@ time ${DOCKER} run \
   ${PIGEN_DOCKER_OPTS} \
   --volume "${CONFIG_FILE}":/config:ro \
   --volume "${DIR}/cache":/pistomp-cache:rw \
+  --volume "${DIR}/overrides":/pistomp-overrides:ro \
   ${IMG_FILENAME_ENV} \
+  -e "IMG_CHANNEL=${IMG_CHANNEL}" \
   -e "GIT_HASH=${GIT_HASH}" \
   -e "GIT_DESCRIBE=${GIT_DESCRIBE}" \
   -e "APT_PROXY=${APT_PROXY}" \
@@ -260,9 +296,9 @@ time ${DOCKER} run \
     cd /pi-gen &&
     echo '==> Downloading non-.deb assets...' &&
     CACHE_DIR=/pistomp-cache bash scripts/fetch-assets.sh &&
-    if ls /pistomp-cache/debpkgs/*.deb >/dev/null 2>&1; then
-      echo '==> Building local apt override repository from cache/debpkgs/...' &&
-      CACHE_DIR=/pistomp-cache REPO_DIR=/pistomp-cache/apt-repo bash scripts/setup-apt-repo.sh
+    if ls /pistomp-overrides/*.deb >/dev/null 2>&1; then
+      echo '==> Building local apt override repository from overrides/...' &&
+      OVERRIDES_DIR=/pistomp-overrides REPO_DIR=/pistomp-cache/apt-repo bash scripts/setup-apt-repo.sh
     fi &&
     ./build.sh ${BUILD_OPTS} &&
     rsync -av work/*/build.log "deploy/${IMG_DATE}-build.log"

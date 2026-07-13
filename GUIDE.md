@@ -77,7 +77,11 @@ Build process executes ordered stages.
 
 - **mod-ui runs in a Python 3.11 venv** (`/opt/pistomp/venvs/mod-ui`) because it requires `tornado==4.3`, which is incompatible with Python 3.13. All other pi-stomp code runs under the system Python 3.13. The venv is built in `debpkgs/mod-ui/debian/rules`.
 - **JACK2 is built from source** as a `.deb` with the `pi-controller-reset.patch` applied (fixes PI integrator windup that causes monotonically increasing audio failures). The bundled `waf` is used with a patched waflib that replaces the removed `imp` module with `types`.
-- **JACK configuration**: `jackdrc` is a script that sources `/etc/default/jack` and exits with an error if that file is missing. `firstboot.sh` writes `/etc/default/jack` from `pistomp.conf`. `jack.service` has `After=firstboot.service`, so JACK never starts before its configuration exists. `pistomp.conf` is the single source of truth for `JACK_SAMPLE_RATE` and `JACK_PERIOD`. `jackdrc` also passes `--port-max` (default 256, override with `JACK_PORT_MAX` in `/etc/default/jack`): JACK sizes its shm segment as `36MB + 33KB * port_max`, so the stock 2048-port default costs 102MB resident — 22% of RAM on a 512MB Pi 3A+, against ~42 ports actually used.
+- **JACK configuration**: `jackdrc` is a script that sources `/etc/default/jack` and exits with an error if that file is missing. `firstboot.sh` writes `/etc/default/jack` from `pistomp.conf`. `jack.service` has `After=firstboot.service`, so JACK never starts before its configuration exists. `pistomp.conf` is the single source of truth for values a user sets; keys the user leaves unset are written **empty**, and `jackdrc` supplies the default for each.
+- **Per-CPU defaults live in `jackdrc`, not `firstboot.sh`.** `firstboot.sh` never bakes a model-derived value (e.g. `JACK_PERIOD`, `JACK_PORT_MAX`) into `/etc/default/jack` — it writes those keys empty unless the user set them in `pistomp.conf`. The per-model default (`grep 'Pi 5' /proc/device-tree/model`) is computed inside `jackdrc` at **every** boot. This is deliberate: `/etc/default/jack` is written once and never touched again, whereas `jackdrc` ships in `jack2-pistomp`. Keeping the defaults in `jackdrc` means (1) updated defaults reach existing devices over OTA, and (2) an SD card moved between Pi models (e.g. Pi 3A+ ↔ Pi 5) picks the right value on the next boot instead of a value frozen at first boot on the other machine. A value explicitly set in `pistomp.conf` is still written through and wins.
+- **`jackdrc` and `jack.service` ship in the `jack2-pistomp` package**, not the image, so JACK startup changes reach existing devices over OTA. `jackdrc` lives at `/usr/lib/pistomp/jackdrc` rather than `/etc` so it is not a dpkg conffile — a conffile prompt would hang the unattended `apt-get install -f -y -qq` that `pistomp-recovery` runs. `dh_installsystemd` is a no-op for the same reason it is in the `pi-stomp` package: an upgrade must not restart JACK and take down mod-host, mod-ui and pi-stomp. `postinst` does a `daemon-reload` and renames a pre-existing `/etc/jackdrc` to `/etc/jackdrc.obsolete`; the new unit takes effect at the next boot.
+- **Both packaged files are overwritten on upgrade. `/etc/default/jack` is not** — no package owns it, so user edits there are permanent. It carries `JACK_SAMPLE_RATE`, `JACK_PERIOD`, `JACK_DEVICE`, `JACK_NPERIODS`, `JACK_RTPRIO`, `JACK_PORT_MAX`, and the `JACK_EXTRA_ARGS` / `JACK_DRIVER_ARGS` escape hatches (server-half and driver-half of the jackd command line, split at the first `-d`). Any key absent or empty falls back to a default inside `jackdrc`, so `/etc/default/jack` files written before a key existed keep working unchanged. To override the unit rather than its arguments, use a drop-in at `/etc/systemd/system/jack.service.d/`.
+- **JACK shm sizing**: the segment is `sizeof(JackGraphManager) + 33,808 * port_max` bytes, mlocked and fully resident. Each port carries a fixed `BUFFER_SIZE_MAX` (8192-frame) buffer regardless of `JACK_PERIOD`. `jackdrc` passes `--port-max` — 512 on a Pi 5, else 256 — overridable via `JACK_PORT_MAX` in `/etc/default/jack`. Upstream's 2048 default costs 102MB, 22% of RAM on a 512MB Pi 3A+, against the ~42 ports a loaded pedalboard uses. The fixed base is set by `--clients` and `--ports-per-application` at build time (see `debpkgs/jack2-pistomp/debian/rules`); upstream's 256/2048 defaults cost 36MB before any port exists, and 64/512 brings that to 8MB.
 - **lilv is installed via apt** (`python3-lilv liblilv-dev`) — no source build needed on Trixie.
 - **lcd-splash** is a C binary compiled from source in `debpkgs/lcd-splash/src/`. It uses `lgpio` (linked against the extracted `lg.deb` at build time) to drive the ILI9341 SPI LCD directly. The splash image is `stage2/05-pistomp/files/splash.rgb565`.
 - **Realtime IRQ tuning** uses the `rtirq-init` apt package (not `rtirq` — the old name doesn't exist on Trixie). Config is installed to `/etc/default/rtirq`. A custom `rtirq.service` unit wraps the init script.
@@ -123,6 +127,14 @@ The `-f`/`--force` flag removes any existing build container and clears `deploy/
 
 Output: `deploy/*pistompOS-*.img.xz` (run `./compress-img.sh` after `build-docker.sh` to produce it; `build-docker.sh` alone leaves the uncompressed `.img` in `deploy/`).
 
+### Build a testing-channel (pre-release) image
+
+```bash
+./build-docker.sh -f --pre        # or: IMG_CHANNEL=testing ./build-docker.sh -f
+```
+
+`--pre` builds against **both** apt suites (`trixie` + `trixie-testing`), so pre-release (`~` version) packages are installed, and the image ships with `pistomp-testing.list` so flashed devices keep following the pre-release channel over OTA. The image name gets a `-pre` suffix (`<date>-pistompOS-pre.img`). Without `--pre`, the build refuses to proceed if `overrides/` contains any pre-release `.deb` — a `~` version can never leak into a production image.
+
 ### Build a single package
 
 Iterate on one `debpkgs/<pkg>` without running the full image build:
@@ -131,7 +143,7 @@ Iterate on one `debpkgs/<pkg>` without running the full image build:
 ./build-package-docker.sh jack2-pistomp
 ```
 
-Always rebuilds. Output lands in `cache/debpkgs/`; the next `./build-docker.sh` run installs it via a high-priority apt override. Remove it from `cache/debpkgs/` to revert to the published version. Mounts `cache/` at `/pistomp-cache` and the repo root at `/pistomp` read-write.
+Always rebuilds. Output lands in `overrides/`; the next `./build-docker.sh` run installs it via a high-priority apt override. Remove it from `overrides/` to revert to the published version. Mounts `cache/` at `/pistomp-cache`, `overrides/` at `/pistomp-overrides`, and the repo root at `/pistomp` read-write.
 
 ### Resume an interrupted build
 
@@ -181,19 +193,22 @@ Custom packages live under `debpkgs/<pkg>/`. Each has:
 **`debian/changelog` is the version gate.** Nothing is published to GitHub Releases or the apt repo unless the version is bumped. All three duplicate-version gates (PR check, release tag, `reprepro`) key off it.
 
 ```bash
-./scripts/bump-version.sh <pkg> "Description of change."
+./scripts/bump-version.sh <pkg> "Description of change."          # production channel
+./scripts/bump-version.sh --pre <pkg> "Description of change."    # pre-release channel (trixie-testing)
 ```
 
 `build.sh` reads the version from the changelog via `dpkg-parsechangelog` — no other files need updating.
 
 Packages using `dpkg-deb --build` (`lcd-splash`, `libfluidsynth2-compat`) derive their version from `debian/control`'s `Version:` field instead.
 
-### `cache/` directory structure
+### `overrides/` and `cache/` directory structure
+
+`overrides/` (top-level, gitignored) holds locally-built override `.deb` packages from `build-package-docker.sh` — intentional state that changes what the next image build installs. `cache/` is purely regenerable.
 
 | Path | Contents |
 | :--- | :--- |
-| `cache/debpkgs/*.deb` | Locally-built override packages (from `build-package-docker.sh`) |
-| `cache/apt-repo/` | Generated from `cache/debpkgs/` by `setup-apt-repo.sh`; only present when overrides exist |
+| `overrides/*.deb` | Locally-built override packages (from `build-package-docker.sh`) |
+| `cache/apt-repo/` | Generated from `overrides/` by `setup-apt-repo.sh`; only present when overrides exist |
 | `cache/kernel/` | RT kernel `.deb` files |
 | `cache/apt-cacher/` | apt-cacher-ng persistent cache (Debian packages) |
 | `cache/uv-cache/` | uv wheel/sdist cache (`UV_CACHE_DIR`) |
@@ -274,12 +289,19 @@ push debpkgs/<pkg>/**  →  build-<pkg>.yml  →  GitHub Release (debpkg/<pkg>/<
 device /etc/apt/sources.list.d/pistomp.list  →  apt update  →  apt install --only-upgrade <pkg>
 ```
 
+### Release channels
+
+Two apt suites on the same gh-pages site: `trixie` (production, every device) and `trixie-testing` (pre-releases, opt-in test devices). The channel is decided by the changelog version alone: a `~` in the version (e.g. `1.2-4~pre1`, created with `./scripts/bump-version.sh --pre <pkg> "msg"`) publishes the GitHub Release as a prerelease and routes the `.deb` into `trixie-testing`. Experimental work can therefore merge to `main` freely — production devices never see `~` versions. A plain bump to the final version promotes it (`~` sorts below the release it precedes, so test devices converge back automatically). Release **tags** encode `~` as `_` (git forbids `~` in refnames); everything else keeps the real Debian version. Test devices opt in by adding a second sources line for `trixie-testing`. Details in `docs/OTA.md` "Release channels".
+
+**Images** have channels too: `./build-docker.sh --pre` (or `IMG_CHANNEL=testing`, or a `release/<ver>-rc1`-style tag in CI) builds from both suites and ships `pistomp-testing.list`, so devices flashed from it follow the pre-release channel; the image name carries a `-pre`/`-rc` marker and the CI release is flagged prerelease (excluded from `releases/latest`). Never promote a pre-release image by re-tagging — its rootfs contains `~` packages and the testing sources line; promote the packages, then cut a fresh `release/<version>` tag.
+
 ### Source of truth: `config.sh`
 
 | Var | Meaning |
 | :--- | :--- |
 | `APT_REPO_URL` | Base URL of the Pages site (e.g. `https://treefallsound.github.io/pi-gen-pistomp`). Written to `pistomp.list` by `stage2/00-dummy-packages/01-run.sh`. |
 | `APT_REPO_SUITE` | Debian suite served by the repo (`trixie`). |
+| `APT_REPO_TESTING_SUITE` | Pre-release suite (`trixie-testing`); used only when `IMG_CHANNEL=testing`. |
 | `APT_REPO_COMPONENT` | apt component (`main`). |
 | `APT_REPO_ARCH` | apt architecture (`arm64`). |
 
@@ -287,9 +309,9 @@ device /etc/apt/sources.list.d/pistomp.list  →  apt update  →  apt install -
 
 | File | Trigger | What it does |
 | :--- | :--- | :--- |
-| `.github/workflows/build-deb.yml` | `workflow_call` | Reusable: extract version from `debian/changelog`, install `Build-Depends` from `debian/control` automatically, run `build.sh`, publish a Release tagged `debpkg/<pkg>/<ver>`. On PRs, fails if that tag already exists (unbumped version). |
+| `.github/workflows/build-deb.yml` | `workflow_call` | Reusable: extract version from `debian/changelog`, install `Build-Depends` from `debian/control` automatically, run `build.sh`, publish a Release tagged `debpkg/<pkg>/<ver>` (`~`→`_` in the tag; `prerelease: true` when the version contains `~`). On PRs, fails if that tag already exists (unbumped version). |
 | `.github/workflows/build-<pkg>.yml` | push/PR on `debpkgs/<pkg>/**` or `config.sh` | Thin wrapper calling `build-deb.yml` with `pkg:`. One per package. Template at `docs/package-template/build.yml`. |
-| `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` release asset, `reprepro includedeb trixie` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch and `conf/distributions` on first run. |
+| `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` release asset, routes it by the release's prerelease flag into `reprepro includedeb trixie` or `trixie-testing` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch and `conf/distributions` on first run. |
 
 ### Duplicate-version gates (three layers)
 
@@ -301,7 +323,7 @@ To ship a new version you **must** bump `debian/changelog`; all three gates poin
 
 ### Build-time vs runtime apt sources
 
-`stage2/00-dummy-packages/01-run.sh` writes `pistomp.list` pointing at `APT_REPO_URL` as the primary apt source — the same URL devices use for OTA. If `cache/debpkgs/` has locally-built `.deb` overrides, `build-docker.sh` generates `cache/apt-repo/` first and `01-run.sh` adds `pistomp-local.list` (Pin-Priority 1001) so those packages win. `stage2/05-pistomp/05-run.sh` removes `pistomp-local.list` and the preferences pin before finalizing the image. Devices ship with only `pistomp.list` — no dead `file://` URI.
+`stage2/00-dummy-packages/01-run.sh` writes `pistomp.list` pointing at `APT_REPO_URL` as the primary apt source — the same URL devices use for OTA. On `--pre` builds it also writes `pistomp-testing.list` for the `trixie-testing` suite, which is deliberately kept in the final image. If `overrides/` has locally-built `.deb` overrides, `build-docker.sh` generates `cache/apt-repo/` first and `01-run.sh` adds `pistomp-local.list` (Pin-Priority 1001) so those packages win. `stage2/05-pistomp/05-run.sh` removes `pistomp-local.list` and the preferences pin before finalizing the image. Production devices ship with only `pistomp.list` — no dead `file://` URI.
 
 ### One-time setup (GitHub Pages)
 

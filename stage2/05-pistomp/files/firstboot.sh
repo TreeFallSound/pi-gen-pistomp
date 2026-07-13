@@ -39,10 +39,14 @@ if [[ -f "${CONF}" ]]; then
     printf 'options brcmfmac roamoff=1\n' > /etc/modprobe.d/brcmfmac.conf
 
     if [[ -n "${WIFI_SSID:-}" ]]; then
+        # wpa-psk covers WPA2 + WPA3-transition APs.
+        # WPA3-only (SAE) networks are not supported by firstboot;
+        # connect via "Nearby networks..." instead which detects them.
         nmcli connection delete "preconfigured" 2>/dev/null || true
         nmcli connection add type wifi ifname wlan0 con-name "preconfigured" \
             ssid "${WIFI_SSID}" \
-            wifi-sec.key-mgmt sae wifi-sec.psk "${WIFI_PASSWORD}" \
+            wifi-sec.key-mgmt wpa-psk wifi-sec.psk "${WIFI_PASSWORD}" \
+            wifi-sec.pmf optional \
             ipv4.route-metric 700 ipv6.route-metric 700 \
             connection.autoconnect yes || true
     fi
@@ -74,9 +78,18 @@ fi
 # ---------- JACK audio configuration ----------
 
 mkdir -p /etc/default
+
+# Unset keys are written empty; jackdrc supplies the default for each at every
+# boot so that we can change defaults using OTA updates without touching pistomp.conf.
 cat > /etc/default/jack <<EOF
 JACK_SAMPLE_RATE="${JACK_SAMPLE_RATE}"
-JACK_PERIOD="${JACK_PERIOD}"
+JACK_PERIOD="${JACK_PERIOD:-}"
+JACK_DEVICE="${JACK_DEVICE:-}"
+JACK_NPERIODS="${JACK_NPERIODS:-}"
+JACK_RTPRIO="${JACK_RTPRIO:-}"
+JACK_PORT_MAX="${JACK_PORT_MAX:-}"
+JACK_EXTRA_ARGS="${JACK_EXTRA_ARGS:-}"
+JACK_DRIVER_ARGS="${JACK_DRIVER_ARGS:-}"
 EOF
 
 # ---------- hardware setup ----------
@@ -85,10 +98,12 @@ lcd "Finishing setup..."
 
 chown -R pistomp:pistomp /home/pistomp/
 
-if grep -q 'Pi 3' /proc/cpuinfo 2>/dev/null; then
-    runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh 2.0 || true
-else
+# Hardware version: Pi 5 = v3 (pi-Stomp Tre), Pi 3/4 = v2 (pi-Stomp Core).
+# v1 is no longer supported.
+if grep -q 'Pi 5' /proc/device-tree/model 2>/dev/null; then
     runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh 3.0 || true
+else
+    runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh 2.0 || true
 fi
 
 if grep -q 'Pi 5' /proc/cpuinfo 2>/dev/null; then
@@ -105,4 +120,7 @@ fi
 
 mv /boot/firmware/firstboot.sh /boot/firmware/firstboot.done
 systemctl disable firstboot.service
-reboot -f
+
+# Clean reboot: resize2fs and the recursive chown above must reach the card.
+sync
+systemctl reboot || reboot -f

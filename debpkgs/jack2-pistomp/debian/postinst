@@ -1,0 +1,50 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "configure" ]; then
+    # Load the new unit (ExecStart moved from /etc/jackdrc to /usr/lib/pistomp/jackdrc)
+    # before the old script is renamed away. daemon-reload does not restart jackd, so a
+    # running server keeps its current exec until the next boot — an upgrade must never
+    # drop audio mid-performance. Without the reload, a crash-restart between now and
+    # reboot would exec a path that no longer exists.
+    if [ -d /run/systemd/system ]; then
+        systemctl daemon-reload || true
+    fi
+
+    # Rename rather than delete: some installs hand-edited this file, and a silently
+    # missing one is harder to diagnose than an obviously dead one. Explain the move
+    # inside the file itself, where whoever goes looking will actually read it.
+    if [ -f /etc/jackdrc ]; then
+        mv /etc/jackdrc /etc/jackdrc.obsolete
+        tmp="$(mktemp)"
+        {
+            cat <<'BANNER'
+# ============================================================================
+# OBSOLETE — this file is no longer executed. Editing it has no effect.
+#
+# jack.service now runs /usr/lib/pistomp/jackdrc, which ships in the
+# jack2-pistomp package so that JACK startup changes reach devices over OTA
+# rather than only on a freshly flashed image.
+#
+# This copy was installed by an older image and renamed here by
+# jack2-pistomp's postinst. It is kept only so that any local edits you made
+# are not lost. Once you have salvaged anything you need, delete it.
+#
+# To change JACK settings, edit /etc/default/jack and reboot:
+#   JACK_SAMPLE_RATE   sample rate in Hz
+#   JACK_PERIOD        ALSA period size in frames
+#   JACK_PORT_MAX      port cap (default: 512 on Pi 5, else 256)
+#
+# The original contents follow.
+# ============================================================================
+BANNER
+            cat /etc/jackdrc.obsolete
+        } > "$tmp"
+        cat "$tmp" > /etc/jackdrc.obsolete
+        rm -f "$tmp"
+        # Not executable: nothing should run it, and the mode says so at a glance.
+        chmod 0644 /etc/jackdrc.obsolete
+    fi
+fi
+
+#DEBHELPER#
