@@ -5,3 +5,11 @@ Codename: trixie
 Architectures: arm64
 Components: main
 Description: pi-Stomp custom packages
+
+Origin: pistomp
+Label: pistomp
+Suite: trixie-testing
+Codename: trixie-testing
+Architectures: arm64
+Components: main
+Description: pi-Stomp custom packages (pre-release channel)
