@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Generate a Raspberry Pi Imager 2.x JSON manifest for a pistompOS compressed image.
-# Usage: ./scripts/generate-imager-manifest.sh pistompOS-<version>.img.xz [version]
+# Usage: ./scripts/generate-imager-manifest.sh pistompOS-<version>.img.xz <git-tag>
+#
+# <git-tag> is the release tag the asset is published under, verbatim — e.g.
+# `release/3.2.0` for a CI release, or a bare `imager-test2` for a hand-cut one.
 #
 # Output: writes pistomp-imager-manifest.json (and prints OS list entry to stdout).
 set -euo pipefail
@@ -12,27 +15,21 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 source "${ROOT_DIR}/config.sh"
 
 XZ_FILE="${1:-}"
-VERSION="${2:-}"
+TAG="${2:-}"
 
-if [[ -z "$XZ_FILE" ]] || [[ ! -f "$XZ_FILE" ]]; then
-    echo "Usage: $0 <pistompOS-<version>.img.xz> [version]"
+if [[ -z "$XZ_FILE" ]] || [[ ! -f "$XZ_FILE" ]] || [[ -z "$TAG" ]]; then
+    echo "Usage: $0 <pistompOS-<version>.img.xz> <git-tag>"
     echo ""
-    echo "If version is omitted it is extracted from the filename."
+    echo "  <git-tag>  Release tag the asset is published under, verbatim."
+    echo "             e.g. 'release/3.2.0' or 'imager-test2'."
     exit 1
 fi
 
-# Derive version from filename if not given
-if [[ -z "$VERSION" ]]; then
-    BASENAME=$(basename "$XZ_FILE")
-    VERSION=$(echo "$BASENAME" | sed -n 's/pistompOS-\(.*\)\.img\.xz/\1/p')
-    if [[ -z "$VERSION" ]]; then
-        echo "ERROR: could not extract version from filename '$BASENAME'."
-        echo "       Provide version as second argument."
-        exit 1
-    fi
-fi
+# Display version: the tag minus the `release/` prefix CI publishes under.
+# A hand-cut bare tag is its own version.
+VERSION="${TAG#release/}"
 
-echo "==> Generating Imager manifest for pistompOS ${VERSION}..."
+echo "==> Generating Imager manifest for pistompOS ${VERSION} (tag: ${TAG})..."
 echo "    File: ${XZ_FILE}"
 
 # The release asset keeps the name of the file build-docker.sh produced, so take
@@ -40,8 +37,6 @@ echo "    File: ${XZ_FILE}"
 # apart once already and Imager only notices at write time.
 ASSET_NAME=$(basename "$XZ_FILE")
 
-# build-image.yml publishes on `release/<version>` tags, and VERSION is that tag
-# minus the `release/` prefix — so the tag path is `release/${VERSION}` verbatim.
 RELEASE_BASE_URL="https://github.com/TreeFallSound/pi-gen-pistomp/releases"
 
 # --- check dependencies ---
@@ -70,13 +65,11 @@ fi
 EXTRACT_SHA256=$(xz -d --stdout "$XZ_FILE" | sha256sum | awk '{print $1}')
 
 # --- release date ---
-# Try git tag date first, then file modification date
+# Date of the tag we were given, then file modification date. The tag may not
+# exist locally (CI builds it before pushing, hand-cut ones are made on GitHub).
 RELEASE_DATE=""
 if command -v git &>/dev/null && git -C "$ROOT_DIR" rev-parse --git-dir &>/dev/null; then
-    TAG=$(git -C "$ROOT_DIR" tag --points-at HEAD 2>/dev/null | head -1)
-    if [[ -n "$TAG" ]]; then
-        RELEASE_DATE=$(git -C "$ROOT_DIR" log -1 --format=%as "$TAG" 2>/dev/null || true)
-    fi
+    RELEASE_DATE=$(git -C "$ROOT_DIR" log -1 --format=%as "$TAG" 2>/dev/null || true)
 fi
 if [[ -z "$RELEASE_DATE" ]]; then
     RELEASE_DATE=$(date -r "$XZ_FILE" +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)
@@ -92,7 +85,7 @@ cat > "$MANIFEST_FILE" <<JSONEOF
       "name": "pi-Stomp OS ${VERSION}",
       "description": "Low-latency audio OS for pi-Stomp guitar pedal hardware (Pi 3/4/5, Zero 2 W). Includes RT kernel, JACK audio, MOD-Host, MOD-UI.",
       "icon": "${APT_REPO_URL}/imager/icon.svg",
-      "url": "${RELEASE_BASE_URL}/download/release/${VERSION}/${ASSET_NAME}",
+      "url": "${RELEASE_BASE_URL}/download/${TAG}/${ASSET_NAME}",
       "extract_size": ${EXTRACT_SIZE},
       "extract_sha256": "${EXTRACT_SHA256}",
       "image_download_size": ${COMPRESSED_SIZE},
@@ -116,7 +109,7 @@ echo "URL users enter in Imager:"
 echo "  ${APT_REPO_URL}/imager/pistomp.json"
 echo ""
 echo "Summary:"
-echo "  Name:         pi-Stomp OS v${VERSION}"
+echo "  Name:         pi-Stomp OS ${VERSION}"
 echo "  Release date: ${RELEASE_DATE}"
 echo "  Extract size: ${EXTRACT_SIZE} bytes"
 echo "  Extract SHA256: ${EXTRACT_SHA256}"

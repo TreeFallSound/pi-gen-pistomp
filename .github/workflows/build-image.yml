@@ -44,10 +44,18 @@ jobs:
       run: |
         if [[ "${GITHUB_REF}" == refs/tags/release/* ]]; then
           VERSION="${GITHUB_REF#refs/tags/release/}"
+          # The tag verbatim — the manifest's download URL is built from it, so
+          # it must match the release GitHub actually publishes, prefix included.
+          TAG="${GITHUB_REF#refs/tags/}"
         else
           VERSION="dev-$(git rev-parse --short HEAD)"
+          # Dispatch builds publish no release; the manifest is an artifact only
+          # and its URL points at nothing. Keep the tag honest rather than
+          # inventing a release/ path that was never cut.
+          TAG="${VERSION}"
         fi
         echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+        echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
         # A pre-release marker in the version selects the testing channel:
         # the image installs from (and ships) the trixie-testing apt suite,
         # and the GitHub Release is flagged prerelease. Mirrors the package
@@ -84,7 +92,7 @@ jobs:
     - name: Generate Imager 2.x JSON manifest
       run: |
         XZ_FILE=$(ls deploy/*pistompOS*.img.xz | head -1)
-        ./scripts/generate-imager-manifest.sh "$XZ_FILE" "${{ steps.version.outputs.version }}"
+        ./scripts/generate-imager-manifest.sh "$XZ_FILE" "${{ steps.version.outputs.tag }}"
 
     - name: List output files
       run: ls -lh deploy pistomp-imager-manifest.json
