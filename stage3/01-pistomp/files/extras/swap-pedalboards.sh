@@ -48,6 +48,10 @@ else
 fi
 chown -R pistomp:pistomp "$PB_DIR"
 
+echo "==> Creating/updating device branch for pistomp-stamp"
+git -C "$PB_DIR" branch -f device HEAD
+git -C "$PB_DIR" checkout device
+
 echo "==> Clearing stale MOD state"
 # last.json points at a now-deleted board; remove so mod-ui can't reload a ghost.
 rm -f "$DATA_DIR/last.json"
