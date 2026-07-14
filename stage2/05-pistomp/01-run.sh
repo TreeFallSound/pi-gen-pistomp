@@ -48,6 +48,12 @@ mkdir -p "${ROOTFS_DIR}/etc/systemd/system/alsa-restore.service.d"
 install -v -m 644 files/services/alsa-restore-override.conf \
   "${ROOTFS_DIR}/etc/systemd/system/alsa-restore.service.d/override.conf"
 
+# Order rpi-preseed ahead of every service that runs as pistomp (UID 1000).
+# Without this it aborts on first boot and no Imager customization is applied.
+mkdir -p "${ROOTFS_DIR}/etc/systemd/system/rpi-preseed.service.d"
+install -v -m 644 files/services/rpi-preseed-before-pistomp.conf \
+  "${ROOTFS_DIR}/etc/systemd/system/rpi-preseed.service.d/10-before-pistomp.conf"
+
 echo "Creating folders and services"
 on_chroot << EOF
 

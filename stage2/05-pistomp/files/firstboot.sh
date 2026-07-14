@@ -19,14 +19,37 @@ if command -v growpart &>/dev/null; then
 fi
 
 # ---------- Imager (rpi-preseed) awareness ----------
-# If the user flashed via Raspberry Pi Imager 2.x with the customization
-# wizard, Imager wrote /boot/firmware/rpi-preseed.toml, which the
-# rpi-preseed package's systemd oneshot applied and renamed to .done.
-# Detect this and skip the OS-level settings that rpi-preseed already
-# handled, so pistomp.conf doesn't override the user's Imager choices.
+# If the user flashed via Raspberry Pi Imager 2.x with the customization wizard,
+# Imager wrote /boot/firmware/rpi-preseed.toml and the rpi-preseed package's
+# systemd oneshot applied it. Detect that and skip the OS-level settings it
+# already handled, so pistomp.conf doesn't override the user's Imager choices.
+#
+# Success is the /var/lib/rpi-preseed/applied stamp, NOT the presence or absence
+# of the TOML: rpi-preseed redacts the TOML's secrets in place and leaves the file
+# on the boot partition, so the TOML is still there after a successful apply.
+PRESEED_TOML="/boot/firmware/rpi-preseed.toml"
+PRESEED_APPLIED="/var/lib/rpi-preseed/applied"
+
 IMAGER_APPLIED=false
-if [[ -f "/boot/firmware/rpi-preseed.done" ]]; then
+if [[ -f "${PRESEED_APPLIED}" ]]; then
     IMAGER_APPLIED=true
+elif [[ -f "${PRESEED_TOML}" ]]; then
+    # The user asked Imager to customize this card, but rpi-preseed did not apply
+    # it — so their WiFi, hostname, password and SSH key are all missing and they
+    # have no way to reach the device. Say so on the LCD rather than booting into a
+    # silently-unconfigured system, then carry on with the pistomp.conf fallback.
+    #
+    # lcd-splash renders one unwrapped line in a 11px-wide font on a 320px LCD, so
+    # a message is hard-clipped at both ends past 29 characters. Hence two frames.
+    echo "firstboot: ${PRESEED_TOML} present but ${PRESEED_APPLIED} missing;" \
+         "rpi-preseed did not apply the Imager customization." \
+         "Falling back to ${CONF}." >&2
+    systemctl status rpi-preseed.service --no-pager >&2 2>&1 || true
+
+    lcd "Imager setup FAILED"
+    sleep 5
+    lcd "Continuing w/ defaults"
+    sleep 5
 fi
 
 # ---------- apply pistomp.conf ----------
