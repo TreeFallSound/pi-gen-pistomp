@@ -40,7 +40,7 @@ Environment=PATCHSTORAGE_PLATFORM_ID=8046
 Environment=PATCHSTORAGE_TARGET_ID=8280
 
 AmbientCapabilities=CAP_NET_BIND_SERVICE
-ExecStartPre=-/usr/bin/lcd-splash /usr/share/pistomp/splash.rgb565 "Starting web interface"
+ExecStartPre=-/usr/bin/lcd-splash /usr/share/pistomp/splash/splash-mod-ui.rgb565 "Starting web interface"
 ExecStart=/opt/pistomp/venvs/mod-ui/bin/mod-ui
 User=pistomp
 Group=pistomp

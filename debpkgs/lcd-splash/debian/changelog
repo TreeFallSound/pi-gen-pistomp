@@ -1,3 +1,9 @@
+lcd-splash (1.0-19) trixie; urgency=medium
+
+  * New per-stage boot artwork: PNG sources in images/, converted to RGB565 at build time; message text now light grey.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 14 Jul 2026 03:42:39 +0000
+
 lcd-splash (1.0-18) trixie; urgency=medium
 
   * Detect Pi 5 vs Pi 3/4 to set correct ILI9341 MADCTL orientation (v2=flip 180, v3=normal);

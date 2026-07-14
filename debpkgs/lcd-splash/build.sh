@@ -56,7 +56,17 @@ gcc -O2 -Wall -Wextra \
     -I"${SRC_DIR}" \
     -llgpio
 
-cp "${ROOT_DIR}/stage2/05-pistomp/files/splash.rgb565" \
+# Convert the source PNGs to the raw RGB565 framebuffers lcd-splash reads.
+mkdir -p "${DEB_DIR}/usr/share/pistomp/splash"
+for png in "${SCRIPT_DIR}"/images/*.png; do
+    name="$(basename "${png}" .png)"
+    python3 "${SRC_DIR}/png2rgb565.py" "${png}" \
+        "${DEB_DIR}/usr/share/pistomp/splash/${name}.rgb565"
+done
+
+# Compat: service files from older packages still point at the single blob, so an
+# lcd-splash upgrade landing before theirs must not break the splash.
+cp "${DEB_DIR}/usr/share/pistomp/splash/splash-start.rgb565" \
     "${DEB_DIR}/usr/share/pistomp/splash.rgb565"
 
 # Generate md5sums so dpkg --verify can detect modified files after install.
