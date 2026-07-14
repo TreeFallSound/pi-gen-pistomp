@@ -50,7 +50,7 @@ if [ "${IMG_CHANNEL}" != "stable" ] && [ "${IMG_CHANNEL}" != "testing" ]; then
 	exit 1
 fi
 
-while getopts "c:f" flag
+while getopts ":c:f" flag
 do
 	case "${flag}" in
 		c)
@@ -59,7 +59,9 @@ do
 		f)
 			FORCE=1
 			;;
-		*)
+		\?)
+			# Silently ignore unknown options (long options like --pre, --force
+			# are handled above before getopts, but still appear in $@)
 			;;
 	esac
 done
