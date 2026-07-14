@@ -23,8 +23,12 @@ echo "deb [arch=${APT_REPO_ARCH} trusted=yes] ${APT_REPO_URL} ${APT_REPO_SUITE} 
 # device converges back to production packages once the real release ships.
 # Leave the channel by deleting this file.
 if [ "${IMG_CHANNEL:-stable}" = "testing" ]; then
-    echo "deb [arch=${APT_REPO_ARCH} trusted=yes] ${APT_REPO_URL} ${APT_REPO_TESTING_SUITE} ${APT_REPO_COMPONENT}" \
-        > /etc/apt/sources.list.d/pistomp-testing.list
+    if wget -q --spider "${APT_REPO_URL}/dists/${APT_REPO_TESTING_SUITE}/Release" 2>/dev/null; then
+        echo "deb [arch=${APT_REPO_ARCH} trusted=yes] ${APT_REPO_URL} ${APT_REPO_TESTING_SUITE} ${APT_REPO_COMPONENT}" \
+            > /etc/apt/sources.list.d/pistomp-testing.list
+    else
+        echo "WARNING: ${APT_REPO_TESTING_SUITE} suite not found at ${APT_REPO_URL} — skipping. Pre-release packages will not be available in this image."
+    fi
 fi
 
 # Optional: local override for packages built via build-package-docker.sh.
