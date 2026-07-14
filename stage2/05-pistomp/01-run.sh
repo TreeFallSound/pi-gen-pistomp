@@ -38,7 +38,7 @@ install -m 755 files/zram-stop.sh ${ROOTFS_DIR}/usr/lib/pistomp/zram-stop.sh
 # read-only rootfs recovery — detects ext4 errors and reboots to trigger fsck
 install -m 755 files/pistomp-ro-recovery.sh ${ROOTFS_DIR}/usr/lib/pistomp/pistomp-ro-recovery.sh
 
-# lcd-splash binary + splash.rgb565 are installed by the lcd-splash .deb
+# lcd-splash binary + /usr/share/pistomp/splash/*.rgb565 are installed by the lcd-splash .deb
 # (see 02-run.sh dpkg -i /pistomp-cache/lcd-splash.deb).
 
 mkdir -p "${ROOTFS_DIR}/usr/lib/systemd/system-shutdown"

@@ -11,7 +11,7 @@ StartLimitIntervalSec=60
 User=pistomp
 WorkingDirectory=/home/pistomp
 Environment="JACK_PROMISCUOUS_SERVER=jack"
-ExecStartPre=-/usr/bin/lcd-splash /usr/share/pistomp/splash.rgb565 "Loading pedalboard"
+ExecStartPre=-/usr/bin/lcd-splash /usr/share/pistomp/splash/splash-pedalboard.rgb565 "Loading pedalboard"
 ExecStart=/opt/pistomp/venvs/pi-stomp/bin/python /opt/pistomp/pi-stomp/modalapistomp.py
 AmbientCapabilities=CAP_SYS_NICE CAP_IPC_LOCK
 Restart=always

@@ -4,12 +4,12 @@ set -e
 
 CONF="/boot/firmware/pistomp.conf"
 LCD="/usr/bin/lcd-splash"
-SPLASH="/usr/share/pistomp/splash.rgb565"
-lcd() { "$LCD" "$SPLASH" "$1" 2>/dev/null || true; }
+SPLASH_DIR="/usr/share/pistomp/splash"
+lcd() { "$LCD" "$SPLASH_DIR/$1.rgb565" "$2" 2>/dev/null || true; }
 
 # ---------- expand root partition to fill SD card ----------
 
-lcd "Expanding filesystem..."
+lcd splash-expandfs "Expanding filesystem..."
 if command -v growpart &>/dev/null; then
     ROOT_DEV="$(findmnt -n -o SOURCE /)"
     DISK="/dev/$(lsblk -no PKNAME "${ROOT_DEV}")"
@@ -55,9 +55,9 @@ fi
 # ---------- apply pistomp.conf ----------
 
 if [[ "${IMAGER_APPLIED}" == "true" ]]; then
-    lcd "Applying pi-Stomp settings..."
+    lcd splash-firstboot "Applying pi-Stomp settings..."
 else
-    lcd "First boot setup..."
+    lcd splash-firstboot "First boot setup..."
 fi
 
 if [[ -f "${CONF}" ]]; then
@@ -73,7 +73,7 @@ if [[ -f "${CONF}" ]]; then
 
     # OS-level settings: only apply if Imager/rpi-preseed didn't already handle them
     if [[ "${IMAGER_APPLIED}" != "true" ]]; then
-        lcd "Configuring WiFi..."
+        lcd splash-wifi "Configuring WiFi..."
 
         printf 'options cfg80211 ieee80211_regdom=%s\n' "${WIFI_COUNTRY:-US}" \
             > /etc/modprobe.d/cfg80211.conf
@@ -136,7 +136,7 @@ EOF
 
 # ---------- hardware setup ----------
 
-lcd "Finishing setup..."
+lcd splash-firstboot "Finishing setup..."
 
 chown -R pistomp:pistomp /home/pistomp/
 
