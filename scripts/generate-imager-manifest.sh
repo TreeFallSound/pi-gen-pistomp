@@ -32,8 +32,17 @@ if [[ -z "$VERSION" ]]; then
     fi
 fi
 
-echo "==> Generating Imager manifest for pistompOS v${VERSION}..."
+echo "==> Generating Imager manifest for pistompOS ${VERSION}..."
 echo "    File: ${XZ_FILE}"
+
+# The release asset keeps the name of the file build-docker.sh produced, so take
+# it from the file itself rather than rebuilding it from VERSION — the two drifted
+# apart once already and Imager only notices at write time.
+ASSET_NAME=$(basename "$XZ_FILE")
+
+# build-image.yml publishes on `release/<version>` tags, and VERSION is that tag
+# minus the `release/` prefix — so the tag path is `release/${VERSION}` verbatim.
+RELEASE_BASE_URL="https://github.com/TreeFallSound/pi-gen-pistomp/releases"
 
 # --- check dependencies ---
 for cmd in xz sha256sum stat; do
@@ -80,13 +89,14 @@ cat > "$MANIFEST_FILE" <<JSONEOF
 {
   "os_list": [
     {
-      "name": "pi-Stomp OS v${VERSION}",
+      "name": "pi-Stomp OS ${VERSION}",
       "description": "Low-latency audio OS for pi-Stomp guitar pedal hardware (Pi 3/4/5, Zero 2 W). Includes RT kernel, JACK audio, MOD-Host, MOD-UI.",
       "icon": "${APT_REPO_URL}/imager/icon.svg",
-      "url": "https://github.com/TreeFallSound/pi-gen-pistomp/releases/download/v${VERSION}/pistompOS-${VERSION}.img.xz",
+      "url": "${RELEASE_BASE_URL}/download/release/${VERSION}/${ASSET_NAME}",
       "extract_size": ${EXTRACT_SIZE},
       "extract_sha256": "${EXTRACT_SHA256}",
       "image_download_size": ${COMPRESSED_SIZE},
+      "image_download_sha256": "${COMPRESSED_SHA256}",
       "release_date": "${RELEASE_DATE}",
       "init_format": "rpi-preseed",
       "devices": [
