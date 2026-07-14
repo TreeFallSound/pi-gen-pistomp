@@ -10,10 +10,12 @@
       "image_download_size": 1330260840,
       "image_download_sha256": "6c1907a656776b4d7bc9621362b02f5d2346417a98eb6e80e8b85703498bc11b",
       "release_date": "2026-07-12",
-      "devices": ["pi5-64bit", "pi4-64bit", "pi3-64bit"],
-      "init_format": "rpi-preseed",
-      "capabilities": ["i2c", "spi"],
-      "architecture": "armv8"
+      "devices": [
+        "pi5-64bit",
+        "pi4-64bit",
+        "pi3-64bit"
+      ],
+      "init_format": "rpi-preseed"
     }
   ]
 }
