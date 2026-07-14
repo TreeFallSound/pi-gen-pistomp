@@ -57,7 +57,7 @@ RPI_PRESEED_REF="main"
 
 # --- pi-stomp (application) ---
 PISTOMP_REPO="https://github.com/TreeFallSound/pi-stomp.git"
-PISTOMP_BRANCH="feat/parameter-menu"
+PISTOMP_BRANCH="feat/reactive-parameters"
 
 # --- pistomp-recovery ---
 PISTOMP_RECOVERY_REPO="https://github.com/TreeFallSound/pistomp-recovery.git"
