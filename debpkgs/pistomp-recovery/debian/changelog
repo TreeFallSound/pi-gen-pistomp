@@ -1,3 +1,16 @@
+pistomp-recovery (0.1.0-28) trixie; urgency=medium
+
+  * Install pistomp-stamp into PATH so pi-stomp can actually call it
+  * PedalboardFacet.init() no longer runs `git checkout device` — the
+    checkout silently reverted the working tree to a stale `device` branch
+    when the repo was swapped (e.g. via swap-pedalboards.sh), causing
+    pistomp-stamp to snapshot the wrong pedalboards as "known-good".
+    stamp() and stamp_item() now check the current branch and skip with a
+    log message when not on `device`, so the stamp is harmless on swapped
+    repos that haven't been set up with a `device` branch.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 13 Jul 2026 22:30:44 +0000
+
 pistomp-recovery (0.1.0-27) trixie; urgency=medium
 
   * Add PyYAML as a dependency via uv.
