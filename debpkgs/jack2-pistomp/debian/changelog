@@ -1,4 +1,4 @@
-jack2-pistomp (1.9.22-6~pre1) trixie; urgency=medium
+jack2-pistomp (1.9.22-7~pre1) trixie; urgency=medium
 
   * Conflict with, replace and provide libjack-jackd2-dev. The package
     ships /usr/include/jack, jack.pc and the libjack*.so dev symlinks,
@@ -7,6 +7,12 @@ jack2-pistomp (1.9.22-6~pre1) trixie; urgency=medium
     package (e.g. the pi-gen build container).
 
  -- pi-gen-pistomp <noreply@github.com>  Sat, 11 Jul 2026 19:43:37 +0000
+
+jack2-pistomp (1.9.22-6) trixie; urgency=medium
+
+  * Point jack.service splash at the per-stage image.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 14 Jul 2026 03:42:39 +0000
 
 jack2-pistomp (1.9.22-5) trixie; urgency=medium
 

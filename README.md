@@ -92,7 +92,7 @@ To change which pi-stomp branch is baked in, edit `PISTOMP_BRANCH` in `config.sh
 - **Packages added to the image**: `stage*/00-packages`
 - **systemd services**: `stage2/05-pistomp/files/services/`
 - **Networking**: `stage2/05-pistomp/files/` — see `NETWORKING.md` for design rationale
-- **Boot splash**: `stage2/05-pistomp/files/splash.rgb565`
+- **Boot splash artwork**: `debpkgs/lcd-splash/images/*.png` (converted to RGB565 at package build time)
 
 ## Workflow for pi-stomp code changes
 

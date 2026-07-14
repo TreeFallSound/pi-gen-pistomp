@@ -1,11 +1,11 @@
-pi-stomp (3.2.0-6~pre2) trixie; urgency=medium
+pi-stomp (3.2.0-7~pre2) trixie; urgency=medium
 
   * Prerelease from the feat/parameter-menu branch — pi-Stomp v2 hardware
     support plus badges + one-nav-rules-them-all support.
 
  -- Cam Gorrie <sastraxi@gmail.com>  Mon, 13 Jul 2026 18:00:00 -0400
 
-pi-stomp (3.2.0-6~pre1) trixie; urgency=medium
+pi-stomp (3.2.0-7~pre1) trixie; urgency=medium
 
   * Prerelease from the prerelease-for-v2 branch — pi-Stomp v2 hardware
     support plus the UI performance work.
@@ -44,6 +44,12 @@ pi-stomp (3.2.0-6~pre1) trixie; urgency=medium
   * Simplify the WiFi command/ops layer.
 
  -- Cam Gorrie <sastraxi@gmail.com>  Sat, 11 Jul 2026 12:00:00 -0400
+
+pi-stomp (3.2.0-6) trixie; urgency=medium
+
+  * Point mod-ala-pi-stomp.service splash at the per-stage image.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 14 Jul 2026 03:42:40 +0000
 
 pi-stomp (3.2.0-5) trixie; urgency=medium
 
