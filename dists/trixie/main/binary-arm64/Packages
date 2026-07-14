@@ -168,17 +168,17 @@ Description: netJACK2 client for DAW recording over Ethernet
  starts/stops it via systemctl.
 
 Package: lcd-splash
-Version: 1.0-18
+Version: 1.0-19
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
 Depends: lg-pistomp
 Priority: optional
 Section: misc
-Filename: pool/main/l/lcd-splash/lcd-splash_1.0-18_arm64.deb
-Size: 12212
-SHA256: d046634792b8c50e5b0c3b9a050b594bb67256804a37164df6d457e034855899
-SHA1: 0eaf6601e40e4c4282b9510e685d0949a7a95e52
-MD5sum: 188ef7d64d7ba8a26b350e660cde839c
+Filename: pool/main/l/lcd-splash/lcd-splash_1.0-19_arm64.deb
+Size: 20384
+SHA256: eef65de74bc95f491a3f56267e68e8feefed042f9f469ec2482a40748bb9aa80
+SHA1: 46fba00f87c586d5387ba1cea3583212ac790f8f
+MD5sum: a1f5d0f3f00d69705d75ee15773f29db
 Description: Fast ILI9341 LCD boot splash for pi-Stomp
  Drives the 320x240 SPI LCD directly (spidev + lgpio) with no
  Python/interpreter overhead. Displays a pre-converted RGB565 image
@@ -222,21 +222,21 @@ Description: FluidSynth .so.2 compatibility shim for prebuilt LV2 plugins
  against libfluidsynth.so.2 can load on Trixie.
 
 Package: mod-host-pistomp
-Version: 0.10.6-3
+Version: 0.10.6-4
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
 Installed-Size: 934
-Depends: libc6 (>= 2.38), libfftw3-double3 (>= 3.3.10), libfftw3-single3 (>= 3.3.10), libgcc-s1 (>= 3.0), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125, liblilv-0-0 (>= 0.22.0~dfsg0), libreadline8t64 (>= 6.0), libstdc++6 (>= 14), liblo7, libreadline8, hylia
+Depends: libc6 (>= 2.38), libfftw3-double3 (>= 3.3.10), libfftw3-single3 (>= 3.3.10), libgcc-s1 (>= 3.0), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125, liblilv-0-0 (>= 0.22.0~dfsg0), libreadline8t64 (>= 6.0), libstdc++6 (>= 14), libserd-0-0, liblo7, libreadline8, hylia
 Conflicts: mod-host
 Replaces: mod-host
 Provides: mod-host
 Priority: optional
 Section: sound
-Filename: pool/main/m/mod-host-pistomp/mod-host-pistomp_0.10.6-3_arm64.deb
-Size: 168704
-SHA256: d926eb4890255f6cc07b94bc5e18d384ea3bebee4a24bfd05f522032ce1e00d3
-SHA1: 7891a0afa99acbffa7a4fb88ca6865068031b212
-MD5sum: d46b29abec5d941a67b2df723aa3a190
+Filename: pool/main/m/mod-host-pistomp/mod-host-pistomp_0.10.6-4_arm64.deb
+Size: 168388
+SHA256: a14bce233fd24d9a932cccd622f27840808d15f48c357082b38985cf0406ba9b
+SHA1: 208d53bc59cc71113ba3064c8b9979da1e1ae94e
+MD5sum: 99f7773aab30e4b3c7fe7a98ca3fc7a8
 Description: MOD Host — LV2 plugin host for JACK (pi-Stomp fork)
  Forked from moddevices/mod-host with the fix/effect-drain-midi branch
  for proper MIDI effect drain on pedalboard changes.
