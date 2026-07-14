@@ -6,7 +6,7 @@ Before=systemd-poweroff.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/lcd-splash /usr/share/pistomp/splash.rgb565 "Shutting down..."
+ExecStart=/usr/bin/lcd-splash /usr/share/pistomp/splash/splash-shutdown.rgb565 "Shutting down..."
 
 [Install]
 WantedBy=poweroff.target

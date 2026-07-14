@@ -4,12 +4,12 @@ set -e
 
 CONF="/boot/firmware/pistomp.conf"
 LCD="/usr/bin/lcd-splash"
-SPLASH="/usr/share/pistomp/splash.rgb565"
-lcd() { "$LCD" "$SPLASH" "$1" 2>/dev/null || true; }
+SPLASH_DIR="/usr/share/pistomp/splash"
+lcd() { "$LCD" "$SPLASH_DIR/$1.rgb565" "$2" 2>/dev/null || true; }
 
 # ---------- expand root partition to fill SD card ----------
 
-lcd "Expanding filesystem..."
+lcd splash-expandfs "Expanding filesystem..."
 if command -v growpart &>/dev/null; then
     ROOT_DEV="$(findmnt -n -o SOURCE /)"
     DISK="/dev/$(lsblk -no PKNAME "${ROOT_DEV}")"
@@ -20,12 +20,12 @@ fi
 
 # ---------- apply pistomp.conf ----------
 
-lcd "First boot setup..."
+lcd splash-firstboot "First boot setup..."
 
 if [[ -f "${CONF}" ]]; then
     source "${CONF}"
 
-    lcd "Configuring WiFi..."
+    lcd splash-wifi "Configuring WiFi..."
     printf 'options cfg80211 ieee80211_regdom=%s\n' "${WIFI_COUNTRY:-US}" \
         > /etc/modprobe.d/cfg80211.conf
     iw reg set "${WIFI_COUNTRY:-US}" 2>/dev/null || true
@@ -94,7 +94,7 @@ EOF
 
 # ---------- hardware setup ----------
 
-lcd "Finishing setup..."
+lcd splash-firstboot "Finishing setup..."
 
 chown -R pistomp:pistomp /home/pistomp/
 
