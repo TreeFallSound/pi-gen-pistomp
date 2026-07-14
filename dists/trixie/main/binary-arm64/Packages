@@ -129,21 +129,21 @@ Description: Record JACK audio output to a file
  MP3 file. Useful for debugging and recording sessions on pi-Stomp.
 
 Package: jack2-pistomp
-Version: 1.9.22-5
+Version: 1.9.22-6
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 2521
+Installed-Size: 2522
 Depends: libasound2t64 (>= 1.0.29), libc6 (>= 2.38), libdb5.3t64, libdbus-1-3 (>= 1.10), libexpat1 (>= 2.0.1), libgcc-s1 (>= 3.0), libopus0 (>= 1.3.1-2~), libsamplerate0 (>= 0.1.7), libstdc++6 (>= 14), libsystemd0, libasound2, libdb5.3
 Conflicts: jack2, jackd2, libjack-jackd2-0
 Replaces: jack2, jackd2, libjack-jackd2-0
 Provides: jackd2, libjack-dev, libjack-jackd2-0 (= 1.9.22~dfsg-4)
 Priority: optional
 Section: sound
-Filename: pool/main/j/jack2-pistomp/jack2-pistomp_1.9.22-5_arm64.deb
-Size: 451564
-SHA256: e506a063965eb875d2ad34d793e3efbac5626505ee557e6feaa0979143a43e71
-SHA1: 9ba9cc35b5418d9bc948b9c5b80d371befde5fa7
-MD5sum: b61e8a41084083ebaf2ded655be4331e
+Filename: pool/main/j/jack2-pistomp/jack2-pistomp_1.9.22-6_arm64.deb
+Size: 451548
+SHA256: 108e21569b9dfc46ddf750ca8d08c2cd2aec7364e4a01c10f9237471da6def30
+SHA1: 231322df7f623ea3d9af79fe9c45004ccc15f60c
+MD5sum: d98c79121177cfb2d0c9db6c397aee55
 Description: JACK Audio Connection Kit v2 (pi-Stomp build)
  JACK is a low-latency audio server. This build includes the
  pi-controller-reset stability fix and links against libdb 5.3.
@@ -275,36 +275,36 @@ Description: MOD ttymidi — serial MIDI bridge
  A simple serial port to ALSA/JACK MIDI bridge, part of the MOD ecosystem.
 
 Package: mod-ui
-Version: 3.0-10
+Version: 3.0-11
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
 Installed-Size: 177749
 Depends: python3, jack2-pistomp, mod-host-pistomp
 Priority: optional
 Section: web
-Filename: pool/main/m/mod-ui/mod-ui_3.0-10_arm64.deb
-Size: 48572016
-SHA256: b4932a31f9f9bde5e8b6c60971d66b35a9c595631e4f48e885ad8a965b5d4def
-SHA1: d6eccb9f889ef69fe452852ae4697d7d61296105
-MD5sum: da5c16f5f9ba56e171a6f6fa93ea321b
+Filename: pool/main/m/mod-ui/mod-ui_3.0-11_arm64.deb
+Size: 48573176
+SHA256: 80c3c09ecaf2a3dd553fbbc009ecaa4613332527d7a4a331eb98ccfe6f324544
+SHA1: f74341374f259f5b24954cbde2df561f80e2113b
+MD5sum: d0dfe3e4300c09ecac93a65983ac4861
 Description: MOD Web UI — web-based pedalboard interface for pi-Stomp
  MOD UI is a web-based interface for managing pedalboards on MOD
  devices. This build runs in a Python 3.11 venv (required by
  tornado==4.3) and is configured for pi-Stomp.
 
 Package: pi-stomp
-Version: 3.2.0-5
+Version: 3.2.0-6
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
 Installed-Size: 168886
 Depends: python3, lg-pistomp, python3-lilv, mod-host-pistomp, mod-ui, mod-midi-merger, mod-ttymidi, amidithru, jack2-pistomp, hylia, sfizz-pistomp, lcd-splash, jack-capture
 Priority: optional
 Section: sound
-Filename: pool/main/p/pi-stomp/pi-stomp_3.2.0-5_arm64.deb
-Size: 33914308
-SHA256: 6e92a0beadec86ae53f2f678a09fd306a3fe1cb627089ccba942c826cf2af891
-SHA1: 7e7e22b521eb3d079770474bad30e563f20af9ac
-MD5sum: 82d1f9ae3fda9bbd08e32ee198ae6a1d
+Filename: pool/main/p/pi-stomp/pi-stomp_3.2.0-6_arm64.deb
+Size: 33909356
+SHA256: 3efb9c11838e6a8eeb8cb50f34a2cda470e38be75511d5017b623054b6b592ba
+SHA1: dff0ca3d5a5300c1a85dae0304c079e8a0dbd1ef
+MD5sum: a980d9920d1e3b69c86a9b3b23aa7f79
 Description: pi-Stomp application — guitar effects pedalboard software
  The pi-Stomp application code, uv-managed venv, and systemd service.
  Installs to /opt/pistomp/pi-stomp/ with a symlink at
