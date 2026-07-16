@@ -23,3 +23,5 @@ debpkgs/lcd-splash/src/font.h
 
 __pycache__/
 *.pyc
+
+.vscode/settings.json
