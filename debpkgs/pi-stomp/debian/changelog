@@ -1,3 +1,10 @@
+pi-stomp (3.2.0-7~pre4) trixie; urgency=medium
+
+  * Lots of new functionality. Proper changelog will come when out of
+    pre-release
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 18 Jul 2026 14:59:44 -0400
+
 pi-stomp (3.2.0-7~pre3) trixie; urgency=medium
 
   * Properly reactive parameters
