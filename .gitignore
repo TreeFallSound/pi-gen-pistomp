@@ -27,3 +27,5 @@ pistomp-imager-manifest.json
 
 __pycache__/
 *.pyc
+
+.vscode/settings.json
