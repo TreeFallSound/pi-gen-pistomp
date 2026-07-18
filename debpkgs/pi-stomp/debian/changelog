@@ -1,7 +1,7 @@
-pi-stomp (3.2.0-7~pre4) trixie; urgency=medium
+pi-stomp (3.2.1-0~pre4) trixie; urgency=medium
 
   * Lots of new functionality. Proper changelog will come when out of
-    pre-release
+    pre-release in the 3.2.1-0 version
 
  -- Cam Gorrie <sastraxi@gmail.com>  Sat, 18 Jul 2026 14:59:44 -0400
 
