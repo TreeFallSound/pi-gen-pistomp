@@ -350,7 +350,7 @@ Description: Lightweight udev-based USB automount for pi-Stomp
  (backups, LV2 plugins, NAM models).
 
 Package: rpi-preseed
-Version: 0.1.0-pistomp2
+Version: 0.1.0-pistomp3
 Architecture: all
 Maintainer: Raspberry Pi OS Team <packages@raspberrypi.com>
 Installed-Size: 117
@@ -359,11 +359,11 @@ Suggests: openssl
 Conflicts: cloud-init
 Priority: optional
 Section: admin
-Filename: pool/main/r/rpi-preseed/rpi-preseed_0.1.0-pistomp2_all.deb
-Size: 26944
-SHA256: 7d9952a689fef752238f35e3593af6503a1bee215d98891111651b47f7d619f4
-SHA1: 0f39f52414ef88d40dc9dbbbe2e62b9f0f007a75
-MD5sum: 75696bab0391148edfb624370992e0fb
+Filename: pool/main/r/rpi-preseed/rpi-preseed_0.1.0-pistomp3_all.deb
+Size: 27204
+SHA256: 07b0f89248efed4c7f087108f946dc180a794250c471e64c36495f2b79686d74
+SHA1: 5f633d1675aad8b1da5563b573f95adedadb3b1f
+MD5sum: 9d86934adfd164df3325264abcbd698d
 Description: first-boot OS customisation for Raspberry Pi OS
  rpi-preseed applies a single human-friendly TOML configuration file on first
  boot, from booted systemd oneshots, reusing the Raspberry Pi helper scripts
