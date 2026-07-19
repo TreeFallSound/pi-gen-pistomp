@@ -33,3 +33,4 @@ python3-venv
 python3-zeroconf
 dnsmasq iptables python3-smbus python3-liblo lockfile-progs
 python3-lilv
+python3-rtmidi python3-mido python3-docopt
