@@ -72,6 +72,15 @@ docker run --name "${CONTAINER_NAME}" \
         tar xz --strip-components=1 -C linux-rpi < \"\${TARBALL}\"
         cd linux-rpi
 
+        # Fail early on KERNEL_VERSION mismatches to save CI time.
+        MAKEFILE_VERSION=\$(make -s kernelversion)
+        if [ \"\${MAKEFILE_VERSION}\" != \"${KERNEL_VERSION}\" ]; then
+            echo \"ERROR: config.sh KERNEL_VERSION=${KERNEL_VERSION} but commit ${LINUX_RPI_COMMIT} is \${MAKEFILE_VERSION}.\"
+            echo \"       Update KERNEL_VERSION in config.sh to match.\"
+            exit 1
+        fi
+        echo \"    Kernel version \${MAKEFILE_VERSION} matches config.sh.\"
+
         echo '==> Configuring kernel (bcm2711_defconfig + RT options)...'
         make ARCH=arm64 bcm2711_defconfig
         cat /rt-kernel/diffconfig >> .config
@@ -88,6 +97,7 @@ docker run --name "${CONTAINER_NAME}" \
         echo '==> Building .deb packages (this takes a while)...'
         make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
               LOCALVERSION=${KERNEL_LOCALVERSION} \
+              KDEB_PKGVERSION=${KERNEL_DEB_VERSION} \
              -j\$(nproc) bindeb-pkg
 
         echo '==> Copying packages to output...'
@@ -102,6 +112,17 @@ if [ ${BUILD_EXIT} -eq 0 ]; then
     ls -lh "${CACHE_DIR}"/linux-*.deb
     echo ""
     echo "Run ./build-docker.sh to build the full image."
+    echo ""
+    echo "CI has no kernel cache and downloads them from a GitHub Release."
+    echo "If this is a new kernel version, publish it before tagging a release:"
+    echo ""
+    echo "  gh release create kernel/${KERNEL_DEB_VERSION} \\"
+    echo "    --title 'RT kernel ${KERNEL_DEB_VERSION} (${KERNEL_RELEASE})' \\"
+    echo "    --notes 'linux-rpi commit: ${LINUX_RPI_COMMIT}' \\"
+    for deb in "${CACHE_DIR}"/linux-*.deb; do
+        echo "    ${deb#"${SCRIPT_DIR}/"} \\"
+    done | sed '$ s/ \\$//'
+    echo ""
     docker rm "${CONTAINER_NAME}"
 else
     echo ""

@@ -10,6 +10,9 @@ set -a
 KERNEL_VERSION="6.18.36"
 KERNEL_LOCALVERSION="-rpi-v8-rt"  # suffix in uname -r; must contain -rpi- so raspi-firmware's initramfs hook recognises the flavour
 LINUX_RPI_COMMIT="954341c412dd48b7c7f8125d81212ec4c0e42ed3"
+# So CI/CD can pick up the kernel without them in cache
+KERNEL_DEB_VERSION="${KERNEL_VERSION}-1"
+KERNEL_ASSETS_URL="https://github.com/TreeFallSound/pi-gen-pistomp/releases/download/kernel/${KERNEL_DEB_VERSION}"
 
 # --- JACK2 ---
 JACK2_REPO="https://github.com/jackaudio/jack2.git"
