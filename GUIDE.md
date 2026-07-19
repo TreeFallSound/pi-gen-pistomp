@@ -363,16 +363,20 @@ sudo rm -f /etc/apt/sources.list.d/pistomp-local.list
 
 ### Adding a new package to OTA
 
-All four steps land in a **single PR** — `scripts/validate-packages.sh` (the PR check) enforces this. Splitting across PRs gates the first on pieces the validator hasn't see yet (Check 1 requires the workflow when the package is in `02-run.sh`; Check 3 requires the workflow when the directory exists; Check 2 requires the changelog bump when the directory is touched).
+All four steps must land in a single PR.
 
-1. Create `debpkgs/<pkg>/` with `build.sh` and a `debian/` directory (control, rules, postinst as needed). No `debian/changelog` yet — the bump below creates it.
+1. Create `debpkgs/<pkg>/` with `build.sh` and a `debian/` directory (control, rules, postinst as needed).
 2. Add the package to `stage2/05-pistomp/02-run.sh`'s `apt-get install` list (factory baseline).
 3. Copy `docs/package-template/build.yml` → `.github/workflows/build-<pkg>.yml`, changing the name, `paths:` filter, and `pkg:` input.
 4. Bump `debian/changelog` — this is what creates the initial entry and sets the version:
 
-   ```bash
-   ./scripts/bump-version.sh <pkg> "Initial package: <one-line description>."         # production
-   ./scripts/bump-version.sh --pre <pkg> "Initial pre-release: <description>."  # trixie-testing
-   ```
+```bash
+./scripts/bump-version.sh <pkg> "Initial package: <one-line description>."   # production
+./scripts/bump-version.sh --pre <pkg> "Initial pre-release: <description>."  # trixie-testing
+```
 
-   Push, open the PR, watch the `validate / validate` check go green, merge. Two downstream workflows then fire: `build-<pkg>.yml` (calls `build-deb.yml`, publishes `debpkg/<pkg>/<ver>` GitHub Release) and `publish-apt-repo.yml` (routes the `.deb` into `trixie` or `trixie-testing` on `gh-pages`). Promotion flows for pre-release packages and pre-release images are covered above in "Release channels".
+Push, open the PR, watch the `validate / validate` check go green, merge.
+
+Two downstream workflows then fire: `build-<pkg>.yml` (calls `build-deb.yml`, publishes `debpkg/<pkg>/<ver>` GitHub Release) and `publish-apt-repo.yml` (routes the `.deb` into `trixie` or `trixie-testing` on `gh-pages`).
+
+Promotion flows for pre-release packages and pre-release images are covered above in "Release channels".
