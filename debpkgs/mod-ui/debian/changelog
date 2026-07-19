@@ -1,3 +1,9 @@
+mod-ui (3.0-11) trixie; urgency=medium
+
+  * Point mod-ui.service splash at the per-stage image.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 14 Jul 2026 03:42:39 +0000
+
 mod-ui (3.0-10) trixie; urgency=medium
 
   * Fix crash when opening plugins whose lv2:project maintainer lacks

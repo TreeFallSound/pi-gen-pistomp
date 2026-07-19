@@ -1,3 +1,15 @@
+pi-stomp (3.2.0-6) trixie; urgency=medium
+
+  * Point mod-ala-pi-stomp.service splash at the per-stage image.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 14 Jul 2026 03:42:40 +0000
+
+pi-stomp (3.2.0-5) trixie; urgency=medium
+
+  * Call pistomp-stamp in the background
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 14 Jul 2026 00:34:08 +0000
+
 pi-stomp (3.2.0-4) trixie; urgency=medium
 
   * Fix USB backup on trixie.

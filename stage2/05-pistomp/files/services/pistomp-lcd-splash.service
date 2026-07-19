@@ -7,7 +7,7 @@ Before=sysinit.target
 
 [Service]
 Type=oneshot
-ExecStart=-/usr/bin/lcd-splash /usr/share/pistomp/splash.rgb565 "Starting..."
+ExecStart=-/usr/bin/lcd-splash /usr/share/pistomp/splash/splash-start.rgb565 "Starting..."
 RemainAfterExit=yes
 
 [Install]

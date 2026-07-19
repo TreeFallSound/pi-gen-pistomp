@@ -64,8 +64,8 @@
 #define MADCTL_V3 0xE8
 #define MADCTL_V2 0x28
 
-/* Text rendering — black in RGB565-BE */
-#define MSG_COLOR       __builtin_bswap16(0x0000)
+/* Text rendering — light grey (#C0C0C0) in RGB565-BE */
+#define MSG_COLOR       __builtin_bswap16(0xC618)
 #define MSG_REGION_TOP  160     /* text centred between this and bottom of LCD */
 
 /* Max bytes per spidev write() — kernel default bufsiz */

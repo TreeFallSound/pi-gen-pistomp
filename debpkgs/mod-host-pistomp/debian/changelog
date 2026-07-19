@@ -1,3 +1,16 @@
+mod-host-pistomp (0.10.6-5) trixie; urgency=medium
+
+  * Close the JACK client before freeing buffers the plugin still writes (heap corruption on pedalboard load).
+  * Fix segfault relaying a zero-size Path property (NAM with no model selected).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 18 Jul 2026 15:13:00 -0400
+
+mod-host-pistomp (0.10.6-4) trixie; urgency=medium
+
+  * Point mod-host.service splash at the per-stage image.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 14 Jul 2026 03:42:39 +0000
+
 mod-host-pistomp (0.10.6-3) trixie; urgency=medium
 
   * Ship mod-host.service from the .deb (was installed untracked by
