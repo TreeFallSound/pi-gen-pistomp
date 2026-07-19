@@ -1,0 +1,18 @@
+[Unit]
+Description=Verify WiFi MAC randomization is off
+After=NetworkManager.service
+Requires=NetworkManager.service
+# Not ordered after network-online.target: compares against the permanent
+# hardware MAC, so it works even if the device never associates.
+
+[Service]
+Type=oneshot
+# Type=oneshot + Restart=no guarantees this runs exactly once per boot and
+# never retries on failure (a tripwire must not flap). A non-zero exit leaves
+# the unit in `failed`, visible on `systemctl --failed`, with no re-execution.
+Restart=no
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/wifi-mac-check.sh
+
+[Install]
+WantedBy=multi-user.target

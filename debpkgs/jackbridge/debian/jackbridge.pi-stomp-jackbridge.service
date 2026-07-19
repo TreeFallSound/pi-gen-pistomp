@@ -24,6 +24,12 @@ EnvironmentFile=-/etc/default/jackbridge
 LimitMEMLOCK=infinity
 LimitRTPRIO=infinity
 
+# jack.service is Type=simple, so After=jack.service only waits for jackd to
+# fork — not for its server socket to accept clients. jackbridge-pi-up calls
+# jack_load against jackd, which races socket readiness on a busy boot. Block
+# here until jack_lsp succeeds (or 30 s, then fail loudly via TimeoutStartSec).
+ExecStartPre=/usr/local/bin/wait-for-jack.sh
+
 # Pin the netJACK2 multicast group (225.3.19.154) to a wired interface so
 # discovery doesn't follow the default route out wlan0. Auto-detects the
 # right NIC; respects $JACKBRIDGE_IFACE. Needs CAP_NET_ADMIN — the `+` prefix

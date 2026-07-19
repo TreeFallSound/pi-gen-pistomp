@@ -23,6 +23,7 @@ install -Dm 644 files/60-ondemand-governor.rules ${ROOTFS_DIR}/etc/udev/rules.d/
 # Realtime priority + memlock limits for audio group (non-service processes)
 install -Dm 644 files/99-audio.conf ${ROOTFS_DIR}/etc/security/limits.d/99-audio.conf
 install -m 755 files/wait-for-jack.sh ${ROOTFS_DIR}/usr/local/bin/wait-for-jack.sh
+install -m 755 files/wifi-mac-check.sh ${ROOTFS_DIR}/usr/local/bin/wifi-mac-check.sh
 
 # Helper scripts for common service operations (ps-restart, ps-stop, ps-run,
 # ps-journal, mod-restart, mod-ui-journal, mod-host-journal)
@@ -75,6 +76,7 @@ ln -sf /usr/lib/systemd/system/mod-midi-merger.service /etc/systemd/system/multi
 ln -sf /usr/lib/systemd/system/mod-midi-merger-broadcaster.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/ttymidi.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/wifi-check.service /etc/systemd/system/multi-user.target.wants
+ln -sf /usr/lib/systemd/system/wifi-mac-check.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/firstboot.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/zram.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/rtirq.service /etc/systemd/system/multi-user.target.wants
