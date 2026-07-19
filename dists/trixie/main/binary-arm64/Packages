@@ -149,18 +149,18 @@ Description: JACK Audio Connection Kit v2 (pi-Stomp build)
  pi-controller-reset stability fix and links against libdb 5.3.
 
 Package: jackbridge
-Version: 1.0-4
+Version: 1.0-5
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 31
+Installed-Size: 32
 Depends: jack2-pistomp, jack-example-tools, iproute2
 Priority: optional
 Section: sound
-Filename: pool/main/j/jackbridge/jackbridge_1.0-4_arm64.deb
-Size: 8380
-SHA256: 6c9f0f99af4c15e6a4fc364f4ab493cd305ae00fac0fff3dde48e655213182d8
-SHA1: 3ee5038f1fe293dd85bfbe4bd68081626314e551
-MD5sum: c9de3c88dfa8f3552db7482864d5dd28
+Filename: pool/main/j/jackbridge/jackbridge_1.0-5_arm64.deb
+Size: 8696
+SHA256: f35b239c1ef2cf57dbca160895b7945971682190cbb6f836af2f5f9ef66a273c
+SHA1: e8f927c038bda4924827c22ecbd528bf4b7b4893
+MD5sum: 5b62507e9b7c5decf98f27979af8e6ea
 Description: netJACK2 client for DAW recording over Ethernet
  Installs the pi-side JackBridge service: 6 helper scripts under
  /usr/local/libexec/jackbridge/ plus pi-stomp-jackbridge.service.
@@ -348,6 +348,31 @@ Description: Lightweight udev-based USB automount for pi-Stomp
  /media/<kernel-dev>) on insertion, and unmounts them on removal. Replaces
  udisks2/usbmount; used by pi-Stomp to discover USB content storage
  (backups, LV2 plugins, NAM models).
+
+Package: rpi-preseed
+Version: 0.1.0-pistomp2
+Architecture: all
+Maintainer: Raspberry Pi OS Team <packages@raspberrypi.com>
+Installed-Size: 117
+Recommends: raspberrypi-sys-mods, userconf-pi, raspi-config, network-manager, whois, rpi-usb-gadget
+Suggests: openssl
+Conflicts: cloud-init
+Priority: optional
+Section: admin
+Filename: pool/main/r/rpi-preseed/rpi-preseed_0.1.0-pistomp2_all.deb
+Size: 26944
+SHA256: 7d9952a689fef752238f35e3593af6503a1bee215d98891111651b47f7d619f4
+SHA1: 0f39f52414ef88d40dc9dbbbe2e62b9f0f007a75
+MD5sum: 75696bab0391148edfb624370992e0fb
+Description: first-boot OS customisation for Raspberry Pi OS
+ rpi-preseed applies a single human-friendly TOML configuration file on first
+ boot, from booted systemd oneshots, reusing the Raspberry Pi helper scripts
+ (imager_custom, userconf, raspi-config nonint) with POSIX-shell fallbacks.
+ .
+ It supports the full Raspberry Pi Imager option surface plus arbitrary runcmds
+ in two phases (pre- and post-network), with idempotent run-once semantics,
+ secret/PII redaction, and a diagnostics collector. It is built into the image
+ in place of the classic firstrun.sh / userconfig.service flow.
 
 Package: sfizz-pistomp
 Version: 1.2.3-8
