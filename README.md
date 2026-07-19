@@ -6,7 +6,7 @@ Builds the OS that [pi-Stomp](https://github.com/TreeFallSound/pi-stomp) runs on
 
 | Hardware | Image | Release |
 | :--  | :--- | :--- |
-| v2/v3 | `pistompOS-3.2.1-rc1.img.xz` | [Release](https://github.com/TreeFallSound/pi-gen-pistomp/releases/tag/release%2F3.2.1-rc1) |
+| v2/v3 | `pistompOS-3.2.1-rc3.img.xz` | [Release](https://github.com/TreeFallSound/pi-gen-pistomp/releases/tag/release%2F3.2.1-rc3) |
 
 If you just built your pi-Stomp! and are looking for the official software, you've come to the right place.
 
