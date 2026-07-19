@@ -6,9 +6,9 @@
       "icon": "https://treefallsound.github.io/pi-gen-pistomp/imager/icon.svg",
       "url": "https://github.com/TreeFallSound/pi-gen-pistomp/releases/download/release/3.2.1-rc1/pistompOS-3.2.1-rc1.img.xz",
       "extract_size": 4726980608,
-      "extract_sha256": "e63ccded358f3ac2d135538d04d8724323b8d55c2da26973a8247a13ac1428d9",
-      "image_download_size": 1336560748,
-      "image_download_sha256": "4acc4f5e1fabb00279760cde2030c03b6aaf4ceec018b624294d6f0f4422c722",
+      "extract_sha256": "f505670716b279c720833abc9f911ef7362a33c11106b7c6919bc25dc584afac",
+      "image_download_size": 1315355072,
+      "image_download_sha256": "b131b52182b41d031ee3af19d86a74797731a1c3ab16d0a77b605abf5ed206be",
       "release_date": "2026-07-19",
       "init_format": "rpi-preseed",
       "devices": [
