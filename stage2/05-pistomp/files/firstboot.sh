@@ -46,9 +46,9 @@ elif [[ -f "${PRESEED_TOML}" ]]; then
          "Falling back to ${CONF}." >&2
     systemctl status rpi-preseed.service --no-pager >&2 2>&1 || true
 
-    lcd "Imager setup FAILED"
+    lcd splash-expandfs "Imager setup FAILED"
     sleep 5
-    lcd "Continuing w/ defaults"
+    lcd splash-expandfs "Continuing w/ defaults"
     sleep 5
 fi
 
@@ -136,7 +136,7 @@ EOF
 
 # ---------- hardware setup ----------
 
-lcd splash-firstboot "Finishing setup..."
+lcd splash-reboot "Finishing setup..."
 
 chown -R pistomp:pistomp /home/pistomp/
 
