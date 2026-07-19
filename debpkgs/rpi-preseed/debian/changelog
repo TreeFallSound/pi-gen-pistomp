@@ -1,3 +1,9 @@
+rpi-preseed (0.1.0-pistomp2) trixie; urgency=medium
+
+  * Emit .built-sha sidecar so check-upstream-staleness.sh can detect upstream drift.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 19 Jul 2026 06:16:22 +0000
+
 rpi-preseed (0.1.0-pistomp1) trixie; urgency=medium
 
   * Initial package for pi-Stomp: TOML-driven first-boot customisation
