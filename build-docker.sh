@@ -318,6 +318,9 @@ ${DOCKER} logs --timestamps "${CONTAINER_NAME}" &>"deploy/${IMG_DATE}-build-dock
 
 ls -lah deploy
 
+# Assert the image actually got the package versions the pre-flight resolved
+bash "${DIR}/scripts/verify-image-packages.sh"
+
 # cleanup
 if [ "${PRESERVE_CONTAINER}" != "1" ]; then
 	${DOCKER} rm -v "${CONTAINER_NAME}"
