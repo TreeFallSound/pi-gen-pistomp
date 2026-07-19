@@ -361,13 +361,18 @@ If the old `file:/pistomp-cache/apt-repo` source is present from a prior image, 
 sudo rm -f /etc/apt/sources.list.d/pistomp-local.list
 ```
 
-### pistomp-recovery self-upgrade
-
-Recovery installs package updates via `AptManager` ([`../pistomp-recovery/src/pistomp_recovery/packages/manager.py`](../pistomp-recovery/src/pistomp_recovery/packages/manager.py)) — `apt-get update` → `apt-get install -y <pkgs>`. Upgrading `pistomp-recovery` itself is safe: the unit's `postinst` doesn't restart the service, so the LCD stays owned by the running process throughout the install. The new code runs after the next service restart (manual `sudo systemctl restart pistomp-recovery`, or the next crash handoff, or reboot).
-
 ### Adding a new package to OTA
 
-1. Create `debpkgs/<pkg>/` with `build.sh`, `debian/`, and a `debian/changelog` entry.
+All four steps land in a **single PR** — `scripts/validate-packages.sh` (the PR check) enforces this. Splitting across PRs gates the first on pieces the validator hasn't see yet (Check 1 requires the workflow when the package is in `02-run.sh`; Check 3 requires the workflow when the directory exists; Check 2 requires the changelog bump when the directory is touched).
+
+1. Create `debpkgs/<pkg>/` with `build.sh` and a `debian/` directory (control, rules, postinst as needed). No `debian/changelog` yet — the bump below creates it.
 2. Add the package to `stage2/05-pistomp/02-run.sh`'s `apt-get install` list (factory baseline).
 3. Copy `docs/package-template/build.yml` → `.github/workflows/build-<pkg>.yml`, changing the name, `paths:` filter, and `pkg:` input.
-4. Bump `debian/changelog`, push to `main`, watch the two workflows run.
+4. Bump `debian/changelog` — this is what creates the initial entry and sets the version:
+
+   ```bash
+   ./scripts/bump-version.sh <pkg> "Initial package: <one-line description>."         # production
+   ./scripts/bump-version.sh --pre <pkg> "Initial pre-release: <description>."  # trixie-testing
+   ```
+
+   Push, open the PR, watch the `validate / validate` check go green, merge. Two downstream workflows then fire: `build-<pkg>.yml` (calls `build-deb.yml`, publishes `debpkg/<pkg>/<ver>` GitHub Release) and `publish-apt-repo.yml` (routes the `.deb` into `trixie` or `trixie-testing` on `gh-pages`). Promotion flows for pre-release packages and pre-release images are covered above in "Release channels".
