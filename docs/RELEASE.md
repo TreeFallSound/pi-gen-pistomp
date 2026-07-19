@@ -109,7 +109,7 @@ gh release create release/3.0.0 \
 #    swaps the tree, so paths from the main branch (pistomp-imager-manifest.json,
 #    site/) do not exist once you are on gh-pages.
 cp pistomp-imager-manifest.json /tmp/manifest.json
-cp site/imager/icon.svg /tmp/icon.svg
+cp site/imager/icon.png /tmp/icon.png
 
 git fetch origin gh-pages
 git checkout gh-pages
@@ -118,7 +118,7 @@ cp /tmp/manifest.json "imager/pistomp-3.0.0.json"
 cp /tmp/manifest.json "imager/pistomp-${CHANNEL}.json"
 # Legacy URL published in the README — keep it mirroring stable, never delete it.
 [ "${CHANNEL}" = "stable" ] && cp /tmp/manifest.json imager/pistomp.json
-cp /tmp/icon.svg imager/icon.svg
+cp /tmp/icon.png imager/icon.png
 git add imager/
 git commit -m "deploy imager manifest for 3.0.0 → ${CHANNEL}"
 git push origin gh-pages

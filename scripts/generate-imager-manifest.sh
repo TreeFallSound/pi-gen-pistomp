@@ -84,7 +84,7 @@ cat > "$MANIFEST_FILE" <<JSONEOF
     {
       "name": "pi-Stomp OS ${VERSION}",
       "description": "Low-latency audio OS for pi-Stomp guitar pedal hardware (Pi 3/4/5, Zero 2 W). Includes RT kernel, JACK audio, MOD-Host, MOD-UI.",
-      "icon": "${APT_REPO_URL}/imager/icon.svg",
+      "icon": "${APT_REPO_URL}/imager/icon.png",
       "url": "${RELEASE_BASE_URL}/download/${TAG}/${ASSET_NAME}",
       "extract_size": ${EXTRACT_SIZE},
       "extract_sha256": "${EXTRACT_SHA256}",
