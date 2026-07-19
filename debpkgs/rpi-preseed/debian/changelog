@@ -1,3 +1,11 @@
+rpi-preseed (0.1.0-pistomp3) trixie; urgency=medium
+
+  * Patch upstream apply_ssh: ssh.authorized_keys were built inside a pipeline
+    subshell and never reached imager_custom enable_ssh, leaving a key-only sshd
+    with no authorized key (lockout).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 19 Jul 2026 17:27:49 +0000
+
 rpi-preseed (0.1.0-pistomp2) trixie; urgency=medium
 
   * Emit .built-sha sidecar so check-upstream-staleness.sh can detect upstream drift.

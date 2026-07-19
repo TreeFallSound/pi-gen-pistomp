@@ -47,9 +47,9 @@ elif [[ -f "${PRESEED_TOML}" ]]; then
     systemctl status rpi-preseed.service --no-pager >&2 2>&1 || true
 
     lcd splash-expandfs "Imager setup FAILED"
-    sleep 5
+    sleep 3
     lcd splash-expandfs "Continuing w/ defaults"
-    sleep 5
+    sleep 3
 fi
 
 # ---------- apply pistomp.conf ----------
@@ -114,6 +114,55 @@ if [[ -f "${CONF}" ]]; then
             chmod 600 /home/pistomp/.ssh/authorized_keys
             chown -R pistomp:pistomp /home/pistomp/.ssh
         fi
+    fi
+fi
+
+# ---------- SSH lockout guard ----------
+# This is a headless appliance with no console: if sshd comes up accepting
+# neither passwords nor keys, the card has to be re-flashed. Prevent this by
+# ensuring that password authentication is enabled if the pistomp user has no non-empty
+# authorized keys file.
+if command -v sshd &>/dev/null; then
+    SSHD_EFF="$(sshd -T 2>/dev/null || true)"
+    PASSAUTH="$(echo "${SSHD_EFF}" | awk '$1=="passwordauthentication"{print $2}')"
+
+    # AuthorizedKeysFile is a space-separated list of patterns, %h-relative unless
+    # absolute. Only %h/%u/%% are defined here; anything else we leave alone and
+    # let the -s test fail closed (louder is better than a false all-clear).
+    FIRST_USER="$(getent passwd 1000 | cut -d: -f1)"
+    FIRST_HOME="$(getent passwd 1000 | cut -d: -f6)"
+    AKF="$(echo "${SSHD_EFF}" | sed -n 's/^authorizedkeysfile //p')"
+    AKF="${AKF:-.ssh/authorized_keys .ssh/authorized_keys2}"
+
+    HAVE_KEYS=false
+    for pat in ${AKF}; do
+        pat="${pat//%h/${FIRST_HOME}}"
+        pat="${pat//%u/${FIRST_USER}}"
+        pat="${pat//%%/%}"
+        [[ "${pat}" == /* ]] || pat="${FIRST_HOME}/${pat}"
+        if [[ -s "${pat}" ]]; then
+            HAVE_KEYS=true
+            break
+        fi
+    done
+
+    if [[ "${PASSAUTH}" == "no" ]] && [[ "${HAVE_KEYS}" != "true" ]]; then
+        echo "firstboot: sshd has PasswordAuthentication no and ${FIRST_USER} has no" \
+             "non-empty authorized keys file (${AKF}). Nothing could authenticate." \
+             "Re-enabling password authentication so the device stays reachable." >&2
+
+        # sshd takes the FIRST value it sees for a keyword and Debian's
+        # sshd_config Includes sshd_config.d/*.conf at the very top, so a drop-in
+        # sorting ahead of every other one wins over both the main file and
+        # anything else that landed in the drop-in directory.
+        printf 'PasswordAuthentication yes\n' \
+            > /etc/ssh/sshd_config.d/00-pistomp-lockout-guard.conf
+        systemctl restart ssh || true
+
+        lcd splash-wifi "SSH key setup FAILED"
+        sleep 3
+        lcd splash-wifi "Password login enabled"
+        sleep 3
     fi
 fi
 

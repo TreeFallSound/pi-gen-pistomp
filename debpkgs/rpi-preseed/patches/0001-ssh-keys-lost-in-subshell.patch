@@ -1,0 +1,51 @@
+Description: Fix authorized_keys never reaching imager_custom enable_ssh
+ apply_ssh() builds the imager_custom argument list with `set --`, then appends
+ each key inside a `toml_array ... | while read` loop. The right-hand side of a
+ pipeline runs in a subshell, so those `set --` calls mutate the subshell's
+ positional parameters and are discarded when it exits. By the time
+ `enable_ssh "$@"` runs, "$@" is still just --key-only/--pass-auth.
+ .
+ The result is a half-applied config that locks the user out: imager_custom
+ honours --key-only and sets `PasswordAuthentication no`, but installs no
+ authorized key. Symptom is `Permission denied (publickey)` on a freshly
+ flashed card whose rpi-preseed.toml carried a valid ssh.authorized_keys.
+ .
+ Only the imager path is affected; _apply_ssh_fallback() appends the keys to
+ authorized_keys directly and is correct -- which is why this never showed up
+ in the test suite, whose sandbox always takes the fallback branch.
+ .
+ Collect the keys into a variable first and iterate with a plain `for`, so the
+ loop stays in the current shell. Field splitting is on newline only (keys
+ contain spaces) and globbing is disabled around the loop, since a key comment
+ may legitimately contain * or ?.
+Author: Cam Gorrie <sastraxi@gmail.com>
+Forwarded: not-yet
+Last-Update: 2026-07-19
+
+--- a/src/apply/ssh.sh
++++ b/src/apply/ssh.sh
+@@ -9,13 +9,23 @@ apply_ssh() {
+     toml_bool ssh.enabled true || _ash_enabled=0
+ 
+     if imager_available; then
+         if toml_bool ssh.password_authentication false; then set -- --pass-auth; else set -- --key-only; fi
+         [ "$_ash_enabled" -eq 1 ] || set -- "$@" --disabled
+-        toml_array ssh.authorized_keys | while IFS= read -r _ash_k; do
++        # NB: deliberately not a pipeline. `toml_array ... | while read` puts the
++        # loop in a subshell, so `set --` there is lost and no key ever reaches
++        # imager_custom -- yielding a key-only sshd with no authorized key.
++        _ash_keys=$(toml_array ssh.authorized_keys)
++        _ash_oldifs=$IFS
++        IFS='
++'
++        set -f
++        for _ash_k in $_ash_keys; do
+             [ -n "$_ash_k" ] && set -- "$@" "$_ash_k"
+         done
++        set +f
++        IFS=$_ash_oldifs
+         report_run ssh.enabled imager_custom "$IMAGER_CUSTOM" enable_ssh "$@"
+         _ash_ids=$(toml_array ssh.ssh_import_id | tr '\n' ' ')
+         # shellcheck disable=SC2086
+         [ -n "$_ash_ids" ] && report_run ssh.ssh_import_id imager_custom "$IMAGER_CUSTOM" import_ssh_id $_ash_ids
+     else

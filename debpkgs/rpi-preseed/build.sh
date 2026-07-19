@@ -22,7 +22,20 @@ cache_check
 # to a commit would silently downgrade this to a permanent SKIP.
 record_upstream_sha
 
+# UPSTREAM_DIR is reused when it already exists, so reset tracked files first --
+# otherwise a second build re-applies the patches onto an already-patched tree
+# and `patch` fails. This MUST come before the changelog overlay below: the
+# changelog is a tracked file, so resetting afterwards silently reverts our
+# version to upstream's and the package builds as 0.1.0.
+git -C "${UPSTREAM_DIR}" checkout -- .
+
 cp "${SCRIPT_DIR}/debian/changelog" "${UPSTREAM_DIR}/debian/changelog"
+
 cd "${UPSTREAM_DIR}"
+for patch in "${SCRIPT_DIR}"/patches/*.patch; do
+    [ -e "${patch}" ] || continue
+    echo "Applying $(basename "${patch}")"
+    patch -p1 --fuzz=0 < "${patch}"
+done
 dpkg-buildpackage -b -us -uc
 move_to_cache
