@@ -78,7 +78,16 @@ else
     if [[ "${CURRENT_VER}" == *-* ]]; then
         UPSTREAM="${CURRENT_VER%-*}"
         REV="${CURRENT_VER##*-}"
-        NEW_VER="${UPSTREAM}-$((REV + 1))"
+        # The revision is not always a bare integer: vendor revisions such as
+        # rpi-preseed's "pistomp1" (cf. Debian's own "1ubuntu1") are valid, and
+        # $((pistomp1 + 1)) aborts under `set -u`. Increment the trailing digits
+        # and keep any prefix, so 4 → 5 and pistomp1 → pistomp2.
+        if [[ "${REV}" =~ ^(.*[^0-9])?([0-9]+)$ ]]; then
+            NEW_VER="${UPSTREAM}-${BASH_REMATCH[1]:-}$(( BASH_REMATCH[2] + 1 ))"
+        else
+            # No trailing digits at all (e.g. "-pistomp"): start the counter.
+            NEW_VER="${UPSTREAM}-${REV}1"
+        fi
     else
         NEW_VER="${CURRENT_VER}-2"
     fi

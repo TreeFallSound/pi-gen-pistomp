@@ -275,6 +275,21 @@ Then re-run the build normally. The cacher will restart clean and rebuild its in
 
 To test a different branch, set `PISTOMP_BRANCH` in `config.sh`.
 
+## PR-time package validation (`.github/workflows/validate-packages.yml`)
+
+`scripts/validate-packages.sh` runs on every PR as the `validate` job, and is meant to be a **required status check** on `main`. It catches four landmines that today otherwise only surface 20 minutes into an image build:
+
+1. A package in `stage2/05-pistomp/02-run.sh`'s `apt-get install` block has no `.github/workflows/build-<pkg>.yml` — the rpi-preseed landmine (image's `apt-get install` hard-fails).
+2. A PR touches `debpkgs/<pkg>/**` without bumping `debian/changelog` (the post-merge duplicate-version gate would silently skip publishing — failing at PR is faster).
+3. A PR adds a new `debpkgs/<pkg>/` directory but doesn't ship the matching `build-<pkg>.yml` in the same diff.
+4. A `.github/workflows/build-<name>.yml` has `paths: debpkgs/<pkg>/**` but no `debpkgs/<pkg>/` exists (typo or stale workflow after a package's directory was deleted).
+
+Run locally before pushing a PR: `./scripts/validate-packages.sh` (defaults base ref to `origin/main`; set `GITHUB_BASE_REF` to compare against another branch).
+
+To enable branch protection: merge the workflow, open one throwaway PR to let GitHub discover the check, then read the exact name off the PR's checks list (for reusable-workflow callers GitHub renders `<owner> / <job>`; for an inline job like this one it should be just `validate`, but verify before requiring it — a wrong name silently blocks every PR forever on a pending check). Add it under Settings → Branches → `main` → Require status checks.
+
+When hardcoding the allowlist of non-custom packages — `jack2-pistomp`, `lg`/`lg-pistomp` (installed earlier in `stage2/00-dummy-packages`), and `jack-example-tools` (Trixie apt) — is no longer accurate (those packages move into `02-run.sh` or vice versa), edit `ALLOWLIST` in the script. Any change to the install list that adds a package to `02-run.sh` must add its name to a workflow in the same PR.
+
 ## OTA updates
 
 Custom `.deb` packages ship on a GitHub Pages-hosted apt repository so devices can `apt upgrade` without reflashing. Full design in [`docs/OTA.md`](./docs/OTA.md); this section is the operator/developer cheat sheet.
@@ -348,13 +363,22 @@ If the old `file:/pistomp-cache/apt-repo` source is present from a prior image, 
 sudo rm -f /etc/apt/sources.list.d/pistomp-local.list
 ```
 
-### pistomp-recovery self-upgrade
-
-Recovery installs package updates via `AptManager` ([`../pistomp-recovery/src/pistomp_recovery/packages/manager.py`](../pistomp-recovery/src/pistomp_recovery/packages/manager.py)) — `apt-get update` → `apt-get install -y <pkgs>`. Upgrading `pistomp-recovery` itself is safe: the unit's `postinst` doesn't restart the service, so the LCD stays owned by the running process throughout the install. The new code runs after the next service restart (manual `sudo systemctl restart pistomp-recovery`, or the next crash handoff, or reboot).
-
 ### Adding a new package to OTA
 
-1. Create `debpkgs/<pkg>/` with `build.sh`, `debian/`, and a `debian/changelog` entry.
+All four steps must land in a single PR.
+
+1. Create `debpkgs/<pkg>/` with `build.sh` and a `debian/` directory (control, rules, postinst as needed).
 2. Add the package to `stage2/05-pistomp/02-run.sh`'s `apt-get install` list (factory baseline).
 3. Copy `docs/package-template/build.yml` → `.github/workflows/build-<pkg>.yml`, changing the name, `paths:` filter, and `pkg:` input.
-4. Bump `debian/changelog`, push to `main`, watch the two workflows run.
+4. Bump `debian/changelog` — this is what creates the initial entry and sets the version:
+
+```bash
+./scripts/bump-version.sh <pkg> "Initial package: <one-line description>."   # production
+./scripts/bump-version.sh --pre <pkg> "Initial pre-release: <description>."  # trixie-testing
+```
+
+Push, open the PR, watch the `validate / validate` check go green, merge.
+
+Two downstream workflows then fire: `build-<pkg>.yml` (calls `build-deb.yml`, publishes `debpkg/<pkg>/<ver>` GitHub Release) and `publish-apt-repo.yml` (routes the `.deb` into `trixie` or `trixie-testing` on `gh-pages`).
+
+Promotion flows for pre-release packages and pre-release images are covered above in "Release channels".

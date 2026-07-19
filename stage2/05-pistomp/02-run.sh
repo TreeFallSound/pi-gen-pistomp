@@ -27,6 +27,7 @@ apt-get install -y -qq \
     mod-ui \
     pi-stomp \
     pistomp-recovery \
+    rpi-preseed \
     pistomp-usb-automount \
     jackbridge \
     ffmpeg-pistomp \
@@ -54,3 +55,36 @@ apt-get autoremove --purge -y
 EOF
 
 umount "${ROOTFS_DIR}/pistomp-cache"
+
+# Verify rpi-preseed ordering covers every User=pistomp service
+# (must run after all packages are installed so service files exist)
+echo "Checking rpi-preseed ordering covers all User=pistomp services..."
+dropin="${ROOTFS_DIR}/etc/systemd/system/rpi-preseed.service.d/10-before-pistomp.conf"
+if [[ ! -f "$dropin" ]]; then
+    echo "ERROR: rpi-preseed drop-in not found at $dropin" >&2
+    exit 1
+fi
+
+# Extract Before= service names from the drop-in, one per line, sorted
+before_list=$(sed -n 's/^Before=//p' "$dropin" | LC_ALL=C sort)
+
+# Find all installed service files with User=pistomp, extract basenames, sorted
+service_list=$(find "${ROOTFS_DIR}/usr/lib/systemd/system/" -maxdepth 1 -name '*.service' \
+    -exec grep -l '^User=pistomp' {} + | sed 's|.*/||' | LC_ALL=C sort)
+
+# Services listed in the drop-in that no longer declare User=pistomp (stale entries)
+dead=$(comm -13 <(echo "$service_list") <(echo "$before_list"))
+if [[ -n "$dead" ]]; then
+    echo "WARNING: drop-in lists services that no longer declare User=pistomp:" >&2
+    echo "$dead" >&2
+fi
+
+# User=pistomp services missing from the drop-in
+missing=$(comm -23 <(echo "$service_list") <(echo "$before_list"))
+if [[ -n "$missing" ]]; then
+    echo "ERROR: rpi-preseed drop-in missing Before= entries for:" >&2
+    echo "$missing" >&2
+    echo "Add them to stage2/05-pistomp/files/services/rpi-preseed-before-pistomp.conf" >&2
+    exit 1
+fi
+echo "rpi-preseed ordering is up to date"

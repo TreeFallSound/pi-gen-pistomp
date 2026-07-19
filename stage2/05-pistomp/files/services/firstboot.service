@@ -1,6 +1,6 @@
 [Unit]
 Description=First Boot Initialization
-After=NetworkManager.service
+After=NetworkManager.service rpi-preseed.service
 Wants=NetworkManager.service
 Before=jack.service
 ConditionPathExists=/boot/firmware/firstboot.sh
