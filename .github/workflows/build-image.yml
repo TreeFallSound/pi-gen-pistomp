@@ -102,7 +102,7 @@ jobs:
       with:
         name: pistompOS
         path: ./deploy/*pistompOS*.img.xz
-        compression-level: 6
+        compression-level: 0
         if-no-files-found: error
 
     - name: Upload Imager manifest
