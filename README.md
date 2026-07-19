@@ -14,7 +14,7 @@ If you just built your pi-Stomp! and are looking for the official software, you'
 
 Uses Raspberry Pi Imager's built-in wizard to set WiFi, hostname, and password at flash time, so you don't have to edit any files manually unless you want to change advanced settings.
 
-1. Open [Raspberry Pi Imager](https://www.raspberrypi.com/software/) (v2.0.11-rc1 or newer).
+1. Open [Raspberry Pi Imager](https://github.com/raspberrypi/rpi-imager/releases/tag/v2.0.11-rc1) (v2.0.11-rc1 or newer required for customization).
 2. Click **App Options** → **Content Repository** → **EDIT**.
 3. Enable **Use custom URL** and enter:
    ```
