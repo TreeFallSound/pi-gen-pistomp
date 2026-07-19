@@ -6,7 +6,7 @@ Builds the OS that [pi-Stomp](https://github.com/TreeFallSound/pi-stomp) runs on
 
 | Hardware | Image | Link |
 | :--  | :--- | :--- |
-| v2/v3 | `pistompOS-v3.2.0-rc4.img.xz` | [Download](https://github.com/TreeFallSound/pi-gen-pistomp/releases/tag/v3.2.0-rc4) |
+| v2/v3 | `pistompOS-3.2.1-rc1.img.xz` | [Download](https://github.com/TreeFallSound/pi-gen-pistomp/releases/tag/release%2F3.2.1-rc1) |
 
 If you just built your pi-Stomp! and are looking for the official software, you've come to the right place.
 
@@ -16,7 +16,7 @@ Uses Raspberry Pi Imager's built-in wizard to set WiFi, hostname, and password a
 
 1. Open [Raspberry Pi Imager](https://www.raspberrypi.com/software/) (v2.x).
 2. Click **App Options** → **Content Repository** → **EDIT**.
-3. Enable **Use custom file** and enter:
+3. Enable **Use custom URL** and enter:
    ```
    https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-stable.json
    ```
@@ -24,6 +24,14 @@ Uses Raspberry Pi Imager's built-in wizard to set WiFi, hostname, and password a
 5. **Choose OS** → select **pi-Stomp OS** from the list.
 6. Click **EDIT SETTINGS** (gear icon) to set WiFi, hostname, password, and SSH keys.
 7. **Choose storage** → select your microSD card → **WRITE**.
+
+#### Pre-release images
+
+Use the following URL for pre-release images to help us test new changes. These builds are likely to have (literal) show-stopper issues, so please don't take them on stage with you.
+
+```
+https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-testing.json
+```
 
 ### Option B — Manual download + pistomp.conf
 
