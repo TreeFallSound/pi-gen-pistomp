@@ -28,7 +28,7 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-cd "${ROOT_DIR}"
+cd "${ROOT_DIR}" || exit 1
 
 INSTALL_LIST="${ROOT_DIR}/stage2/05-pistomp/02-run.sh"
 WORKFLOW_DIR="${ROOT_DIR}/.github/workflows"
@@ -189,11 +189,24 @@ else
         fi
 
         base_ver="$(
-            git show "${BASE_REF_FOR_DIFF}:debpkgs/${pkg}/debian/changelog" 2>/dev/null \
-                | ( command -v dpkg-parsechangelog >/dev/null 2>&1 \
-                      && dpkg-parsechangelog --show-field Version - 2>/dev/null \
-                      || sed -n '1s/^[^(]*(\([^)]*\)).*/\1/p' ) \
-                | head -1
+            # Read the base changelog once into a variable; both the
+            # dpkg-parsechangelog and sed fallback paths need it, and stdin
+            # can only be consumed once.
+            cl=$(git show "${BASE_REF_FOR_DIFF}:debpkgs/${pkg}/debian/changelog" 2>/dev/null) || true
+            if [ -z "${cl}" ]; then
+                :
+            elif command -v dpkg-parsechangelog >/dev/null 2>&1; then
+                # --file - reads from stdin (the bare '-' form is rejected).
+                # dpkg-parsechangelog may exit non-zero on a changelog snippet
+                # missing its trailer (e.g. head of file via git show doesn't
+                # include the closing line); fall back to the sed parser, which
+                # only needs the first line where the version lives.
+                v=$(printf '%s' "${cl}" | dpkg-parsechangelog --file - --show-field Version 2>/dev/null) \
+                    && [ -n "${v}" ] && printf '%s' "${v}" \
+                    || printf '%s\n' "${cl}" | sed -n '1s/^[^(]*(\([^)]*\)).*/\1/p'
+            else
+                printf '%s\n' "${cl}" | sed -n '1s/^[^(]*(\([^)]*\)).*/\1/p'
+            fi
         )"
         if [ -z "${base_ver}" ]; then
             base_control_ver="$(git show "${BASE_REF_FOR_DIFF}:debpkgs/${pkg}/debian/control" 2>/dev/null | awk '/^Version:/ {print $2; exit}')"
@@ -210,6 +223,14 @@ else
 
         if [ "${head_ver}" = "${base_ver}" ]; then
             echo "  FAIL  debpkgs/${pkg}/ modified in PR but version unchanged (${head_ver}); run: ./scripts/bump-version.sh ${pkg} \"...\""
+            check2_fail=1
+        elif command -v dpkg >/dev/null 2>&1 \
+             && ! dpkg --compare-versions "${head_ver}" gt "${base_ver}"; then
+            # A differing version isn't enough: a downgrade also differs, and it
+            # would sail past the PR check only to be refused by reprepro after
+            # merge (or, worse, publish a version apt will never offer devices,
+            # since '~' sorts below the release it precedes).
+            echo "  FAIL  debpkgs/${pkg}/ version went backwards: ${base_ver} → ${head_ver} (must sort greater)"
             check2_fail=1
         else
             echo "  OK    debpkgs/${pkg}/ bumped ${base_ver} → ${head_ver}"

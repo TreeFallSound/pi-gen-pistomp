@@ -153,9 +153,18 @@ jobs:
     #   imager/pistomp-stable.json    — latest production image
     #   imager/pistomp-testing.json   — latest pre-release image
     #   imager/pistomp-<version>.json  — per-version archival snapshot
+    #   imager/pistomp.json           — legacy URL kept as a third stable copy
+    #                                    (README on main has been publishing
+    #                                    this URL; deleting it would 404 every
+    #                                    already-configured Imager install).
+    # Trails the release job: if the GitHub Release fails (422 on existing tag,
+    # asset upload timeout, softprops transient), the manifest must NOT be
+    # published — otherwise Imager shows users a version whose download URL
+    # 404s. needs: [build, release] guarantees the manifest strictly trails a
+    # real public release.
     if: startsWith(github.ref, 'refs/tags/release/')
-    needs: [build]
-    runs-on: ubuntu-24.04-arm
+    needs: [build, release]
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
@@ -178,9 +187,18 @@ jobs:
             CHANNEL="stable"
           fi
 
+          # Per-version archival snapshot + channel pointer. Also keep the
+          # legacy imager/pistomp.json as a third copy of stable — the README
+          # on main has been telling users to paste that URL into Imager, and
+          # deleting it would silently 404 every already-configured install
+          # on their next launch. Costs one cp + one JSON file on gh-pages.
           cp imager/pistomp-imager-manifest.json "imager/pistomp-${IMG_VERSION}.json"
           cp imager/pistomp-imager-manifest.json "imager/pistomp-${CHANNEL}.json"
-          rm -f imager/pistomp.json
+          if [[ "${CHANNEL}" == "stable" ]]; then
+            cp imager/pistomp-imager-manifest.json imager/pistomp.json
+          fi
+          # Don't commit the raw downloaded artifact into gh-pages.
+          rm -f imager/pistomp-imager-manifest.json
 
           git config user.name "pistomp-bot"
           git config user.email "bot@treefallsound.com"
@@ -189,5 +207,20 @@ jobs:
             echo "No changes to gh-pages."
           else
             git commit -m "deploy imager manifest for ${IMG_VERSION} → ${CHANNEL} [skip ci]"
-            git push
+            # publish-apt-repo.yml (triggered by the release job) also pushes
+            # gh-pages, so a plain push can be rejected non-fast-forward. Retry
+            # on top of whatever landed meanwhile. The commit must exist before
+            # rebasing — `git pull --rebase` aborts outright on a dirty index
+            # ("cannot pull with rebase: Your index contains uncommitted
+            # changes"), which is why the commit comes first.
+            for attempt in 1 2 3; do
+              if git push origin HEAD:gh-pages; then
+                exit 0
+              fi
+              echo "push rejected (attempt ${attempt}); rebasing onto origin/gh-pages"
+              git fetch origin gh-pages
+              git rebase origin/gh-pages || { git rebase --abort || true; exit 1; }
+            done
+            echo "::error::could not push manifest to gh-pages after 3 attempts"
+            exit 1
           fi

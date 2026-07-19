@@ -18,9 +18,13 @@ name: validate-packages
 # All logic is in scripts/validate-packages.sh so it can be run locally.
 #
 # Add this as a required status check on the `main` branch protection rule
-# (Settings → Branches → `main` → Require status checks: `validate / validate`).
-# It will only appear in the picker after the first PR (or this dispatch) has
-# run and discovered it for GitHub's status check index.
+# (Settings → Branches → `main` → Require status checks).
+#
+# The exact check name rendering depends on whether GitHub sees the job as
+# inline (just `validate`) or a reusable-workflow caller (`validate / validate`);
+# merge this, open one throwaway PR, read the name off the checks list, then
+# add that exact string to the protection rule. A wrong name silently blocks
+# every PR forever on a pending check.
 
 on:
   pull_request:

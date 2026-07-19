@@ -73,8 +73,15 @@ Two channel manifests plus per-version archival snapshots are kept on gh-pages:
 | `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-stable.json` | Latest production image |
 | `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-testing.json` | Latest pre-release image |
 | `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-<version>.json` | Pinned to one version |
+| `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp.json` | **Legacy** — mirrors stable. Never delete. |
 
 Enter the stable or testing URL in Imager → App Options → Content Repository → Custom URL.
+
+`pistomp.json` was the only URL the README published before channels existed, so
+an unknown number of users already have it pasted into their Imager config.
+`deploy-manifest` keeps writing it alongside `pistomp-stable.json`; removing it
+would 404 every one of those installs on next launch, with nothing to tell them
+why. It costs one file.
 
 ### Historical note
 
@@ -97,14 +104,21 @@ gh release create release/3.0.0 \
   --title "pi-Stomp OS 3.0.0" \
   --notes "..."
 
-# 3. Deploy manifest to the right channel + per-version snapshot
+# 3. Deploy manifest to the right channel + per-version snapshot.
+#    Stash the manifest outside the worktree first — `git checkout gh-pages`
+#    swaps the tree, so paths from the main branch (pistomp-imager-manifest.json,
+#    site/) do not exist once you are on gh-pages.
+cp pistomp-imager-manifest.json /tmp/manifest.json
+cp site/imager/icon.svg /tmp/icon.svg
+
 git fetch origin gh-pages
 git checkout gh-pages
 CHANNEL="stable"   # or "testing" for a -rc/-pre/-beta/-alpha tag
-cp pistomp-imager-manifest.json "imager/pistomp-3.0.0.json"
-cp pistomp-imager-manifest.json "imager/pistomp-${CHANNEL}.json"
-rm -f imager/pistomp.json
-cp site/imager/icon.svg imager/icon.svg
+cp /tmp/manifest.json "imager/pistomp-3.0.0.json"
+cp /tmp/manifest.json "imager/pistomp-${CHANNEL}.json"
+# Legacy URL published in the README — keep it mirroring stable, never delete it.
+[ "${CHANNEL}" = "stable" ] && cp /tmp/manifest.json imager/pistomp.json
+cp /tmp/icon.svg imager/icon.svg
 git add imager/
 git commit -m "deploy imager manifest for 3.0.0 → ${CHANNEL}"
 git push origin gh-pages
@@ -120,4 +134,4 @@ git checkout main
 | `build-<pkg>.yml` | push to `main` changing `debpkgs/<pkg>/**` | `.deb` GitHub Release (prerelease if version has `~`) |
 | `publish-apt-repo.yml` | any release published (and explicit dispatch from `build-deb.yml`) | apt index on `gh-pages` (trixie + trixie-testing) |
 | `build-image.yml` | `git push origin release/<version>` or manual dispatch | `.img.xz` + Imager manifest + (if tag) GitHub Release |
-| `validate-packages.yml` | `pull_request` | PR status check (blocks merge — add to required checks) |
+| `validate-packages.yml` | `pull_request` | PR status check (add to required checks after first run reveals the exact name — see workflow comment) |
