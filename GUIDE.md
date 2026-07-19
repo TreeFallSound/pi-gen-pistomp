@@ -329,7 +329,7 @@ Two apt suites on the same gh-pages site: `trixie` (production, every device) an
 | :--- | :--- | :--- |
 | `.github/workflows/build-deb.yml` | `workflow_call` | Reusable: extract version from `debian/changelog`, install `Build-Depends` from `debian/control` automatically, run `build.sh`, publish a Release tagged `debpkg/<pkg>/<ver>` (`~`→`_` in the tag; `prerelease: true` when the version contains `~`). On PRs, fails if that tag already exists (unbumped version). |
 | `.github/workflows/build-<pkg>.yml` | push/PR on `debpkgs/<pkg>/**` or `config.sh` | Thin wrapper calling `build-deb.yml` with `pkg:`. One per package. Template at `docs/package-template/build.yml`. |
-| `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` release asset, routes it by the release's prerelease flag into `reprepro includedeb trixie` or `trixie-testing` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch and `conf/distributions` on first run. |
+| `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` **and `*_all.deb`** release asset (the selector is `_(arm64|all)\.deb$` — architecture-independent packages like `rpi-preseed` build as `_all.deb` and would be silently skipped by an arm64-only glob), routes it by the release's prerelease flag into `reprepro includedeb trixie` or `trixie-testing` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch and `conf/distributions` on first run. |
 
 ### Duplicate-version gates (three layers)
 
