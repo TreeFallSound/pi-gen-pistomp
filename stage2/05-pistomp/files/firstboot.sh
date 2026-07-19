@@ -209,6 +209,9 @@ systemctl disable --now bluetooth.service 2>/dev/null || true
 mv /boot/firmware/firstboot.sh /boot/firmware/firstboot.done
 systemctl disable firstboot.service
 
+# Tell lcd-reboot.service this is the first-boot reboot
+touch /run/pistomp-firstboot-reboot
+
 # Clean reboot: resize2fs and the recursive chown above must reach the card.
 sync
 systemctl reboot || reboot -f
