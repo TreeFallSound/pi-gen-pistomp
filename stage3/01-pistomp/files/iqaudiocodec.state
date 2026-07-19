@@ -134,7 +134,7 @@ state.IQaudIOCODEC {
 	control.10 {
 		iface MIXER
 		name 'DAC EQ1 Volume'
-		value 13
+		value 7
 		comment {
 			access 'read write'
 			type INTEGER
@@ -142,13 +142,13 @@ state.IQaudIOCODEC {
 			range '0 - 15'
 			dbmin -1050
 			dbmax 1200
-			dbvalue.0 900
+			dbvalue.0 0
 		}
 	}
 	control.11 {
 		iface MIXER
 		name 'DAC EQ2 Volume'
-		value 13
+		value 7
 		comment {
 			access 'read write'
 			type INTEGER
@@ -156,13 +156,13 @@ state.IQaudIOCODEC {
 			range '0 - 15'
 			dbmin -1050
 			dbmax 1200
-			dbvalue.0 900
+			dbvalue.0 0
 		}
 	}
 	control.12 {
 		iface MIXER
 		name 'DAC EQ3 Volume'
-		value 13
+		value 7
 		comment {
 			access 'read write'
 			type INTEGER
@@ -170,13 +170,13 @@ state.IQaudIOCODEC {
 			range '0 - 15'
 			dbmin -1050
 			dbmax 1200
-			dbvalue.0 900
+			dbvalue.0 0
 		}
 	}
 	control.13 {
 		iface MIXER
 		name 'DAC EQ4 Volume'
-		value 13
+		value 7
 		comment {
 			access 'read write'
 			type INTEGER
@@ -184,13 +184,13 @@ state.IQaudIOCODEC {
 			range '0 - 15'
 			dbmin -1050
 			dbmax 1200
-			dbvalue.0 900
+			dbvalue.0 0
 		}
 	}
 	control.14 {
 		iface MIXER
 		name 'DAC EQ5 Volume'
-		value 13
+		value 7
 		comment {
 			access 'read write'
 			type INTEGER
@@ -198,7 +198,7 @@ state.IQaudIOCODEC {
 			range '0 - 15'
 			dbmin -1050
 			dbmax 1200
-			dbvalue.0 900
+			dbvalue.0 0
 		}
 	}
 	control.15 {

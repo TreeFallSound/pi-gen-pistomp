@@ -10,7 +10,7 @@ Environment=JACK_PROMISCUOUS_SERVER=jack
 LimitRTPRIO=infinity
 LimitMEMLOCK=infinity
 AmbientCapabilities=CAP_SYS_NICE CAP_IPC_LOCK
-ExecStartPre=-+/usr/bin/lcd-splash /usr/share/pistomp/splash.rgb565 "Loading audio engine"
+ExecStartPre=-+/usr/bin/lcd-splash /usr/share/pistomp/splash/splash-jack.rgb565 "Loading audio engine"
 ExecStart=/usr/lib/pistomp/jackdrc
 User=jack
 Group=jack
