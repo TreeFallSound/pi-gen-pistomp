@@ -85,6 +85,12 @@ jobs:
             fi
             echo "$RESP" | jq -r '
               .[]
+              # Only debpkg/<pkg>/<ver> releases feed the apt repo. Without this
+              # the sweep picks up any release carrying an arm64 .deb — notably
+              # the kernel/<ver> releases that scripts/fetch-assets.sh pulls
+              # from, which would put linux-image into the trixie suite and hand
+              # every device a new kernel on its next apt upgrade.
+              | select(.tag_name | startswith("debpkg/"))
               | (if .prerelease then "testing" else "stable" end) as $channel
               | .assets[].browser_download_url
               | select(test("_(arm64|all)\\.deb$"))
