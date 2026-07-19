@@ -18,7 +18,7 @@ Uses Raspberry Pi Imager's built-in wizard to set WiFi, hostname, and password a
 2. Click **App Options** → **Content Repository** → **EDIT**.
 3. Enable **Use custom file** and enter:
    ```
-   https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp.json
+   https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-stable.json
    ```
 4. Click **APPLY & RESTART**.
 5. **Choose OS** → select **pi-Stomp OS** from the list.

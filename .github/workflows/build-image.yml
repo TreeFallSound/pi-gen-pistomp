@@ -149,8 +149,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy-manifest:
-    # Deploy the Imager manifest to gh-pages so the latest version is always
-    # available at https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp.json
+    # Deploy the Imager manifest to gh-pages:
+    #   imager/pistomp-stable.json    — latest production image
+    #   imager/pistomp-testing.json   — latest pre-release image
+    #   imager/pistomp-<version>.json  — per-version archival snapshot
     if: startsWith(github.ref, 'refs/tags/release/')
     needs: [build]
     runs-on: ubuntu-24.04-arm
@@ -165,16 +167,27 @@ jobs:
         with:
           name: imager-manifest
           path: imager/
-      - name: Version-pin and deploy
+      - name: Deploy channel and version-pinned manifests
+        env:
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+          IMG_VERSION: ${{ needs.build.outputs.image_version }}
         run: |
-          cp imager/pistomp-imager-manifest.json imager/pistomp.json
-          cp imager/pistomp-imager-manifest.json "imager/pistomp-${{ needs.build.outputs.image_version }}.json"
+          if [[ "${PRERELEASE}" == "true" ]]; then
+            CHANNEL="testing"
+          else
+            CHANNEL="stable"
+          fi
+
+          cp imager/pistomp-imager-manifest.json "imager/pistomp-${IMG_VERSION}.json"
+          cp imager/pistomp-imager-manifest.json "imager/pistomp-${CHANNEL}.json"
+          rm -f imager/pistomp.json
+
           git config user.name "pistomp-bot"
           git config user.email "bot@treefallsound.com"
           git add imager/
           if git diff --cached --quiet; then
             echo "No changes to gh-pages."
           else
-            git commit -m "deploy imager manifest for ${{ needs.build.outputs.image_version }} [skip ci]"
+            git commit -m "deploy imager manifest for ${IMG_VERSION} → ${CHANNEL} [skip ci]"
             git push
           fi

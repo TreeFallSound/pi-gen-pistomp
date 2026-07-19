@@ -64,20 +64,23 @@ rather than at image build time.
 `build-image.yml` also accepts `workflow_dispatch` for test builds — those
 produce a workflow artifact only, no GitHub Release and no manifest deploy.
 
-### Imager manifest URL
+### Imager manifest URLs
 
-```bash
-# Verify in Raspberry Pi Imager:
-# App Options → Content Repository → Custom URL:
-# https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp.json
-```
+Two channel manifests plus per-version archival snapshots are kept on gh-pages:
+
+| URL | Contents |
+| --- | --- |
+| `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-stable.json` | Latest production image |
+| `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-testing.json` | Latest pre-release image |
+| `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-<version>.json` | Pinned to one version |
+
+Enter the stable or testing URL in Imager → App Options → Content Repository → Custom URL.
 
 ### Historical note
 
-The steps below are obsolete since `build-image.yml` now produces the
-GitHub Release, the manifest, and the `gh-pages` deploy in the workflow
-itself. Kept as a manual fallback for emergencies (e.g. if the workflow's
-`release` or `deploy-manifest` jobs fail and you need to publish by hand).
+The manual `gh release create` + `git push gh-pages` flow below is obsolete
+since `build-image.yml` now does the release, manifest, and gh-pages deploy
+in-workflow. Kept as an emergency fallback only.
 
 <details>
 <summary>Manual fallback (rarely needed)</summary>
@@ -85,24 +88,25 @@ itself. Kept as a manual fallback for emergencies (e.g. if the workflow's
 ```bash
 # 1. Generate Imager manifest
 ./scripts/generate-imager-manifest.sh \
-  deploy/pistompOS-3.0.0.img.xz 3.0.0        # writes pistomp-imager-manifest.json
+  deploy/pistompOS-3.0.0.img.xz release/3.0.0
 
-# 2. Create GitHub Release
+# 2. Create GitHub Release (omit --prerelease for production)
 gh release create release/3.0.0 \
   deploy/pistompOS-3.0.0.img.xz \
   pistomp-imager-manifest.json \
   --title "pi-Stomp OS 3.0.0" \
   --notes "..."
-# (omit --prerelease for production; add --prerelease if the tag carries -rc1 suffix)
 
-# 3. Deploy Imager manifest to gh-pages
+# 3. Deploy manifest to the right channel + per-version snapshot
 git fetch origin gh-pages
 git checkout gh-pages
-cp ../pistomp-imager-manifest.json imager/pistomp.json
-cp ../pistomp-imager-manifest.json "imager/pistomp-3.0.0.json"
-cp ../site/imager/icon.svg imager/icon.svg
+CHANNEL="stable"   # or "testing" for a -rc/-pre/-beta/-alpha tag
+cp pistomp-imager-manifest.json "imager/pistomp-3.0.0.json"
+cp pistomp-imager-manifest.json "imager/pistomp-${CHANNEL}.json"
+rm -f imager/pistomp.json
+cp site/imager/icon.svg imager/icon.svg
 git add imager/
-git commit -m "deploy imager manifest for 3.0.0"
+git commit -m "deploy imager manifest for 3.0.0 → ${CHANNEL}"
 git push origin gh-pages
 git checkout main
 ```
