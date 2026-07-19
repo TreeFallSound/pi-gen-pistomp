@@ -176,6 +176,13 @@ jobs:
         with:
           name: imager-manifest
           path: imager/
+      # The icon lives on the source branch (site/imager/), which the gh-pages
+      # checkout above does not contain. Check the tagged source out to a side
+      # path so the deploy step can copy it across.
+      - uses: actions/checkout@v4
+        with:
+          path: src
+          fetch-depth: 1
       - name: Deploy channel and version-pinned manifests
         env:
           PRERELEASE: ${{ needs.build.outputs.prerelease }}
@@ -199,6 +206,12 @@ jobs:
           fi
           # Don't commit the raw downloaded artifact into gh-pages.
           rm -f imager/pistomp-imager-manifest.json
+
+          # Publish the icon the manifest points at. Unconditional so a changed
+          # icon redeploys; `git diff --cached --quiet` below skips the commit
+          # when it is byte-identical to what is already on gh-pages.
+          cp src/site/imager/icon.png imager/icon.png
+          rm -rf src
 
           git config user.name "pistomp-bot"
           git config user.email "bot@treefallsound.com"
