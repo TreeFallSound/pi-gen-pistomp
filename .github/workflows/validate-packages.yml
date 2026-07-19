@@ -1,0 +1,45 @@
+name: validate-packages
+
+# PR-time validation of the debpkg/CI contract. Catches, *before* merge,
+# the four landmines that today only surface at image build time:
+#
+#   1. A package listed in stage2/05-pistomp/02-run.sh's apt install block
+#      has no .github/workflows/build-<pkg>.yml (the rpi-preseed landmine:
+#      image build's `apt-get install` hard-fails 20 minutes in).
+#   2. A PR touches debpkgs/<pkg>/** without bumping debian/changelog (the
+#      post-merge duplicate-version gate in build-deb.yml:80-94 silently
+#      skips publishing; failing at PR is faster).
+#   3. A PR adds a new debpkgs/<pkg>/ directory without shipping the
+#      matching build-<pkg>.yml in the same diff.
+#   4. A .github/workflows/build-<name>.yml has paths: debpkgs/<pkg>/**
+#      but no debpkgs/<pkg>/ directory exists (typo, or stale workflow
+#      after a package was removed).
+#
+# All logic is in scripts/validate-packages.sh so it can be run locally.
+#
+# Add this as a required status check on the `main` branch protection rule
+# (Settings → Branches → `main` → Require status checks: `validate / validate`).
+# It will only appear in the picker after the first PR (or this dispatch) has
+# run and discovered it for GitHub's status check index.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Check 2/3 diff against origin/$GITHUB_BASE_REF — needs full
+          # history of the base branch, not a shallow single commit.
+          fetch-depth: 0
+
+      - name: Install dpkg-dev (for dpkg-parsechangelog)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dpkg-dev >/dev/null 2>&1 || true
+
+      - name: Run validate-packages.sh
+        run: ./scripts/validate-packages.sh

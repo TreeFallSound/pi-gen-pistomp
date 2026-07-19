@@ -275,6 +275,19 @@ Then re-run the build normally. The cacher will restart clean and rebuild its in
 
 To test a different branch, set `PISTOMP_BRANCH` in `config.sh`.
 
+## PR-time package validation (`.github/workflows/validate-packages.yml`)
+
+`scripts/validate-packages.sh` runs on every PR as the `validate / validate` job, and is meant to be a **required status check** on `main` (Settings → Branches → `main` → Require status checks: `validate / validate`). It catches four landmines that today otherwise only surface 20 minutes into an image build:
+
+1. A package in `stage2/05-pistomp/02-run.sh`'s `apt-get install` block has no `.github/workflows/build-<pkg>.yml` — the rpi-preseed landmine (image's `apt-get install` hard-fails).
+2. A PR touches `debpkgs/<pkg>/**` without bumping `debian/changelog` (the post-merge duplicate-version gate would silently skip publishing — failing at PR is faster).
+3. A PR adds a new `debpkgs/<pkg>/` directory but doesn't ship the matching `build-<pkg>.yml` in the same diff.
+4. A `.github/workflows/build-<name>.yml` has `paths: debpkgs/<pkg>/**` but no `debpkgs/<pkg>/` exists (typo or stale workflow after a package's directory was deleted).
+
+Run locally before pushing a PR: `./scripts/validate-packages.sh` (defaults base ref to `origin/main`; set `GITHUB_BASE_REF` to compare against another branch).
+
+When hardcoding the allowlist of non-custom packages — `jack2-pistomp`, `lg`/`lg-pistomp` (installed earlier in `stage2/00-dummy-packages`), and `jack-example-tools` (Trixie apt) — is no longer accurate (those packages move into `02-run.sh` or vice versa), edit `ALLOWLIST` in the script. Any change to the install list that adds a package to `02-run.sh` must add its name to a workflow in the same PR.
+
 ## OTA updates
 
 Custom `.deb` packages ship on a GitHub Pages-hosted apt repository so devices can `apt upgrade` without reflashing. Full design in [`docs/OTA.md`](./docs/OTA.md); this section is the operator/developer cheat sheet.

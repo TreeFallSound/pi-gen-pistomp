@@ -17,7 +17,70 @@ IMG_VERSION=3.0.0 ./build-docker.sh -f        # produces deploy/pistompOS-3.0.0.
 ./compress-img.sh                             # produces deploy/pistompOS-3.0.0.img.xz
 ```
 
-## Publish a release manually
+## Publish a release
+
+### Current flow (automatic via `build-image.yml`)
+
+The image build is triggered by **pushing a `release/<version>` tag**. The
+workflow (`build-image.yml`) builds the image, publishes a GitHub Release
+with the `.img.xz` and Imager manifest attached, and deploys the manifest
+to `gh-pages` so Raspberry Pi Imager 2.x picks it up automatically.
+
+```bash
+# Production image:
+git tag release/3.3.0 && git push origin release/3.3.0
+
+# Pre-release image (testing channel — installs from + ships trixie-testing apt suite,
+# flagged as GitHub prerelease, excluded from releases/latest):
+git tag release/3.3.0-rc1 && git push origin release/3.3.0-rc1
+```
+
+The `_version_` becomes the image filename, release name and manifest URL
+verbatim — **don't prefix it with `v`** (e.g. `release/v3.3.0` produces
+`pistompOS-v3.3.0.img.xz`, which is non-conventional).
+
+The prerelease flag is decided by a regex match on the version suffix:
+`-(rc|pre|beta|alpha)[0-9]*$` → testing channel + GitHub prerelease. Plain
+version → production channel + standard release.
+
+Before tagging, **wait for all `build-<pkg>.yml` and `publish-apt-repo.yml`
+runs from your last merge to `main` to finish** — the image build installs
+`.deb`s from the live `gh-pages` apt repo, so any package published by a
+recent merge must already be in the apt index when the image build runs.
+The staleness gate (`check-upstream-staleness.sh`) only verifies that GitHub
+Releases exist with current `.built-sha` sidecars; the image's actual
+`apt-get install` reads the apt index, not GitHub Releases.
+
+### Pre-merge PR check
+
+`validate-packages.yml` runs `scripts/validate-packages.sh` on every PR
+and is meant to be a required status check on `main`. It catches four
+landmines (missing workflow for an installed package, unbumped changelog,
+new package without workflow, stale workflow `paths:` typo) *before* merge
+rather than at image build time.
+
+### Manual dispatch (no release)
+
+`build-image.yml` also accepts `workflow_dispatch` for test builds — those
+produce a workflow artifact only, no GitHub Release and no manifest deploy.
+
+### Imager manifest URL
+
+```bash
+# Verify in Raspberry Pi Imager:
+# App Options → Content Repository → Custom URL:
+# https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp.json
+```
+
+### Historical note
+
+The steps below are obsolete since `build-image.yml` now produces the
+GitHub Release, the manifest, and the `gh-pages` deploy in the workflow
+itself. Kept as a manual fallback for emergencies (e.g. if the workflow's
+`release` or `deploy-manifest` jobs fail and you need to publish by hand).
+
+<details>
+<summary>Manual fallback (rarely needed)</summary>
 
 ```bash
 # 1. Generate Imager manifest
@@ -25,11 +88,12 @@ IMG_VERSION=3.0.0 ./build-docker.sh -f        # produces deploy/pistompOS-3.0.0.
   deploy/pistompOS-3.0.0.img.xz 3.0.0        # writes pistomp-imager-manifest.json
 
 # 2. Create GitHub Release
-gh release create v3.0.0 \
+gh release create release/3.0.0 \
   deploy/pistompOS-3.0.0.img.xz \
   pistomp-imager-manifest.json \
-  --title "pi-Stomp OS v3.0.0" \
+  --title "pi-Stomp OS 3.0.0" \
   --notes "..."
+# (omit --prerelease for production; add --prerelease if the tag carries -rc1 suffix)
 
 # 3. Deploy Imager manifest to gh-pages
 git fetch origin gh-pages
@@ -41,16 +105,15 @@ git add imager/
 git commit -m "deploy imager manifest for 3.0.0"
 git push origin gh-pages
 git checkout main
-
-# 4. Verify in Raspberry Pi Imager
-# App Options → Content Repository → Custom URL:
-# https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp.json
 ```
+
+</details>
 
 ## CI triggers
 
 | Workflow | Trigger | Produces |
 |---|---|---|
-| `build-<pkg>.yml` | push to `main` changing `debpkgs/<pkg>/**` | `.deb` release |
-| `publish-apt-repo.yml` | any release published | apt index on `gh-pages` |
-| `build-image.yml` | `git push origin release/<version>` or manual dispatch | `.img.xz` + Imager manifest |
+| `build-<pkg>.yml` | push to `main` changing `debpkgs/<pkg>/**` | `.deb` GitHub Release (prerelease if version has `~`) |
+| `publish-apt-repo.yml` | any release published (and explicit dispatch from `build-deb.yml`) | apt index on `gh-pages` (trixie + trixie-testing) |
+| `build-image.yml` | `git push origin release/<version>` or manual dispatch | `.img.xz` + Imager manifest + (if tag) GitHub Release |
+| `validate-packages.yml` | `pull_request` | PR status check (blocks merge — add to required checks) |
