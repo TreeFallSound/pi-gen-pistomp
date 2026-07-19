@@ -1,3 +1,10 @@
+pi-stomp (3.2.1-0~pre5) trixie; urgency=medium
+
+  * Lots of new functionality. Proper changelog will come when out of
+    pre-release in the 3.2.1-0 version
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 19 Jul 2026 2:44:00 -0400
+
 pi-stomp (3.2.1-0~pre4) trixie; urgency=medium
 
   * Lots of new functionality. Proper changelog will come when out of
