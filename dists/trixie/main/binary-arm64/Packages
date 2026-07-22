@@ -315,18 +315,18 @@ Description: pi-Stomp application — guitar effects pedalboard software
  fetch full history and tags, and enable `git describe --dirty=*`.
 
 Package: pistomp-recovery
-Version: 0.1.0-29
+Version: 0.1.0-30
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 119678
+Installed-Size: 119680
 Depends: python3, jack2-pistomp, lg-pistomp, libasound2, libfreetype6
 Priority: optional
 Section: utils
-Filename: pool/main/p/pistomp-recovery/pistomp-recovery_0.1.0-29_arm64.deb
-Size: 22916940
-SHA256: b8c9df2cebb999d2ea0ff0e1fcee422bf69a1319b19bba166cb1630dffd389a4
-SHA1: d8aee4c3837a67086fac99eb82053f2f88413cab
-MD5sum: 20d8005d306603dfbce96f0363b382d2
+Filename: pool/main/p/pistomp-recovery/pistomp-recovery_0.1.0-30_arm64.deb
+Size: 22915696
+SHA256: 0ca59b560092abd70c2cd14abfbde1c287e2ddb18e2c9d8b0b9b5920a6bcee5f
+SHA1: c5b563b0f35dae8fbfda3f60ffb084c09d278825
+MD5sum: f375028319108a4b055792947a2d43ab
 Description: Package update and recovery service for pi-Stomp
  Recovery service that provides LCD-based factory reset, package rollback,
  and OTA update management. Runs as a systemd service triggered on
