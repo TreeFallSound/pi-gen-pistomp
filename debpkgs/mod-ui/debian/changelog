@@ -1,3 +1,12 @@
+mod-ui (3.0-13) trixie; urgency=medium
+
+  * Add mod-ui-owned session recording: toolbar record button, 32-bit
+    float WAV capture to Audio Recordings/ (no clipping, no duration
+    cap), multi-tab WebSocket sync, and a crash watchdog. Fixes
+    jack_capture exiting instantly under systemd (missing --no-stdin).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 23 Jul 2026 03:20:40 +0000
+
 mod-ui (3.0-12) trixie; urgency=medium
 
   * Fix broken pedalboard thumbnails on save: modtools.pedalboard used
