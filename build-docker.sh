@@ -50,7 +50,7 @@ if [ "${IMG_CHANNEL}" != "stable" ] && [ "${IMG_CHANNEL}" != "testing" ]; then
 	exit 1
 fi
 
-while getopts "c:f" flag
+while getopts ":c:f" flag
 do
 	case "${flag}" in
 		c)
@@ -59,7 +59,9 @@ do
 		f)
 			FORCE=1
 			;;
-		*)
+		\?)
+			# Silently ignore unknown options (long options like --pre, --force
+			# are handled above before getopts, but still appear in $@)
 			;;
 	esac
 done
@@ -315,6 +317,9 @@ echo "copying log from container ${CONTAINER_NAME} to deploy/"
 ${DOCKER} logs --timestamps "${CONTAINER_NAME}" &>"deploy/${IMG_DATE}-build-docker.log"
 
 ls -lah deploy
+
+# Assert the image actually got the package versions the pre-flight resolved
+bash "${DIR}/scripts/verify-image-packages.sh"
 
 # cleanup
 if [ "${PRESERVE_CONTAINER}" != "1" ]; then

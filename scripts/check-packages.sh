@@ -161,6 +161,14 @@ for i in "${!pkg_names[@]}"; do
 done
 echo ""
 
+# Machine-readable copy of the same resolution (for drift detection purposes).
+EXPECTED_FILE="${EXPECTED_PACKAGES_FILE:-${ROOT_DIR}/deploy/expected-packages.txt}"
+mkdir -p "$(dirname "${EXPECTED_FILE}")"
+: > "${EXPECTED_FILE}"
+for i in "${!pkg_names[@]}"; do
+    printf '%s %s\n' "${pkg_names[$i]}" "${pkg_versions[$i]}" >> "${EXPECTED_FILE}"
+done
+
 for i in "${!pkg_names[@]}"; do
     ver="${pkg_versions[$i]}"
     changelog="${pkg_dirs[$i]}/debian/changelog"

@@ -12,9 +12,10 @@ Package: jack2-pistomp
 Architecture: arm64
 Depends: ${shlibs:Depends}, ${misc:Depends}, libasound2, libdb5.3,
  libdbus-1-3, libsamplerate0, libopus0
-Provides: jackd2, libjack-dev, libjack-jackd2-0 (= 1.9.22~dfsg-4)
-Conflicts: jackd2, jack2, libjack-jackd2-0
-Replaces: jackd2, jack2, libjack-jackd2-0
+Provides: jackd2, libjack-dev, libjack-jackd2-0 (= 1.9.22~dfsg-4),
+ libjack-jackd2-dev (= 1.9.22~dfsg-4)
+Conflicts: jackd2, jack2, libjack-jackd2-0, libjack-jackd2-dev
+Replaces: jackd2, jack2, libjack-jackd2-0, libjack-jackd2-dev
 Description: JACK Audio Connection Kit v2 (pi-Stomp build)
  JACK is a low-latency audio server. This build includes the
  pi-controller-reset stability fix and links against libdb 5.3.

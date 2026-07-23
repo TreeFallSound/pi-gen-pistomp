@@ -31,6 +31,7 @@ mkdir -p "${ROOTFS_DIR}/etc/systemd/system/bluetooth.service.d"
 install -v -m 644 files/services/bluetooth-rfkill-unblock.conf \
   "${ROOTFS_DIR}/etc/systemd/system/bluetooth.service.d/rfkill-unblock.conf"
 install -m 755 files/wait-for-jack.sh ${ROOTFS_DIR}/usr/local/bin/wait-for-jack.sh
+install -m 755 files/wifi-mac-check.sh ${ROOTFS_DIR}/usr/local/bin/wifi-mac-check.sh
 
 # Helper scripts for common service operations (ps-restart, ps-stop, ps-run,
 # ps-journal, mod-restart, mod-ui-journal, mod-host-journal)
@@ -56,6 +57,26 @@ mkdir -p "${ROOTFS_DIR}/etc/systemd/system/alsa-restore.service.d"
 install -v -m 644 files/services/alsa-restore-override.conf \
   "${ROOTFS_DIR}/etc/systemd/system/alsa-restore.service.d/override.conf"
 
+# Order rpi-preseed ahead of every service that runs as pistomp (UID 1000).
+# Without this it aborts on first boot and no Imager customization is applied.
+mkdir -p "${ROOTFS_DIR}/etc/systemd/system/rpi-preseed.service.d"
+install -v -m 644 files/services/rpi-preseed-before-pistomp.conf \
+  "${ROOTFS_DIR}/etc/systemd/system/rpi-preseed.service.d/10-before-pistomp.conf"
+
+# Per-device SSH host keys. stage2/01-sys-tweaks/01-run.sh runs `ssh-keygen -A`
+# at build time so sshd can always start; that means every card flashed from this
+# image ships the same host keys until first boot swaps them out. Drop the stamp
+# that arms the regeneration unit, and order sshd behind it.
+install -m 755 files/regenerate-ssh-host-keys.sh \
+  "${ROOTFS_DIR}/usr/lib/pistomp/regenerate-ssh-host-keys.sh"
+touch "${ROOTFS_DIR}/etc/ssh/.factory-host-keys"
+
+for unit in ssh.service ssh.socket; do
+  mkdir -p "${ROOTFS_DIR}/etc/systemd/system/${unit}.d"
+  install -v -m 644 files/services/ssh-after-hostkey-regen.conf \
+    "${ROOTFS_DIR}/etc/systemd/system/${unit}.d/10-after-hostkey-regen.conf"
+done
+
 echo "Creating folders and services"
 on_chroot << EOF
 
@@ -77,9 +98,17 @@ ln -sf /usr/lib/systemd/system/mod-midi-merger.service /etc/systemd/system/multi
 ln -sf /usr/lib/systemd/system/mod-midi-merger-broadcaster.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/ttymidi.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/wifi-check.service /etc/systemd/system/multi-user.target.wants
+ln -sf /usr/lib/systemd/system/wifi-mac-check.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/firstboot.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/zram.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/rtirq.service /etc/systemd/system/multi-user.target.wants
+ln -sf /usr/lib/systemd/system/regenerate-ssh-host-keys.service /etc/systemd/system/multi-user.target.wants
+
+# mask raspberrypi-sys-mods' own host-key regeneration. It is gated on
+# ConditionFirstBoot=, which depends on /etc/machine-id and has misfired on this
+# image before; ours is gated on a self-clearing stamp. Two mechanisms racing to
+# rewrite /etc/ssh is strictly worse than one.
+ln -sf /dev/null /etc/systemd/system/regenerate_ssh_host_keys.service
 
 # mask the base image's rpi-swap-generated zram0 unit in favour of our own
 ln -sf /dev/null /etc/systemd/system/systemd-zram-setup@zram0.service

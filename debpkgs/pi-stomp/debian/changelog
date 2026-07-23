@@ -1,3 +1,79 @@
+pi-stomp (3.2.1-0~pre6) trixie; urgency=medium
+
+  * Implement Calf EQ5 panel
+  * Re-try MOD-UI connection sooner on startup
+  * Synthetic parameters for pedalboard transport bindings
+  * Fix tap tempo when shortpress is set on same footswitch
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 21 Jul 2026 05:15:00 +0000
+
+pi-stomp (3.2.1-0~pre5) trixie; urgency=medium
+
+  * Lots of new functionality. Proper changelog will come when out of
+    pre-release in the 3.2.1-0 version
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 19 Jul 2026 2:44:00 -0400
+
+pi-stomp (3.2.1-0~pre4) trixie; urgency=medium
+
+  * Lots of new functionality. Proper changelog will come when out of
+    pre-release in the 3.2.1-0 version
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 18 Jul 2026 14:59:44 -0400
+
+pi-stomp (3.2.0-7~pre3) trixie; urgency=medium
+
+  * Properly reactive parameters
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 14 Jul 2026 21:48:41 +0000
+
+pi-stomp (3.2.0-7~pre2) trixie; urgency=medium
+
+  * Prerelease from the feat/parameter-menu branch — pi-Stomp v2 hardware
+    support plus badges + one-nav-rules-them-all support.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 13 Jul 2026 18:00:00 -0400
+
+pi-stomp (3.2.0-7~pre1) trixie; urgency=medium
+
+  * Prerelease from the prerelease-for-v2 branch — pi-Stomp v2 hardware
+    support plus the UI performance work.
+
+  [ v2 hardware ]
+  * Derive the real SPI clock from the SoC instead of assuming a Pi 4/5:
+    spi_timing now reads /proc/device-tree/compatible and models each
+    controller's divisor rounding, so the Pi 3 (v2) gets correct transfer-time
+    estimates rather than the Pi 5's. Drives the LCD inline-push gate, the
+    emulator, and lcd320x240's poll_divisor.
+  * Parameterdialog now edits parameters on the same quantized step grid as
+    the v3 tweak encoders (common/parameter_steps.py), so one detent of the
+    nav encoder — the only encoder on v2 — moves a value by the same amount.
+  * Skip the aggressive LCD reset path on v2; it is no longer needed.
+
+  [ Performance ]
+  * Rewrite the pedalboard render loop: cached glyphs/tints, fewer full
+    repaints, and cheaper text and panel painting.
+  * WebSocket send loop parks on a wakeup event instead of a 1 ms poll, and
+    the send/receive tasks now race FIRST_COMPLETED so a closed socket is
+    noticed immediately and reconnects cleanly.
+  * Run the dpkg version check on a background thread (modalapi/version_check)
+    so it no longer stalls startup or the UI.
+  * Coalesce MIDI/control updates with max_drain=1, matching pistomptre.
+
+  [ Analog inputs ]
+  * Detect a disconnected/floating ADC pin (e.g. an expression-pedal jack with
+    nothing plugged in) and suppress the 60 Hz mains-hum noise it aliases into
+    the poll stream, sleeping the input until a real pedal wakes it.
+
+  [ WiFi ]
+  * Support WPA3 networks.
+  * Optimistic WiFi menu: acts on the selection immediately instead of waiting
+    for NetworkManager to settle.
+  * Fix stale scan results lingering in the network list.
+  * Simplify the WiFi command/ops layer.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 11 Jul 2026 12:00:00 -0400
+
 pi-stomp (3.2.0-6) trixie; urgency=medium
 
   * Point mod-ala-pi-stomp.service splash at the per-stage image.

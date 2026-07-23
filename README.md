@@ -4,38 +4,55 @@ Builds the OS that [pi-Stomp](https://github.com/TreeFallSound/pi-stomp) runs on
 
 ## Quick start
 
-| Hardware | Image | Link |
+| Hardware | Image | Release |
 | :--  | :--- | :--- |
-| v2/v3 | `pistompOS-v3.2.0-rc4.img.xz` | [Download](https://github.com/TreeFallSound/pi-gen-pistomp/releases/tag/v3.2.0-rc4) |
+| v2/v3 | `pistompOS-3.2.1-rc3.img.xz` | [Release](https://github.com/TreeFallSound/pi-gen-pistomp/releases/tag/release%2F3.2.1-rc3) |
 
-If you just built your pi-Stomp! and are looking for the official software, you've come to the right place. Start by downloading the image above.
+If you just built your pi-Stomp! and are looking for the official software, you've come to the right place.
 
-### Step 1 — Flash the image
+### Option A — Flash with customization wizard (recommended)
 
-Flash the `.img.xz` you just downloaded to a microSD card using the latest version of [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
+Uses Raspberry Pi Imager's built-in wizard to set WiFi, hostname, and password at flash time, so you don't have to edit any files manually unless you want to change advanced settings.
+
+1. Open [Raspberry Pi Imager](https://github.com/raspberrypi/rpi-imager/releases/tag/v2.0.11-rc1) (v2.0.11-rc1 or newer required for customization).
+2. Click **App Options** → **Content Repository** → **EDIT**.
+3. Enable **Use custom URL** and enter:
+   ```
+   https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-stable.json
+   ```
+4. Click **APPLY & RESTART**.
+5. **Choose OS** → select **pi-Stomp OS** from the list.
+6. Click **EDIT SETTINGS** (gear icon) to set WiFi, hostname, password, and SSH keys.
+7. **Choose storage** → select your microSD card → **WRITE**.
+
+#### Pre-release images
+
+Use the following URL for pre-release images to help us test new changes. These builds are likely to have (literal) show-stopper issues, so please don't take them on stage with you.
+
+```
+https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-testing.json
+```
+
+### Option B — Manual download + pistomp.conf
+
+Download the image above and flash it like any other `.img.xz`. All customization is done via `pistomp.conf` on the boot partition after flashing.
 
 1. Open Raspberry Pi Imager.
 2. **Choose OS** → **Use custom** → select the `pistompOS-<date>.img.xz` file.
-3. **Choose storage** → select your microSD card.
-4. Click **Write**.
-
-### Step 2 — Configure `pistomp.conf` (before first boot)
-
-After flashing, the card's boot partition mounts as a small FAT volume (named `BOOTFS`). Open `pistomp.conf` on it and edit the values for your setup. The file lives at the root of the boot partition:
+3. **Choose storage** → select your microSD card → **WRITE**.
+4. After flashing, the card's boot partition mounts as a small FAT volume. Open `pistomp.conf` on it and edit:
 
 | Setting | Meaning | Default |
 | :--- | :--- | :--- |
 | `WIFI_SSID` | WiFi network name. Leave blank to skip WiFi. | `""` |
 | `WIFI_PASSWORD` | WiFi password (WPA2/WPA3 personal). | `""` |
-| `WIFI_COUNTRY` | ISO 3166-1 alpha-2 country code, e.g. `US`, `GB`, `DE`. Controls regulatory domain / allowed channels. | `"US"` |
+| `WIFI_COUNTRY` | ISO 3166-1 alpha-2 country code, e.g. `US`, `GB`, `DE`. Controls regulatory domain. | `"US"` |
 | `HOSTNAME` | Device hostname on the network (appended with `.local`). | `"pistomp"` |
-| `USER_PASSWORD` | Password for the `pistomp` user (used for SSH and console login). | `"pistomp"` |
-| `TIMEZONE` | `tz` database timezone, e.g. `US/Central`, `Europe/London`, `America/Toronto`. | `"US/Central"` |
-| `SSH_AUTHORIZED_KEY` | Paste your SSH public key here to enable key-based login. Leave blank to skip. | `""` |
-| `JACK_SAMPLE_RATE` | JACK audio sample rate in Hz. netJACK mirrors this rate. | `"48000"` |
-| `JACK_PERIOD` | JACK period (buffer frames). Lower = less latency, higher CPU cost. Powers-of-two typically: `64`, `128`, `256`. | `"64"` |
-
-These settings are applied on first boot by `firstboot.sh` and then left in place for reference. To re-apply changed settings later, delete `/boot/firmware/firstboot.done` on the booted device and reboot.
+| `USER_PASSWORD` | Password for the `pistomp` user (SSH and console). | `"pistomp"` |
+| `TIMEZONE` | `tz` database timezone, e.g. `US/Central`, `Europe/London`. | `"US/Central"` |
+| `SSH_AUTHORIZED_KEY` | Paste your SSH public key here. Leave blank to skip. | `""` |
+| `JACK_SAMPLE_RATE` | JACK audio sample rate in Hz. | `"48000"` |
+| `JACK_PERIOD` | Buffer frames. Lower = less latency. Powers-of-two: `64`, `128`, `256`. | `"64"` |
 
 ### Step 3 — Install the card and boot
 
@@ -175,3 +192,15 @@ docker exec -it pigen_work bash
 | `CONTAINER_NAME` | `pigen_work` | Override container name |
 
 For kernel updates, debugging failed builds, mounting the built image, and apt-cacher troubleshooting, see **`GUIDE.md`**.
+
+## Appendix 2 — JACK settings after first boot
+
+JACK parameters are always read from `/etc/default/jack` (written once by `firstboot.sh`, defaults filled by `jackdrc` at every boot). To change them:
+
+```bash
+sudo nano /etc/default/jack
+# edit JACK_SAMPLE_RATE, JACK_PERIOD, JACK_DEVICE, etc.
+sudo systemctl restart jack
+```
+
+Any key left empty in `/etc/default/jack` falls back to a per-model default in `jackdrc` — you only need to set what you want to override.

@@ -10,6 +10,9 @@ set -a
 KERNEL_VERSION="6.18.36"
 KERNEL_LOCALVERSION="-rpi-v8-rt"  # suffix in uname -r; must contain -rpi- so raspi-firmware's initramfs hook recognises the flavour
 LINUX_RPI_COMMIT="954341c412dd48b7c7f8125d81212ec4c0e42ed3"
+# So CI/CD can pick up the kernel without them in cache
+KERNEL_DEB_VERSION="${KERNEL_VERSION}-1"
+KERNEL_ASSETS_URL="https://github.com/TreeFallSound/pi-gen-pistomp/releases/download/kernel/${KERNEL_DEB_VERSION}"
 
 # --- JACK2 ---
 JACK2_REPO="https://github.com/jackaudio/jack2.git"
@@ -51,9 +54,13 @@ MOD_MIDI_MERGER_REF="master"
 MOD_TTYMIDI_REPO="https://github.com/moddevices/mod-ttymidi.git"
 MOD_TTYMIDI_REF="master"
 
+# --- rpi-preseed (Raspberry Pi Imager customisation handler) ---
+RPI_PRESEED_REPO="https://github.com/raspberrypi/rpi-preseed.git"
+RPI_PRESEED_REF="main"
+
 # --- pi-stomp (application) ---
 PISTOMP_REPO="https://github.com/TreeFallSound/pi-stomp.git"
-PISTOMP_BRANCH="main"
+PISTOMP_BRANCH="feat/transport-bindings"
 
 # --- pistomp-recovery ---
 PISTOMP_RECOVERY_REPO="https://github.com/TreeFallSound/pistomp-recovery.git"

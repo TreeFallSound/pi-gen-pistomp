@@ -6,6 +6,7 @@ After=jack.service
 [Service]
 User=pistomp
 Environment="JACK_PROMISCUOUS_SERVER=jack"
+ExecStartPre=/usr/local/bin/wait-for-jack.sh
 ExecStart=/usr/bin/amidithru touchosc
 Restart=always
 RestartSec=1

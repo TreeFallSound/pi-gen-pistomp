@@ -82,12 +82,15 @@ Build process executes ordered stages.
 - **`jackdrc` and `jack.service` ship in the `jack2-pistomp` package**, not the image, so JACK startup changes reach existing devices over OTA. `jackdrc` lives at `/usr/lib/pistomp/jackdrc` rather than `/etc` so it is not a dpkg conffile — a conffile prompt would hang the unattended `apt-get install -f -y -qq` that `pistomp-recovery` runs. `dh_installsystemd` is a no-op for the same reason it is in the `pi-stomp` package: an upgrade must not restart JACK and take down mod-host, mod-ui and pi-stomp. `postinst` does a `daemon-reload` and renames a pre-existing `/etc/jackdrc` to `/etc/jackdrc.obsolete`; the new unit takes effect at the next boot.
 - **Both packaged files are overwritten on upgrade. `/etc/default/jack` is not** — no package owns it, so user edits there are permanent. It carries `JACK_SAMPLE_RATE`, `JACK_PERIOD`, `JACK_DEVICE`, `JACK_NPERIODS`, `JACK_RTPRIO`, `JACK_PORT_MAX`, and the `JACK_EXTRA_ARGS` / `JACK_DRIVER_ARGS` escape hatches (server-half and driver-half of the jackd command line, split at the first `-d`). Any key absent or empty falls back to a default inside `jackdrc`, so `/etc/default/jack` files written before a key existed keep working unchanged. To override the unit rather than its arguments, use a drop-in at `/etc/systemd/system/jack.service.d/`.
 - **JACK shm sizing**: the segment is `sizeof(JackGraphManager) + 33,808 * port_max` bytes, mlocked and fully resident. Each port carries a fixed `BUFFER_SIZE_MAX` (8192-frame) buffer regardless of `JACK_PERIOD`. `jackdrc` passes `--port-max` — 512 on a Pi 5, else 256 — overridable via `JACK_PORT_MAX` in `/etc/default/jack`. Upstream's 2048 default costs 102MB, 22% of RAM on a 512MB Pi 3A+, against the ~42 ports a loaded pedalboard uses. The fixed base is set by `--clients` and `--ports-per-application` at build time (see `debpkgs/jack2-pistomp/debian/rules`); upstream's 256/2048 defaults cost 36MB before any port exists, and 64/512 brings that to 8MB.
+- **SSH host keys: generated at build, replaced at first boot.** The governing rule, learned from two separate lockouts: *the existence of a host key must never depend on a boot-time step succeeding* — only its uniqueness may. `stage2/01-sys-tweaks/01-run.sh` runs `ssh-keygen -A` in the chroot, so every image ships with working keys and sshd can always start. `regenerate-ssh-host-keys.service` then swaps in per-device keys on first boot, ordered `Before=ssh.service ssh.socket` with a `Wants=` (**never** `Requires=`) drop-in on both, so no client ever pins the shared factory key. The script stages new keys in a temp dir under `/etc/ssh` and `mv`s them in — a same-filesystem `rename(2)`, atomic per key — so there is no window with zero keys; on any failure it keeps the factory keys, leaves the stamp, and exits non-zero to land in the journal. Worst case is a shared key, never no key.
+- **SSH lockout guard.** `firstboot.sh` asserts, against `sshd -T` (the only source that resolves `Include`, `sshd_config.d` and defaults the way the daemon does), that sshd will accept *something*: if `PasswordAuthentication no` and UID 1000 has no non-empty authorized-keys file, it drops `/etc/ssh/sshd_config.d/00-pistomp-lockout-guard.conf` re-enabling passwords and says so on the LCD. Deliberately phrased as an invariant over the effective config rather than a check for any particular writer — rpi-preseed, `pistomp.conf` and the image's own `sshd_config` edits can each produce that state, and the interesting failures are the unanticipated ones. The `00-` prefix matters: sshd takes the **first** value it sees for a keyword and Debian `Include`s `sshd_config.d/*.conf` at the top of `sshd_config`, so sorting ahead of every other drop-in is what makes it win.
 - **lilv is installed via apt** (`python3-lilv liblilv-dev`) — no source build needed on Trixie.
 - **lcd-splash** is a C binary compiled from source in `debpkgs/lcd-splash/src/`. It uses `lgpio` (linked against the extracted `lg.deb` at build time) to drive the ILI9341 SPI LCD directly. It takes `lcd-splash <image.rgb565> [message]` and each boot stage passes its own artwork. The source artwork lives as PNGs in `debpkgs/lcd-splash/images/`; `build.sh` converts each to a raw 320x240 big-endian RGB565 blob with `src/png2rgb565.py` (stdlib only, no Pillow) and ships them at `/usr/share/pistomp/splash/<name>.rgb565`. The message is drawn in light grey in the band below `MSG_REGION_TOP` (y=160), which the artwork leaves empty.
 - **Realtime IRQ tuning** uses the `rtirq-init` apt package (not `rtirq` — the old name doesn't exist on Trixie). Config is installed to `/etc/default/rtirq`. A custom `rtirq.service` unit wraps the init script.
 - **Networking** matches pistomp-arch exactly: wired NM profile with 15 s DHCP timeout + link-local fallback (`eth0`), wifi power-save off, MAC randomization off, multihome policy routing dispatcher.
 - **WiFi hotspot** is started on demand by `wifi-check.service` (after NM settles), not via rc.local. It only starts if neither WiFi nor ethernet is connected.
 - **WiFi roaming stability (wpa_supplicant 2.11 + `roamoff=1`)**. On a band/AP-steering mesh (e.g. Bell "Whole Home WiFi") the Debian image dropped WiFi repeatedly — disconnect/reconnect "roaming" — where pistomp-arch was rock-solid for months on the *same* hardware, firmware, mesh, and config. Root cause: **Debian Trixie ships `wpasupplicant` 2.10; arch shipped 2.11.** When the mesh steers the client to a BSSID advertising 802.11r, NetworkManager negotiates a WPA-PSK→FT-PSK *cross-AKM* roam; wpa_supplicant **2.10 fumbles that transition and tears the link down**, while **2.11 fixed it** ("improve cross-AKM roaming with driver-based SME/BSS selection"). This was confirmed empirically: the arch box runs wpa_supplicant 2.11 with FT *exposed* (`get_capability key_mgmt` lists `FT-PSK`) and firmware roaming *on* (`roamoff=0`), happily roaming a 5 GHz mesh node — so the differentiator is purely the supplicant version, not FT capability or config. The mitigation baked in: **`options brcmfmac roamoff=1`** (written by `firstboot.sh` to `/etc/modprobe.d/brcmfmac.conf`) disables in-driver roaming so a steer becomes a clean full reconnect — harmless since this is a stationary floor appliance that never needs to roam. Refs: raspberrypi/linux#6265, Arch FS#63397, kernel BZ 206315.
+- **The stage2 chroot has no network tools.** At `stage2/00-dummy-packages` the rootfs is a ~11k-file bootstrap — no `wget`, `curl`, or `ca-certificates` (wget arrives ~15s later). Reachability probes belong on the build container, *before* `on_chroot`. A `wget --spider` there silently failed "command not found", skipped the `trixie-testing` source, and shipped stable packages inside a `-rc` image. `scripts/verify-image-packages.sh` now fails the build when installed versions don't match `check-packages.sh`'s pre-flight resolution.
 - **QEMU**: not needed. The build runs in a native arm64 Docker container (Apple Silicon, arm64 Linux, arm64 CI). On x86_64 Linux, `dpkg-reconfigure qemu-user-binfmt` inside the container registers QEMU with the `F` flag — no QEMU binary needs to exist inside the rootfs.
 
 ## Hardware Targets
@@ -275,6 +278,21 @@ Then re-run the build normally. The cacher will restart clean and rebuild its in
 
 To test a different branch, set `PISTOMP_BRANCH` in `config.sh`.
 
+## PR-time package validation (`.github/workflows/validate-packages.yml`)
+
+`scripts/validate-packages.sh` runs on every PR as the `validate` job, and is meant to be a **required status check** on `main`. It catches four landmines that today otherwise only surface 20 minutes into an image build:
+
+1. A package in `stage2/05-pistomp/02-run.sh`'s `apt-get install` block has no `.github/workflows/build-<pkg>.yml` — the rpi-preseed landmine (image's `apt-get install` hard-fails).
+2. A PR touches `debpkgs/<pkg>/**` without bumping `debian/changelog` (the post-merge duplicate-version gate would silently skip publishing — failing at PR is faster).
+3. A PR adds a new `debpkgs/<pkg>/` directory but doesn't ship the matching `build-<pkg>.yml` in the same diff.
+4. A `.github/workflows/build-<name>.yml` has `paths: debpkgs/<pkg>/**` but no `debpkgs/<pkg>/` exists (typo or stale workflow after a package's directory was deleted).
+
+Run locally before pushing a PR: `./scripts/validate-packages.sh` (defaults base ref to `origin/main`; set `GITHUB_BASE_REF` to compare against another branch).
+
+To enable branch protection: merge the workflow, open one throwaway PR to let GitHub discover the check, then read the exact name off the PR's checks list (for reusable-workflow callers GitHub renders `<owner> / <job>`; for an inline job like this one it should be just `validate`, but verify before requiring it — a wrong name silently blocks every PR forever on a pending check). Add it under Settings → Branches → `main` → Require status checks.
+
+When hardcoding the allowlist of non-custom packages — `jack2-pistomp`, `lg`/`lg-pistomp` (installed earlier in `stage2/00-dummy-packages`), and `jack-example-tools` (Trixie apt) — is no longer accurate (those packages move into `02-run.sh` or vice versa), edit `ALLOWLIST` in the script. Any change to the install list that adds a package to `02-run.sh` must add its name to a workflow in the same PR.
+
 ## OTA updates
 
 Custom `.deb` packages ship on a GitHub Pages-hosted apt repository so devices can `apt upgrade` without reflashing. Full design in [`docs/OTA.md`](./docs/OTA.md); this section is the operator/developer cheat sheet.
@@ -311,7 +329,7 @@ Two apt suites on the same gh-pages site: `trixie` (production, every device) an
 | :--- | :--- | :--- |
 | `.github/workflows/build-deb.yml` | `workflow_call` | Reusable: extract version from `debian/changelog`, install `Build-Depends` from `debian/control` automatically, run `build.sh`, publish a Release tagged `debpkg/<pkg>/<ver>` (`~`→`_` in the tag; `prerelease: true` when the version contains `~`). On PRs, fails if that tag already exists (unbumped version). |
 | `.github/workflows/build-<pkg>.yml` | push/PR on `debpkgs/<pkg>/**` or `config.sh` | Thin wrapper calling `build-deb.yml` with `pkg:`. One per package. Template at `docs/package-template/build.yml`. |
-| `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` release asset, routes it by the release's prerelease flag into `reprepro includedeb trixie` or `trixie-testing` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch and `conf/distributions` on first run. |
+| `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` **and `*_all.deb`** release asset (the selector is `_(arm64|all)\.deb$` — architecture-independent packages like `rpi-preseed` build as `_all.deb` and would be silently skipped by an arm64-only glob), routes it by the release's prerelease flag into `reprepro includedeb trixie` or `trixie-testing` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch and `conf/distributions` on first run. |
 
 ### Duplicate-version gates (three layers)
 
@@ -348,13 +366,22 @@ If the old `file:/pistomp-cache/apt-repo` source is present from a prior image, 
 sudo rm -f /etc/apt/sources.list.d/pistomp-local.list
 ```
 
-### pistomp-recovery self-upgrade
-
-Recovery installs package updates via `AptManager` ([`../pistomp-recovery/src/pistomp_recovery/packages/manager.py`](../pistomp-recovery/src/pistomp_recovery/packages/manager.py)) — `apt-get update` → `apt-get install -y <pkgs>`. Upgrading `pistomp-recovery` itself is safe: the unit's `postinst` doesn't restart the service, so the LCD stays owned by the running process throughout the install. The new code runs after the next service restart (manual `sudo systemctl restart pistomp-recovery`, or the next crash handoff, or reboot).
-
 ### Adding a new package to OTA
 
-1. Create `debpkgs/<pkg>/` with `build.sh`, `debian/`, and a `debian/changelog` entry.
+All four steps must land in a single PR.
+
+1. Create `debpkgs/<pkg>/` with `build.sh` and a `debian/` directory (control, rules, postinst as needed).
 2. Add the package to `stage2/05-pistomp/02-run.sh`'s `apt-get install` list (factory baseline).
 3. Copy `docs/package-template/build.yml` → `.github/workflows/build-<pkg>.yml`, changing the name, `paths:` filter, and `pkg:` input.
-4. Bump `debian/changelog`, push to `main`, watch the two workflows run.
+4. Bump `debian/changelog` — this is what creates the initial entry and sets the version:
+
+```bash
+./scripts/bump-version.sh <pkg> "Initial package: <one-line description>."   # production
+./scripts/bump-version.sh --pre <pkg> "Initial pre-release: <description>."  # trixie-testing
+```
+
+Push, open the PR, watch the `validate / validate` check go green, merge.
+
+Two downstream workflows then fire: `build-<pkg>.yml` (calls `build-deb.yml`, publishes `debpkg/<pkg>/<ver>` GitHub Release) and `publish-apt-repo.yml` (routes the `.deb` into `trixie` or `trixie-testing` on `gh-pages`).
+
+Promotion flows for pre-release packages and pre-release images are covered above in "Release channels".

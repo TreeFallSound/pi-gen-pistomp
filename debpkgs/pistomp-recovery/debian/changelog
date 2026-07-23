@@ -1,3 +1,21 @@
+pistomp-recovery (0.1.0-30) trixie; urgency=medium
+
+  * Refresh the trixie-testing apt suite during in-recovery update checks.
+    The restricted apt-get update was scoped to pistomp.list only, so
+    opted-in test devices never saw pre-release (~pre) package candidates.
+    Now globs pistomp*.list so every pistomp channel is refreshed while
+    still skipping the Debian/raspi mirrors.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Wed, 22 Jul 2026 02:38:53 +0000
+
+pistomp-recovery (0.1.0-29) trixie; urgency=medium
+
+  * Remove dead Environment=JACK_PROMISCUOUS_SERVER=jack. Recovery
+    Conflicts with mod-ala-pi-stomp and mod-ui, so the JACK stack is torn
+    down whenever recovery runs — there is no JACK server to talk to.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 19 Jul 2026 04:27:56 +0000
+
 pistomp-recovery (0.1.0-28) trixie; urgency=medium
 
   * Install pistomp-stamp into PATH so pi-stomp can actually call it

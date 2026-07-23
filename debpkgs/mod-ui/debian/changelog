@@ -1,3 +1,12 @@
+mod-ui (3.0-12) trixie; urgency=medium
+
+  * Fix broken pedalboard thumbnails on save: modtools.pedalboard used
+    the removed Image.ANTIALIAS constant, which crashed screenshot
+    generation under Pillow 10+ (device runs 12.3.0) and left the web UI
+    showing broken images. Switch to Image.LANCZOS.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Wed, 22 Jul 2026 04:26:11 +0000
+
 mod-ui (3.0-11) trixie; urgency=medium
 
   * Point mod-ui.service splash at the per-stage image.
