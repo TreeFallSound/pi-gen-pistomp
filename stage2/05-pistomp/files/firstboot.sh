@@ -201,8 +201,11 @@ if grep -q 'Pi 5' /proc/cpuinfo 2>/dev/null; then
     runuser -u pistomp -- /home/pistomp/pi-stomp/util/pi5_eeprom_update.sh || true
 fi
 
-systemctl disable --now hciuart.service 2>/dev/null || true
-systemctl disable --now bluetooth.service 2>/dev/null || true
+if [[ "${BLUETOOTH_ENABLED}" == "true" ]]; then
+    systemctl enable --now bluetooth.service hciuart.service 2>/dev/null || true
+else
+    systemctl disable --now bluetooth.service hciuart.service 2>/dev/null || true
+fi
 
 # ---------- done ----------
 

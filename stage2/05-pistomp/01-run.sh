@@ -22,6 +22,14 @@ install -Dm 644 files/60-ondemand-governor.rules ${ROOTFS_DIR}/etc/udev/rules.d/
 
 # Realtime priority + memlock limits for audio group (non-service processes)
 install -Dm 644 files/99-audio.conf ${ROOTFS_DIR}/etc/security/limits.d/99-audio.conf
+
+# Bluetooth: Experimental BLE-MIDI plugin creates ALSA seq ports
+install -Dm 644 files/bluetooth-main.conf ${ROOTFS_DIR}/etc/bluetooth/main.conf
+# Drop-in: clear the rfkill soft-block before bluetoothd powers the adapter
+# (Pi 5 BT can boot soft-blocked). Harmless when BT is disabled — never runs.
+mkdir -p "${ROOTFS_DIR}/etc/systemd/system/bluetooth.service.d"
+install -v -m 644 files/services/bluetooth-rfkill-unblock.conf \
+  "${ROOTFS_DIR}/etc/systemd/system/bluetooth.service.d/rfkill-unblock.conf"
 install -m 755 files/wait-for-jack.sh ${ROOTFS_DIR}/usr/local/bin/wait-for-jack.sh
 install -m 755 files/wifi-mac-check.sh ${ROOTFS_DIR}/usr/local/bin/wifi-mac-check.sh
 
