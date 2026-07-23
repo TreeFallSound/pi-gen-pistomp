@@ -2,7 +2,7 @@ Origin: pistomp
 Label: pistomp
 Suite: trixie-testing
 Codename: trixie-testing
-Date: Wed, 22 Jul 2026 04:29:28 UTC
+Date: Thu, 23 Jul 2026 04:16:51 UTC
 Architectures: arm64
 Components: main
 Description: pi-Stomp custom packages (pre-release channel)
