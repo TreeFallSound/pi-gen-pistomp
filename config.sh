@@ -107,10 +107,6 @@ VEJA_BASS_CAB_REF="master"
 VEJA_1960_CAB_REPO="https://github.com/VeJa-Plugins/Marshall-1960.git"
 VEJA_1960_CAB_REF="master"
 
-# --- LoopJefe beat-synced multitrack looper LV2 plugin (pistomp fork) ---
-LOOPJEFE_LV2_REPO="https://github.com/sastraxi/loopjefe-lv2.git"
-LOOPJEFE_LV2_REF="master"
-
 # --- LV2 plugins tarball ---
 LV2_PLUGINS_URL="https://www.treefallsound.com/downloads/lv2plugins.tar.gz"
 LV2_PLUGINS_SHA256=""
