@@ -58,6 +58,74 @@ effect. On the device side, nothing tried has ever restored it.
 `192.168.2.10` was recorded in the July log as a control proving "not client
 isolation". It is in fact a **second affected host** — Mac → `.10` also fails.
 
+## Failure onset is not at wake
+
+In the one instrumented failure, the Mac woke and reached the Pi normally for
+~45s before losing it:
+
+```
+19:07:31  Pi boots
+19:08:18  Mac wakes                (Pi uptime  47s)
+19:08:39  ssh "Connection established"
+19:09:02  v4=UP  sshbyname=OK
+19:09:18  FAIL begins              (Pi uptime 107s)   — continues ~8 min
+```
+
+Nothing changed on the Mac between 19:09:02 and 19:09:18. A stale cache or an
+aged-out AP forwarding entry would fail immediately on wake, not after a
+working window.
+
+## Controlled non-reproductions
+
+Two valid sleep/wake cycles on 2026-08-03, both clean throughout:
+
+| Run | Sleep | Pi boot → Mac wake | Result |
+| :--- | :--- | :--- | :--- |
+| 23:02 | 590s | 264s | 0% loss, clean 3 min |
+| 23:18 | 635s | **27s** | 0% loss, clean 4m45s (Pi uptime 30→313s) |
+
+The second deliberately matched the failing run's short boot-to-wake interval
+and spanned the 107s onset mark. **A short boot-to-wake interval is not
+sufficient to trigger the bug.**
+
+A third attempt was void: the Mac slept only 34s (`pmset -g log` confirms), too
+short to drop association on AC with `TCPKeepAlive=active`. Verify the probe's
+`WAKE DETECTED — slept Ns` banner reports 600s+ before believing any run.
+
+`awdl0` was `active` in both the failure and both controls, so it does not
+discriminate.
+
+## The v3.1.0 attribution is unsupported
+
+A full v3.0.5 vs v3.1.0 audit of every external command either version runs
+found **no mechanism**. v3.0.5's periodic footprint was `wpa_cli -i wlan0
+status` + `systemctl is-active wifi-hotspot` every 5s — both pure reads. It ran
+nothing state-changing on any timer, poll loop, or UI refresh: no reconnect, no
+reassociate, no `nmcli con up`, no DHCP renew, no interface bounce. v3.1.0's
+5s tick is heavier (N+3 `nmcli` invocations) but equally read-only.
+
+This falsifies the "v3.0.5 incidentally emitted gratuitous ARP and masked an
+underlying fault" hypothesis. On an NM image `wpa_cli` likely failed outright
+(NM runs `wpa_supplicant -u` on D-Bus; the `/run/wpa_supplicant/wlan0` control
+socket usually does not exist), making v3.0.5's footprint smaller still.
+
+Three real behavioural deltas exist. All are excluded on the affected device:
+
+| Delta | Excluded by |
+| :--- | :--- |
+| v3.1.0 mints a new profile + UUID per scanned join (`ops.resolve_unique_name`) | Device runs `preconfigured`, `e957098c…`; no minted profiles |
+| Hotspot moved from the systemd unit to NM, so an upgraded device can hold two AP profiles | `wifi-hotspot` disabled + inactive; single `pistomp-hotspot` |
+| `LimitRTPRIO=95` added to the service unit | Process is SCHED_OTHER, rtprio unset, 5.7% CPU |
+
+Combined with `192.168.2.10` — which does not run pi-Stomp — failing at the
+same moment, **no evidence supports the version correlation.** It rests on
+recollection; v3.0.5 was never instrumented.
+
+Scanning is not a factor. `WifiMenu.tick()` repeats scans only while the
+"Nearby networks" list is the current panel, paced by `RESCAN_INTERVAL_S`
+(10s, above NM's 8s rate limit); the root menu scans once on open. The bug
+occurs with the menu closed.
+
 ## Open questions
 
 1. **Why did this not occur on release/v3.0.5?** Unexplained. Both v3.0.5 and
@@ -74,8 +142,43 @@ Any correct mechanism must satisfy both.
 
 Every capture so far is Mac-side. **Whether the Mac's ARP requests reach the
 Pi has never been observed.** That single fact separates AP-side broadcast
-suppression from anything Pi-side. A persistent Pi-side capture is armed —
-see `wifi-capture.service` below.
+suppression from anything Pi-side.
+
+`wifi-capture.service` is armed on the test device to answer it. It runs
+`/usr/local/bin/wifi-capture.sh`, is enabled across reboots, and writes to
+`/var/log/wifi-capture/`:
+
+| File | Contents |
+| :--- | :--- |
+| `<date>-<bootid>/wlan0.pcapN` | 8 × 20 MB ring: `arp or rarp or icmp or icmp6 or port 5353` |
+| `state.log` | every 30s: `ip neigh`, BSSID, signal, power save, uptime |
+
+The ring restarts at `.pcap0` every run, so each boot gets its own subdirectory
+or it would overwrite the boot being investigated; the newest 12 are kept. The
+`boot_id` suffix keeps names unique when NTP later corrects the clock backwards.
+
+Debian's `tcpdump` drops to user `tcpdump` and cannot write under `/var/log`;
+the script passes `-Z root`. The filter deliberately excludes SSH, or the
+capture's own control traffic rotates the evidence out of the ring.
+
+After the next occurrence, **before** cycling the Mac's interface:
+
+```bash
+ssh pistomp@pistomp.local '
+  D=$(ls -1dt /var/log/wifi-capture/*-*-* | head -1)
+  sudo tcpdump -r "$D/wlan0.pcap0" -n -e -tttt' | grep -i 'who-has 192.168.2.152'
+```
+
+An ARP request from `f8:4d:89:a4:4f:9a` present in that output means the
+broadcast reached the Pi and the failure is Pi-side or return-path. Absent
+means the AP never delivered it.
+
+Removal:
+
+```bash
+sudo systemctl disable --now wifi-capture
+sudo rm -rf /etc/systemd/system/wifi-capture.service /usr/local/bin/wifi-capture.sh /var/log/wifi-capture
+```
 
 ## Diagnostics
 
