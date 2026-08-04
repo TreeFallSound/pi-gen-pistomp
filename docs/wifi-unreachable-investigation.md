@@ -1,201 +1,96 @@
-# WiFi reachable-but-unreachable: 2026-07-18 investigation log
+# WiFi: Mac cannot reach the pi-Stomp
 
-A pi-Stomp on WiFi was intermittently unreachable from a macOS laptop while the
-device itself reported a healthy link. This is a record of what was measured and
-what changed the outcome. Mechanisms proposed during the session are listed at
-the bottom under **Discarded hypotheses** — they are recorded so they are not
-re-proposed, not because they are believed.
+A pi-Stomp on WiFi becomes unreachable from a macOS laptop while the device
+itself is healthy and reachable from other clients. Two investigation sessions:
+2026-07-18 and 2026-08-03. This document records only what was measured.
 
 ## Environment
 
 | | |
 | :--- | :--- |
-| Device | Raspberry Pi 5, Debian Trixie, RT kernel 6.18.36-rpi-v8-rt |
-| WiFi | brcmfmac, BCM4345/6, single radio |
-| Router | Bell "Home Hub", SSID `BELL592`, LAN MAC `c0:3c:04:29:72:dc` |
-| Client | macOS laptop, `en0` WiFi, `en7` USB ethernet |
+| Device | Raspberry Pi 5, Debian Trixie, `wlan0` MAC `2c:cf:67:85:d5:09`, `192.168.2.152` |
+| Client | macOS laptop, `en0`, MAC `f8:4d:89:a4:4f:9a`, `192.168.2.153` |
+| Router | Bell Home Hub, SSID `BELL592`, gateway `192.168.2.1` / `c0:3c:04:29:72:dc` |
 
-Router BSSIDs observed for `BELL592`:
+## What is established
 
-| BSSID | Chan | Freq |
-| :--- | :--- | :--- |
-| `C0:3C:04:29:72:E2` | 1 | 2.4 GHz |
-| `C0:3C:04:29:72:E3` | 36 | 5180 MHz |
-| `C2:3C:04:29:72:D8` | 149 | 5745 MHz |
+**The failure is unidirectional L2 unreachability, Mac → Pi.** It is not name
+resolution and not the pi-Stomp application.
 
-## Symptom
+- `pistomp.local` resolved correctly throughout an 11-minute total outage.
+- Mac-side `tcpdump`: 11 ARP broadcasts for `.152` and `.10`, zero replies.
+  The Mac's ARP entry stays `(incomplete)`.
+- Multicast frames *from* `2c:cf:67:85:d5:09` arrive at the Mac during the
+  outage. The Pi is transmitting and the Mac is receiving.
+- Mac → gateway 0% loss, Mac → `.17` 0% loss, Mac → `.152` and `.10` 100% loss.
+- A phone reached the Pi normally at the same moment. The Pi is exonerated.
+- Both ends were associated to the **same BSSID `C2:3C:04:29:72:D8`, channel
+  149**, during the 2026-08-03 failure.
 
-`ssh pistomp@pistomp.local` and `ping <wifi IP>` fail from the Mac. Plugging in
-ethernet appears not to help; disabling WiFi on the Mac eventually restores
-access. Recurs over days, "fixes itself", recurred for a second developer on a
-different network in a different country (that instance was never instrumented).
-
-## Measurements
-
-Device-side state during the outage — all of this held while the Mac reported
-100% packet loss:
-
-- `assoc=yes`, BSSID unchanged, IP unchanged, `gw_ping=ok`, `inet=ok`
-- signal -46 to -50 dBm, no deauth/disassoc in the journal, zero NIC errors
-- `wlan0` on its permanent MAC `2c:cf:67:85:d5:09` (no randomization on the Pi)
-
-Packet capture on the Pi's `wlan0` during a failing ping from the Mac:
-
-```
-requests in: 9
-replies out: 9
-```
-
-The Pi received and answered every packet. macOS firewall was confirmed
-disabled (`State = 0`, stealth off).
-
-Reachability matrix, taken during one failing window:
-
-| From | To | Result |
-| :--- | :--- | :--- |
-| Mac | gateway `.1` | 0% loss |
-| Mac | Pi `.152` | 100% loss |
-| Mac | unrelated host `.10` | 100% loss |
-| Pi | gateway `.1` | 0% loss |
-| Pi | unrelated host `.10` | 0% loss |
-| Pi | Mac `.153` | 100% loss |
-
-Pi-side ARP for the Mac went from `FAILED` to a resolved `lladdr` after Bell's
-"Whole Home Wi-Fi" was disabled; unicast to the Mac still failed at that point.
-
-Pi-side routing was checked and is correct — policy table 200 carries
-`192.168.2.0/24 dev wlan0 scope link`, so replies are not misrouted via the
-gateway:
-
-```
-$ ip route show table 200
-default via 192.168.2.1 dev wlan0
-192.168.2.0/24 dev wlan0 scope link src 192.168.2.152
-```
-
-A **static ARP entry** installed on the Pi for the Mac did not restore
-connectivity. Note this only corrected the Pi's ARP table; the Mac's was not
-touched during that test.
-
-A stale neighbour entry for the Mac's previous randomized MAC was observed on
-the Pi: `192.168.2.12 → 56:bb:44:f7:96:3a STALE`.
-
-## Changes made, and what followed
-
-Listed in the order applied. Each entry records only what was observed after it.
-
-| # | Change | Observed after |
-| :--- | :--- | :--- |
-| 1 | macOS **Private Wi-Fi Address disabled** (MAC `56:bb:…` → `f8:4d:89:a4:4f:9a`, new lease `.153`) | Permanent failure became intermittent: 5/5, then 21/25, then 0/25 |
-| 2 | Router rebooted | No improvement; 0 of 6 Mac→Pi requests arrived |
-| 3 | Bell **"Whole Home Wi-Fi" disabled** | Pi-side ARP for the Mac resolved; unicast still 100% loss |
-| 4 | Pi **pinned** to `C0:3C:04:29:72:E3` (ch 36) | 15/15, 0% loss, 9 ms |
-| 5 | Pin removed, Pi returned to `C2:…:D8` (ch 149) | 100% loss again |
-| 6 | Pin reapplied | 0% loss; SSH over WiFi worked |
-| 7 | — (no device change) | Connectivity lost again while pin was still applied |
-| 8 | Mac: `dscacheutil -flushcache` + `killall -HUP mDNSResponder` | No change |
-| 9 | Mac: **`sudo arp -a -d`** and **`ifconfig en0 down/up`** | **Connectivity restored** |
-| 10 | Pin removed from the device (no forced reconnect) | Pi on `C2:…:D8` ch 149, Mac on ch 149, **0% loss** |
-
-Step 10 is the same BSSID pairing that failed at steps 5 and 7.
-
-## What restored connectivity
+## What restores it
 
 On the **Mac**, not the Pi:
 
-```
-# no effect on its own
-sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
-sudo arp -a -d
-
-# this restored it
+```bash
 sudo ifconfig en0 down && sleep 3 && sudo ifconfig en0 up
 ```
 
-The Mac's MAC address changed twice during the period (private → hardware) and
-its IP changed with it (`.12` → `.153`).
+Confirmed twice. Flushing DNS (`dscacheutil -flushcache`,
+`killall -HUP mDNSResponder`) has no effect. `sudo arp -a -d` alone has no
+effect. On the device side, nothing tried has ever restored it.
 
-## Multi-address name resolution
+## Ruled out by direct measurement
 
-`pistomp.local` resolves to four addresses:
+| Hypothesis | Contradicted by |
+| :--- | :--- |
+| WiFi power save on the Pi | `iw dev wlan0 get power_save` → off, on two separate failing boots |
+| MAC randomization on the Pi | Permanent MAC, `wifi.scan-rand-mac-address=no` |
+| Duplicate / competing NM profiles | Only `preconfigured` and `pistomp-hotspot` exist |
+| Hotspot AP/client flapping | `wifi-hotspot` disabled and inactive |
+| RT / CPU starvation | SCHED_OTHER, 5.5% CPU, load 0.54 |
+| NM profile UUID churn changing IPv6 addresses | Device stays on `preconfigured`; UUID never changes |
+| mDNS / name resolution | Name resolved correctly through the entire outage |
+| The pi-Stomp application | Its only network surface is `nmcli` subprocesses and a **localhost** WebSocket |
+| Cross-radio / band steering | Both ends on the same BSSID and channel during the failure |
+| macOS firewall | `State = 0`, stealth off |
+| Pi-side routing | Table 200 carries `192.168.2.0/24 dev wlan0 scope link` |
 
-```
-169.254.125.193          # eth0 IPv4 link-local
-192.168.2.152            # wlan0 IPv4
-fddc:13a1:617f:4092:…    # IPv6 ULA
-fe80:18::2ecf:67ff:…     # IPv6 link-local
-```
+`192.168.2.10` was recorded in the July log as a control proving "not client
+isolation". It is in fact a **second affected host** — Mac → `.10` also fails.
 
-Measured: with ethernet plugged, `ssh pistomp.local` selects
-`fe80::2ecf:67ff:fe85:d508%en7` — the IPv6 link-local over ethernet — first.
+## Open questions
 
-```
-debug1: Connecting to pistomp.local [fe80::2ecf:67ff:fe85:d508%en7] port 22
-CONNECTED via fe80::8dd:ebff:83c1:b976%eth0 49612 fe80::2ecf:67ff:fe85:d508%eth0 22
-```
+1. **Why did this not occur on release/v3.0.5?** Unexplained. Both v3.0.5 and
+   v3.1.0 shipped on the *same* pi-gen image (`v3.0.4`, 2026-04-09) — no OS
+   release exists between then and the 3.2 line in July. The only variable is
+   the pi-Stomp application, whose network surface is listed above. An A/B does
+   not require reflashing; check out the old app version on the device.
+2. **Why does it also occur for a second developer on a different router, in a
+   different country?** That instance has never been instrumented.
 
-Consequences observed: SSH succeeded over ethernet while WiFi was unreachable,
-and when the ethernet far end was dead `ssh` sat on that candidate rather than
-failing over quickly. `ssh` walks `getaddrinfo` candidates serially with a full
-TCP timeout each; browsers do not (Happy Eyeballs).
+Any correct mechanism must satisfy both.
 
-## Diagnostic commands used
+## Not yet measured
+
+Every capture so far is Mac-side. **Whether the Mac's ARP requests reach the
+Pi has never been observed.** That single fact separates AP-side broadcast
+suppression from anything Pi-side. A persistent Pi-side capture is armed —
+see `wifi-capture.service` below.
+
+## Diagnostics
 
 ```bash
 # Which BSSID / channel each end is on
 nmcli -f IN-USE,BSSID,CHAN,FREQ,SIGNAL dev wifi list --rescan no | grep '^\*'   # Pi
 system_profiler SPAirPortDataType | grep -E 'Channel|Signal|PHY Mode'          # macOS
-                                    # macOS redacts BSSID without Location Services
 
-ip neigh show                        # ARP/ND state, look for FAILED or stale entries
-ip route show table 200              # multihome policy table
-sudo tcpdump -l -n -i wlan0 -e icmp  # confirm packets arrive / replies leave
-iw event -t                          # observe scans (nmcli and journal do not show bgscan)
-
-dscacheutil -q host -a name pistomp.local   # what the name actually resolves to
-ssh -v pistomp@pistomp.local                # which address ssh picks
+ip neigh show                        # ARP/ND state
+sudo tcpdump -l -n -e -i wlan0 arp   # do the Mac's requests arrive?
+arp -an | grep 192.168.2.152         # macOS; (incomplete) is the signature
 ```
 
-Capture note: read a `tcpdump` output file only after the process has exited, or
-the results are empty due to output buffering.
+macOS suppresses ARP retries for ~20s after a failed entry — `sudo arp -d <ip>`
+before capturing, or the capture will contain nothing.
 
-## Discarded hypotheses
-
-Each of these was asserted during the session and is contradicted by the
-measurements above. Recorded to prevent repetition.
-
-| Hypothesis | Contradicted by |
-| :--- | :--- |
-| AP client isolation | Pi reached host `.10` at 0% loss from the same BSSID |
-| Router does not forward client-to-client unicast | Same as above |
-| `C2:…:D8` is a mesh-backhaul VAP that carries no client traffic | It served DHCP, gateway and internet, and reached `.10` |
-| Intra-BSSID isolation on `C2:…:D8` | Step 10: both ends on ch 149, 0% loss |
-| wpa_supplicant 2.10 cross-AKM roaming failure | No disconnect or roam events in the journal |
-| `machine-id` churn causing DHCP client-id changes | Capture showed a MAC-based client-id (`Client-ID (61), length 7`) |
-| Per-interface mDNS hostnames as a fix | Not how multi-homed devices behave; not pursued |
-
-The BSSID pin (steps 4–6) correlated with recovery twice and then failed at step
-7 with the pin still applied. Changing BSSID forces re-association and therefore
-new ARP resolution, so it is not independent of step 9.
-
-## Open
-
-- No unattended link failure was ever captured. `wifi-monitor` (a temporary
-  debug script added during this session, not a shipped component) logged
-  `assoc=yes gw_ping=ok inet=ok` continuously throughout, including during every
-  period the device was unreachable. Nothing on the device reports LAN-peer
-  reachability.
-- The second developer's occurrence was never instrumented; no data links it to
-  this one.
-- Whether the restored state survives beyond 2026-07-18 is unverified.
-
-## Cleanup left on the test device
-
-```bash
-sudo systemctl disable --now wifi-monitor.service
-sudo apt-get remove tcpdump
-```
-
-Persistent journald was enabled via `~/extras/journal-toggle.sh`; it required a
-manual `sudo mkdir -p /var/log/journal` and `sudo journalctl --flush`, which that
-script does not do.
+Read a `tcpdump` output file only after the process exits; otherwise output
+buffering makes it appear empty.
