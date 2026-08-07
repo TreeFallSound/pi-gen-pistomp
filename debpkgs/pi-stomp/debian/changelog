@@ -1,3 +1,19 @@
+pi-stomp (3.2.1-0~pre7) trixie; urgency=medium
+
+  * Honour the MIDI-learn sub-range MOD-UI stores with a binding: a control
+    learned over part of a port's range now sweeps only that part, and the
+    dialog shows the bound minimum and maximum.
+  * Logarithmic ports now use the same geometric taper as MOD-UI, on the
+    encoder step grid, in the parameter dialog, and on the CC we emit — a
+    log control no longer lands on a different value than the web UI.
+  * Nicer value display for logarithmic parameters.
+  * Transport bindings: high-precision BPM over the WebSocket, and bound
+    transport parameters emit bypass MIDI CC.
+  * Fix parameters being learnable while the external MIDI port was
+    unavailable.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 06 Aug 2026 22:43:00 -0400
+
 pi-stomp (3.2.1-0~pre6) trixie; urgency=medium
 
   * Implement Calf EQ5 panel
