@@ -1,0 +1,16 @@
+Package: pistomp-bluetooth
+Version: 1.0.0-1~pre1
+Section: sound
+Priority: optional
+Architecture: arm64
+Depends: bluez
+Maintainer: pistomp <pistomp@example.com>
+Description: BLE-MIDI capability for pi-Stomp
+ Ships a bluetooth.service drop-in that starts bluetoothd with -E, which is
+ what registers bluez's BLE-MIDI GATT profile, and unblocks the rfkill soft
+ block the Pi 5 radio boots with. Once a BLE-MIDI device connects, bluez
+ publishes an ALSA seq port and jackd -X seq bridges it automatically.
+ .
+ Installing this package does not turn Bluetooth on; the drop-in is inert
+ while bluetooth.service is disabled. The pi-Stomp UI owns enable/disable
+ and all pairing.
