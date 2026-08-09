@@ -1,6 +1,9 @@
 pistomp-recovery (0.1.0-31) trixie; urgency=medium
 
   * Build the venv with 'uv sync --locked' so a stale uv.lock fails the build instead of shipping a stale dependency set.
+  * Skip dh_makeshlibs, which was scraping the venv's wheel-bundled private
+    libraries and declaring that this package provides SONAMEs such as
+    libjpeg-6d4ad459 and libscipy_openblas64_, plus an ldconfig trigger.
 
  -- Cam Gorrie <sastraxi@gmail.com>  Sun, 09 Aug 2026 02:02:40 +0000
 

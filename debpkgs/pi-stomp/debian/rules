@@ -60,6 +60,11 @@ override_dh_dwz:
 override_dh_shlibdeps:
 	# Skip — all .so dependencies are private libs bundled inside PyPI wheels
 
+override_dh_makeshlibs:
+	# Skip — otherwise it scrapes the wheels' bundled private libs and declares
+	# this package *provides* SONAMEs like libjpeg-6d4ad459 and
+	# libscipy_openblas64_, plus a pointless ldconfig trigger.
+
 override_dh_installsystemd:
 	# Service enablement is handled by stage2/05-pistomp/01-run.sh ln -sf,
 	# not by deb-systemd-helper. The unit file is installed manually above.
