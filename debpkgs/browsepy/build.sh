@@ -11,8 +11,7 @@ UPSTREAM_DIR="${WORKDIR}/${PKG}-src"
 
 cache_check
 
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${BROWSEPY_REF}" --depth 1 "${BROWSEPY_REPO}" "${UPSTREAM_DIR}"
+sync_upstream "${BROWSEPY_REPO}" "${BROWSEPY_REF}" "${UPSTREAM_DIR}"
 record_upstream_sha
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"

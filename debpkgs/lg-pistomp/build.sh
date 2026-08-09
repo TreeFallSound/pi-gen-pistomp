@@ -11,8 +11,7 @@ UPSTREAM_DIR="${WORKDIR}/${PKG}-src"
 
 cache_check
 
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --depth 1 --branch "${LG_TAG}" "${LG_REPO}" "${UPSTREAM_DIR}"
+sync_upstream "${LG_REPO}" "${LG_TAG}" "${UPSTREAM_DIR}"
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"
 cd "${UPSTREAM_DIR}"

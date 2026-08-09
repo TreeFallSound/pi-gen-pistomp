@@ -12,8 +12,7 @@ UPSTREAM_DIR="${WORKDIR}/${PKG}-src"
 
 cache_check
 
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${RPI_PRESEED_REF}" --depth 1 "${RPI_PRESEED_REPO}" "${UPSTREAM_DIR}"
+sync_upstream "${RPI_PRESEED_REPO}" "${RPI_PRESEED_REF}" "${UPSTREAM_DIR}"
 # Emit the .built-sha sidecar. Without it check-upstream-staleness.sh can see
 # this package (pkg-sources.sh discovers it) but has nothing to compare against,
 # so it reports a non-fatal WARN forever and upstream drift is never caught.
@@ -22,13 +21,11 @@ cache_check
 # to a commit would silently downgrade this to a permanent SKIP.
 record_upstream_sha
 
-# UPSTREAM_DIR is reused when it already exists, so reset tracked files first --
-# otherwise a second build re-applies the patches onto an already-patched tree
-# and `patch` fails. This MUST come before the changelog overlay below: the
-# changelog is a tracked file, so resetting afterwards silently reverts our
-# version to upstream's and the package builds as 0.1.0.
-git -C "${UPSTREAM_DIR}" checkout -- .
-
+# sync_upstream above leaves a clean tree, so the patches below always apply to
+# pristine sources -- a reused UPSTREAM_DIR can no longer re-apply them onto an
+# already-patched tree. Nothing may reset tracked files after this point: the
+# changelog overlaid below is a tracked file, and reverting it to upstream's
+# would silently build the package as 0.1.0.
 cp "${SCRIPT_DIR}/debian/changelog" "${UPSTREAM_DIR}/debian/changelog"
 
 cd "${UPSTREAM_DIR}"

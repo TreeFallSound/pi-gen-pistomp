@@ -13,8 +13,7 @@ BUILD_DIR="${WORKDIR}/${PKG}-build"
 cache_check
 
 # Clone source to a sibling directory so debian/rules can find it
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${PISTOMP_BRANCH}" --depth 1 "${PISTOMP_REPO}" "${UPSTREAM_DIR}"
+sync_upstream "${PISTOMP_REPO}" "${PISTOMP_BRANCH}" "${UPSTREAM_DIR}"
 record_upstream_sha
 
 # Record git metadata so the postinst can `git init` a local repo on the
