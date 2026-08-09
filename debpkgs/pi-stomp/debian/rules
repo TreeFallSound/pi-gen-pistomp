@@ -43,8 +43,12 @@ override_dh_auto_install:
 	rm -rf "$(SRC_INSTALL_DIR)"/tests
 	# Build venv here (not in dh_auto_build) so dh_prep doesn't wipe it before packaging
 	uv venv --python /usr/bin/python3 --system-site-packages "$(VENV_DIR)"
+	# --locked, not --frozen: --frozen installs whatever uv.lock says without
+	# checking it against pyproject.toml, so a dependency added upstream but
+	# never re-locked is silently omitted from the .deb and the build still
+	# goes green. --locked makes that mismatch a hard build failure.
 	UV_PROJECT_ENVIRONMENT="$(VENV_DIR)" \
-		uv sync --frozen --no-dev --no-editable --extra hardware \
+		uv sync --locked --no-dev --no-editable --extra hardware \
 		--project "$(PISTOMP_SRC_DIR)"
 	# Install systemd service file
 	install -Dm 644 debian/pi-stomp.mod-ala-pi-stomp.service \

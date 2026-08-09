@@ -1,3 +1,9 @@
+pi-stomp (3.2.1-0~pre9) trixie; urgency=medium
+
+  * Build the venv with 'uv sync --locked' so a dependency added to pyproject.toml without re-locking fails the build instead of being silently omitted from the package.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 09 Aug 2026 02:02:40 +0000
+
 pi-stomp (3.2.1-0~pre8) trixie; urgency=medium
 
   * Honour the MIDI-learn sub-range MOD-UI stores with a binding: a control

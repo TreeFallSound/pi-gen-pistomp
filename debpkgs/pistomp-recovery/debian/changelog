@@ -1,3 +1,9 @@
+pistomp-recovery (0.1.0-31) trixie; urgency=medium
+
+  * Build the venv with 'uv sync --locked' so a stale uv.lock fails the build instead of shipping a stale dependency set.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 09 Aug 2026 02:02:40 +0000
+
 pistomp-recovery (0.1.0-30) trixie; urgency=medium
 
   * Refresh the trixie-testing apt suite during in-recovery update checks.
