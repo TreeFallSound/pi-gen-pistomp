@@ -1,3 +1,14 @@
+pi-stomp (3.2.1-0~pre10) trixie; urgency=medium
+
+  * Fix Calf EQ-5 Q parameters + shelves
+  * Change manual QR code to point to treefallsound
+  * Transport (tempo) parameters can be bound to controls, with high-precision BPM over WebSocket
+  * Fix tap tempo when bound to a footswitch
+  * Fixed: Params could be MIDI-learned while the external MIDI port was unavailable
+  * Global EQ now accounts for the current sample rate
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 10 Aug 2026 17:57:00 -0400
+
 pi-stomp (3.2.1-0~pre9) trixie; urgency=medium
 
   * Build the venv with 'uv sync --locked' so a dependency added to pyproject.toml without re-locking fails the build instead of being silently omitted from the package.
