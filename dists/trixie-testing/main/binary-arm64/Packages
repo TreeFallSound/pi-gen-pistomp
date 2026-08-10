@@ -19,18 +19,18 @@ Description: JACK Audio Connection Kit v2 (pi-Stomp build)
  pi-controller-reset stability fix and links against libdb 5.3.
 
 Package: pi-stomp
-Version: 3.2.1-0~pre8
+Version: 3.2.1-0~pre10
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 167365
-Depends: python3, lg-pistomp, python3-lilv, mod-host-pistomp, mod-ui, mod-midi-merger, mod-ttymidi, amidithru, jack2-pistomp, hylia, sfizz-pistomp, lcd-splash, jack-capture
+Installed-Size: 167366
+Depends: python3, lg-pistomp, mod-host-pistomp, mod-ui, mod-midi-merger, mod-ttymidi, amidithru, jack2-pistomp, hylia, sfizz-pistomp, lcd-splash, jack-capture
 Priority: optional
 Section: sound
-Filename: pool/main/p/pi-stomp/pi-stomp_3.2.1-0~pre8_arm64.deb
-Size: 33565864
-SHA256: d6eb8d2b4c66445e32cb5c648b6eaaf8cfaa7bbe819bf6b03d86105db9b08cad
-SHA1: 657fdfa38b332a32318c378881f4f24a939b020e
-MD5sum: 54880f78a542f86ba34a99b9b1aefb7f
+Filename: pool/main/p/pi-stomp/pi-stomp_3.2.1-0~pre10_arm64.deb
+Size: 33564728
+SHA256: 5801c5c363a3943531367bdd8c21411ded1da0e0528dc31fc877259b27977e38
+SHA1: 8757c963632dd7e9fdf2631075a5533329e1d180
+MD5sum: 5c9cd2d116fc0f7abb0d19c89e659d7d
 Description: pi-Stomp application — guitar effects pedalboard software
  The pi-Stomp application code, uv-managed venv, and systemd service.
  Installs to /opt/pistomp/pi-stomp/ with a symlink at
