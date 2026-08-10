@@ -11,8 +11,7 @@ UPSTREAM_DIR="${WORKDIR}/${PKG}-src"
 
 cache_check
 
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${MOD_HOST_BRANCH}" --depth 1 "${MOD_HOST_REPO}" "${UPSTREAM_DIR}"
+sync_upstream "${MOD_HOST_REPO}" "${MOD_HOST_BRANCH}" "${UPSTREAM_DIR}"
 record_upstream_sha
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"

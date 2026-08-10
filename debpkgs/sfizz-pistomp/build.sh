@@ -11,8 +11,10 @@ UPSTREAM_DIR="${WORKDIR}/sfizz-ui-1.2.3"
 
 cache_check
 
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${SFIZZ_TAG}" --recurse-submodules "${SFIZZ_REPO}" "${UPSTREAM_DIR}"
+# Full history (as the previous unshallowed clone had): sfizz's CMake derives
+# its version with `git describe`, which needs tags reachable from HEAD.
+UPSTREAM_DEPTH=full UPSTREAM_SUBMODULES=1 \
+    sync_upstream "${SFIZZ_REPO}" "${SFIZZ_TAG}" "${UPSTREAM_DIR}"
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"
 cd "${UPSTREAM_DIR}"

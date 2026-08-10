@@ -1,3 +1,28 @@
+pi-stomp (3.2.1-0~pre10) trixie; urgency=medium
+
+  * Fix Calf EQ-5 Q parameters + shelves
+  * Change manual QR code to point to treefallsound
+  * Transport (tempo) parameters can be bound to controls, with high-precision BPM over WebSocket
+  * Fix tap tempo when bound to a footswitch
+  * Fixed: Params could be MIDI-learned while the external MIDI port was unavailable
+  * Global EQ now accounts for the current sample rate
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 10 Aug 2026 17:57:00 -0400
+
+pi-stomp (3.2.1-0~pre9) trixie; urgency=medium
+
+  * Build the venv with 'uv sync --locked' so a dependency added to pyproject.toml without re-locking fails the build instead of being silently omitted from the package.
+  * Drop the python3-lilv dependency. Nothing imports the Python binding, and
+    it cannot be imported with only python3-lilv installed: it dlopens the
+    unversioned liblilv-0.so, which ships in liblilv-dev. lilv is used solely
+    by C code (mod-host, mod-ui's libmod_utils.so), which depends on
+    liblilv-0-0 directly.
+  * Skip dh_makeshlibs, which was scraping the venv's wheel-bundled private
+    libraries and declaring that this package provides SONAMEs such as
+    libjpeg-6d4ad459 and libscipy_openblas64_, plus an ldconfig trigger.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 09 Aug 2026 02:02:40 +0000
+
 pi-stomp (3.2.1-0~pre8) trixie; urgency=medium
 
   * Honour the MIDI-learn sub-range MOD-UI stores with a binding: a control
