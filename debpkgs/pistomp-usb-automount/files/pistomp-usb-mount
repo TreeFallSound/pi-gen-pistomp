@@ -12,28 +12,35 @@ if [[ -z "${ACTION}" || -z "${DEV}" ]]; then
     exit 1
 fi
 
-# Only handle real partitions with a filesystem.
-ID_FS_TYPE=$(/sbin/blkid -s TYPE -o value "/dev/${DEV}" 2>/dev/null || true)
-if [[ -z "${ID_FS_TYPE}" ]]; then
-    exit 0
-fi
-
-# Use filesystem label as mountpoint name; fall back to device name.
-LABEL=$(/sbin/blkid -s LABEL -o value "/dev/${DEV}" 2>/dev/null || true)
-MOUNT_NAME="${LABEL:-${DEV}}"
-MOUNT_POINT="${MOUNT_BASE}/${MOUNT_NAME}"
-
 case "${ACTION}" in
     add)
+        # Only handle real partitions with a filesystem.
+        ID_FS_TYPE=$(/sbin/blkid -s TYPE -o value "/dev/${DEV}" 2>/dev/null || true)
+        if [[ -z "${ID_FS_TYPE}" ]]; then
+            exit 0
+        fi
+
+        # Use filesystem label as mountpoint name; fall back to device name.
+        LABEL=$(/sbin/blkid -s LABEL -o value "/dev/${DEV}" 2>/dev/null || true)
+        MOUNT_POINT="${MOUNT_BASE}/${LABEL:-${DEV}}"
+
         mkdir -p "${MOUNT_POINT}"
         # Mount with permissive permissions so the pistomp user can read/write.
-        if mount -o "rw,nodev,nosuid,uid=1000,gid=1000,umask=000" "/dev/${DEV}" "${MOUNT_POINT}" 2>/dev/null; then
+        if ERR=$(mount -o "rw,nodev,nosuid,uid=1000,gid=1000,umask=000" "/dev/${DEV}" "${MOUNT_POINT}" 2>&1); then
             logger -t pistomp-usb-mount "Mounted /dev/${DEV} at ${MOUNT_POINT}"
         else
+            logger -t pistomp-usb-mount -p user.err "Failed to mount /dev/${DEV} at ${MOUNT_POINT}: ${ERR}"
             rmdir "${MOUNT_POINT}" 2>/dev/null || true
         fi
         ;;
     remove)
+        # The node is already gone, so blkid can't give the label back — read
+        # the mountpoint out of the mount table (\040 is a space in a label).
+        MOUNT_POINT=$(printf '%b' "$(awk -v d="/dev/${DEV}" '$1 == d { print $2; exit }' /proc/mounts)")
+        if [[ -z "${MOUNT_POINT}" ]]; then
+            MOUNT_POINT="${MOUNT_BASE}/${DEV}"
+        fi
+
         if mountpoint -q "${MOUNT_POINT}" 2>/dev/null; then
             umount "${MOUNT_POINT}" 2>/dev/null || umount -l "${MOUNT_POINT}" 2>/dev/null || true
             logger -t pistomp-usb-mount "Unmounted ${MOUNT_POINT}"

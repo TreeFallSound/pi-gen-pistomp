@@ -2,6 +2,7 @@
 # Mounts USB mass-storage partitions under /media/<label> when inserted,
 # and unmounts them on removal.
 
-# Block partition devices on USB buses
-SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", ACTION=="add", ENV{ID_BUS}=="usb", ENV{ID_FS_USAGE}=="filesystem", RUN{program}+="/usr/local/libexec/pistomp-usb-mount add %k"
-SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", ACTION=="remove", ENV{ID_BUS}=="usb", RUN{program}+="/usr/local/libexec/pistomp-usb-mount remove %k"
+# Not RUN{program}: udevd's SystemCallFilter excludes @mount (mount(2) is EPERM
+# even as root), and PrivateMounts would hide the mount anyway. Unplug is the
+# unit's BindsTo, not a remove rule.
+SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", ACTION=="add", ENV{ID_BUS}=="usb", ENV{ID_FS_USAGE}=="filesystem", ENV{SYSTEMD_WANTS}+="pistomp-usb-mount@%k.service"
