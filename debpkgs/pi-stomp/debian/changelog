@@ -1,3 +1,19 @@
+pi-stomp (3.3.0-0) trixie; urgency=medium
+
+  * Backup/restore progress UI: reusable progress bar, restore offered from
+    the welcome flow, and a cleaner restart after restoring
+  * Footswitch UI: selectable footswitch widget with a longpress bindings
+    dialog (including pedalboard chord rows), more visible snapshot binding
+    colours, and better pedalboard scrolling
+  * Unmapping a MIDI binding learned over a sub-range now restores the
+    parameter's full declared range (thanks jpremill)
+  * Fix transport source name ("none", as MOD-UI defines it, instead of
+    "internal") — removes protocol log spam
+  * Relicense under AGPL and ship THIRD_PARTY_LICENSES.md covering bundled
+    plugins, including new plugins from four new contributors
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 14 Aug 2026 04:17:29 +0000
+
 pi-stomp (3.2.1-0~pre10) trixie; urgency=medium
 
   * Fix Calf EQ-5 Q parameters + shelves
