@@ -1,3 +1,12 @@
+mod-ui (3.0-15~pre1) trixie; urgency=medium
+
+  * Aggregated mode: connect hot-plugged hardware MIDI output to
+    mod-midi-merger:in in jack_port_appeared (defense-in-depth with the
+    merger's own reconcile scan). Separated mode: retry alias lookup
+    with 0.5s delay when the alias is not ready.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 17 Aug 2026 01:30:00 +0000
+
 mod-ui (3.0-14) trixie; urgency=medium
 
   * Show the correct file parameters (NAM models, cabsim IRs) on

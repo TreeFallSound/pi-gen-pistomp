@@ -1,3 +1,12 @@
+mod-midi-merger (1.0-5~pre1) trixie; urgency=medium
+
+  * Add periodic reconcile scan to merger and broadcaster: connect
+    hot-plugged MIDI ports within 2 seconds without a mode toggle.
+  * Mask the legacy image-only systemd units in postinst. mod-host
+    loads and unloads the merger on demand via jack_internal_client_load.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 17 Aug 2026 01:29:58 +0000
+
 mod-midi-merger (1.0-4) trixie; urgency=medium
 
   * Bump to track upstream branch HEAD.

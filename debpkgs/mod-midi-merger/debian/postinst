@@ -1,0 +1,12 @@
+#!/bin/bash
+# mod-midi-merger postinst.
+# mod-host loads and unloads the merger on demand. These image-only units
+# must not load the merger at boot. Disable and mask them.
+set -e
+
+for unit in mod-midi-merger.service mod-midi-merger-broadcaster.service; do
+    systemctl disable --now "$unit" 2>/dev/null || true
+    systemctl mask "$unit" 2>/dev/null || true
+done
+
+#DEBHELPER#
