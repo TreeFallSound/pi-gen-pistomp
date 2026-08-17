@@ -66,6 +66,10 @@ PISTOMP_BRANCH="main"
 PISTOMP_RECOVERY_REPO="https://github.com/TreeFallSound/pistomp-recovery.git"
 PISTOMP_RECOVERY_BRANCH="main"
 
+# --- pistomp-mobile (phone web UI for MOD-UI) ---
+PISTOMP_MOBILE_REPO="https://github.com/rosenauproductions/Pistomp-Mobile.git"
+PISTOMP_MOBILE_REF="main"
+
 # --- JackBridge (netJACK2 DAW recording over Ethernet) ---
 JACKROUTER_REPO="https://github.com/TreeFallSound/JackRouter.git"
 JACKROUTER_REF="master"
