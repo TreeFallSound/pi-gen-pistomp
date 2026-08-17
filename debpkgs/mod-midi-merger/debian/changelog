@@ -1,7 +1,10 @@
 mod-midi-merger (1.0-5~pre1) trixie; urgency=medium
 
-  * Add periodic reconcile scan to merger and broadcaster: connect
-    hot-plugged MIDI ports within 2 seconds without a mode toggle.
+  * Harden hot-plug: NULL guard in the port-registration callback plus an
+    event-armed reconcile burst in the merger and broadcaster supervisor.
+    A registration wakes the supervisor, which runs a few 1-second reconcile
+    scans to connect ports that were not queryable when the callback fired.
+    No steady-state polling: the supervisor blocks between events.
   * Mask the legacy image-only systemd units in postinst. mod-host
     loads and unloads the merger on demand via jack_internal_client_load.
 

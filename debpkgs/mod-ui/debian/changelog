@@ -1,9 +1,9 @@
 mod-ui (3.0-15~pre1) trixie; urgency=medium
 
-  * Aggregated mode: connect hot-plugged hardware MIDI output to
-    mod-midi-merger:in in jack_port_appeared (defense-in-depth with the
-    merger's own reconcile scan). Separated mode: retry alias lookup
-    with 0.5s delay when the alias is not ready.
+  * Separated mode: retry the MIDI port alias lookup (6 attempts, 0.5s
+    apart) when the ALSA alias is not ready as the port-registration
+    callback fires, so a hot-plugged device reliably appears in the device
+    list. Aggregated mode connection is owned by mod-midi-merger.
 
  -- Cam Gorrie <sastraxi@gmail.com>  Mon, 17 Aug 2026 01:30:00 +0000
 

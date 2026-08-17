@@ -1,17 +1,19 @@
-Description: Add periodic reconcile scan and NULL guard to port-registration callback
+Description: Harden hot-plug port connection with a NULL guard and an
+ event-armed reconcile burst.
  The port-registration callback connects a new physical MIDI port only at
- the instant it fires. If the callback misses the event, or the port is not
- queryable yet (jack_port_by_id returns NULL), the device does not join the
- merged stream.
+ the instant it fires. If the port is not queryable yet (jack_port_by_id
+ returns NULL), the one-shot connect is lost and the device never joins the
+ merged stream until a mode toggle.
  .
- This patch adds a reconcile_connections() function to both the merger and
- the broadcaster that scans for all physical MIDI ports and connects the
- ones that are not connected yet. The supervisor thread calls it every loop
- iteration and wakes on a 2-second timeout as well as on an event, so a
- missed registration is corrected within 2 seconds. The port-registration
- callback guards against a NULL jack_port_by_id return and always wakes the
- supervisor. The scan is safe to repeat: jack_connect returns EEXIST when
- the connection is present.
+ This patch adds a reconcile_connections() function to the merger and the
+ broadcaster that scans every physical MIDI port and connects the ones that
+ are not connected yet (safe to repeat: jack_connect returns EEXIST when the
+ connection is present). The port-registration callback gains a NULL guard
+ and always wakes the supervisor. The supervisor blocks on sem_wait while
+ idle; a wake arms a short burst of reconcile scans (a few attempts, one
+ second apart) so a port that was not queryable when its callback fired is
+ picked up within a few seconds. A fresh event re-arms the burst. There is
+ no steady-state polling: between events the supervisor is fully blocked.
 Author: Cam Gorrie <sastraxi@gmail.com>
 Forwarded: not-needed
 Last-Update: 2026-08-16
@@ -100,15 +102,24 @@ Last-Update: 2026-08-16
    return;
  }
  
-@@ -155,7 +197,10 @@ void *supervise(void *arg) {
+@@ -155,7 +197,19 @@ void *supervise(void *arg) {
  
++  const int reconcile_burst = 4;
++  int reconcile_left = 0;
++
    while (mm->do_exit == false) {
      handle_scheduled_connections(mm);
 -    sem_wait(&mm->sem);
-+    reconcile_connections(mm);
-+
-+    /* Wake on a new event, or after 2 seconds, whichever is first. */
-+    sem_timedwait_secs(&mm->sem, 2);
++    if (reconcile_left > 0) {
++      reconcile_connections(mm);
++      if (sem_timedwait_secs(&mm->sem, 1) == 0)
++        reconcile_left = reconcile_burst;   /* new event: re-arm the burst */
++      else
++        --reconcile_left;                    /* timed out: count down */
++    } else {
++      sem_wait(&mm->sem);                     /* idle: block until an event */
++      reconcile_left = reconcile_burst;
++    }
    }
    return NULL;
  }
@@ -197,15 +208,24 @@ Last-Update: 2026-08-16
    return;
  }
  
-@@ -157,7 +198,10 @@ void *supervise(void *arg) {
+@@ -157,7 +198,19 @@ void *supervise(void *arg) {
  
++  const int reconcile_burst = 4;
++  int reconcile_left = 0;
++
    while (mm->do_exit == false) {
      handle_scheduled_connections(mm);
 -    sem_wait(&mm->sem);
-+    reconcile_connections(mm);
-+
-+    /* Wake on a new event, or after 2 seconds, whichever is first. */
-+    sem_timedwait_secs(&mm->sem, 2);
++    if (reconcile_left > 0) {
++      reconcile_connections(mm);
++      if (sem_timedwait_secs(&mm->sem, 1) == 0)
++        reconcile_left = reconcile_burst;   /* new event: re-arm the burst */
++      else
++        --reconcile_left;                    /* timed out: count down */
++    } else {
++      sem_wait(&mm->sem);                     /* idle: block until an event */
++      reconcile_left = reconcile_burst;
++    }
    }
    return NULL;
  }
