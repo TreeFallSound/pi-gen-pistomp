@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 install -m 644 files/services/*.service ${ROOTFS_DIR}/usr/lib/systemd/system/
+install -m 644 files/services/*.target ${ROOTFS_DIR}/usr/lib/systemd/system/
 
 # jackdrc and jack.service ship in the jack2-pistomp package (so they reach devices
 # over OTA), not here. The ln -sf below still enables the unit.

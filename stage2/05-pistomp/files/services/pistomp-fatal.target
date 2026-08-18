@@ -1,0 +1,7 @@
+[Unit]
+Description=pi-Stomp fatal boot state - bad image, boot stopped
+Documentation=file:/boot/firmware/firstboot.done
+DefaultDependencies=no
+Requires=pistomp-fatal.service
+After=pistomp-fatal.service
+AllowIsolate=yes

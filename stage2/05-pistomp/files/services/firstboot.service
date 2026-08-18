@@ -4,6 +4,9 @@ After=NetworkManager.service rpi-preseed.service
 Wants=NetworkManager.service
 Before=jack.service
 ConditionPathExists=/boot/firmware/firstboot.sh
+# A non-zero exit from firstboot.sh (the uid-1000 guard) must stop the boot
+OnFailure=pistomp-fatal.target
+OnFailureJobMode=isolate
 
 [Service]
 Type=oneshot
