@@ -1,3 +1,23 @@
+mod-midi-merger (1.0-5~pre3) trixie; urgency=medium
+
+  * Depend on mod-host-pistomp (>= 0.10.6-6). The postinst masks the legacy
+    image-only systemd units because mod-host loads the merger on demand,
+    which is only true from 0.10.6-6: earlier builds resolved no jack >=
+    1.9.0 at compile time, so -DHAVE_JACK2 was undefined and
+    effects_aggregated_midi_enable was compiled out. Installing this package
+    beside an older mod-host would mask the units and leave nothing to load
+    the merger, disabling aggregated MIDI mode.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 18 Aug 2026 03:53:42 +0000
+
+mod-midi-merger (1.0-5~pre2) trixie; urgency=medium
+
+  * Rebuild so the event-armed reconcile burst actually ships: the
+    1.0-5~pre1 binary was built from the earlier perpetual 2-second poll
+    variant of the patch.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 18 Aug 2026 02:37:31 +0000
+
 mod-midi-merger (1.0-5~pre1) trixie; urgency=medium
 
   * Harden hot-plug: NULL guard in the port-registration callback plus an
