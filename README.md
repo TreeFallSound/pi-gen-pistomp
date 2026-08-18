@@ -6,7 +6,7 @@ Builds the OS that [pi-Stomp](https://github.com/TreeFallSound/pi-stomp) runs on
 
 | Hardware | Image | Release |
 | :--  | :--- | :--- |
-| v2/v3 | `pistompOS-3.2.1-rc3.img.xz` | [Release](https://github.com/TreeFallSound/pi-gen-pistomp/releases/tag/release%2F3.2.1-rc3) |
+| v2/v3 | `pistompOS-3.3.0.img.xz` | [Release](https://github.com/TreeFallSound/pi-gen-pistomp/releases/tag/release%2F3.3.0) |
 
 If you just built your pi-Stomp! and are looking for the official software, you've come to the right place.
 
@@ -14,7 +14,7 @@ If you just built your pi-Stomp! and are looking for the official software, you'
 
 Uses Raspberry Pi Imager's built-in wizard to set WiFi, hostname, and password at flash time, so you don't have to edit any files manually unless you want to change advanced settings.
 
-1. Open [Raspberry Pi Imager](https://github.com/raspberrypi/rpi-imager/releases/tag/v2.0.11-rc1) (v2.0.11-rc1 or newer required for customization).
+1. Open [Raspberry Pi Imager](https://github.com/raspberrypi/rpi-imager/releases) (v2.0.11 or newer required for customization).
 2. Click **App Options** → **Content Repository** → **EDIT**.
 3. Enable **Use custom URL** and enter:
    ```
