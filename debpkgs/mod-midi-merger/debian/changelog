@@ -1,3 +1,12 @@
+mod-midi-merger (1.0-5~pre4) trixie; urgency=medium
+
+  * Add pkg-config to Build-Depends. Upstream master now calls
+    find_package(PkgConfig REQUIRED) in CMakeLists.txt; the floating
+    MOD_MIDI_MERGER_REF="master" pin pulled in the change, breaking
+    configure with "Could NOT find PkgConfig".
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 18 Aug 2026 04:30:00 +0000
+
 mod-midi-merger (1.0-5~pre3) trixie; urgency=medium
 
   * Depend on mod-host-pistomp (>= 0.10.6-6). The postinst masks the legacy
