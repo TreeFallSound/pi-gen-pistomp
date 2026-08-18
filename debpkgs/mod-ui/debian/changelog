@@ -1,12 +1,3 @@
-mod-ui (3.0-15~pre1) trixie; urgency=medium
-
-  * Separated mode: retry the MIDI port alias lookup (6 attempts, 0.5s
-    apart) when the ALSA alias is not ready as the port-registration
-    callback fires, so a hot-plugged device reliably appears in the device
-    list. Aggregated mode connection is owned by mod-midi-merger.
-
- -- Cam Gorrie <sastraxi@gmail.com>  Mon, 17 Aug 2026 01:30:00 +0000
-
 mod-ui (3.0-14) trixie; urgency=medium
 
   * Show the correct file parameters (NAM models, cabsim IRs) on
