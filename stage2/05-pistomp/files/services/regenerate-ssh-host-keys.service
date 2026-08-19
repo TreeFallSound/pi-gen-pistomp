@@ -1,0 +1,20 @@
+[Unit]
+Description=Regenerate SSH host keys on first boot
+Documentation=file:/usr/lib/pistomp/regenerate-ssh-host-keys.sh
+
+# The stamp is written at image build time and removed by the script once new
+# keys are in place, so this is a no-op from the second boot onward. Trigger on
+# the stamp rather than ConditionFirstBoot= -- first-boot detection depends on
+# /etc/machine-id, which has misfired on this image before.
+ConditionPathExists=/etc/ssh/.factory-host-keys
+
+After=local-fs.target
+Before=ssh.service ssh.socket
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/pistomp/regenerate-ssh-host-keys.sh
+
+[Install]
+WantedBy=multi-user.target

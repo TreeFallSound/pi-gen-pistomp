@@ -1,3 +1,16 @@
+pistomp-usb-automount (1.0.0-2) trixie; urgency=medium
+
+  * Mount via a udev-activated systemd unit: udevd's SystemCallFilter
+    blocks mount(2) with EPERM in RUN programs, and PrivateMounts hides
+    any mount that did succeed.
+  * Fix unmount on unplug. The blkid filesystem guard ran before the action
+    switch, so removal — where the device node is already gone — always
+    exited early and left a stale mount. The mountpoint now comes from
+    /proc/mounts, which also survives labels blkid can no longer report.
+  * Log mount failures instead of silently removing the mountpoint.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 11 Aug 2026 22:40:15 +0000
+
 pistomp-usb-automount (1.0.0-1) trixie; urgency=medium
 
   * Initial release. Extracted from stage2/01-sys-tweaks so the fix reaches

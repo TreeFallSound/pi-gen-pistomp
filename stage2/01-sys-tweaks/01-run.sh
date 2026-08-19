@@ -28,7 +28,7 @@ fi
 on_chroot << EOF
 if [ "${ENABLE_SSH}" == "1" ]; then
 	systemctl enable ssh
-	systemctl enable sshd-keygen.service
+	ssh-keygen -A
 else
 	systemctl disable ssh
 fi
@@ -68,11 +68,6 @@ EOF
 on_chroot << EOF
 usermod --pass='*' root
 EOF
-
-# SSH host keys are deleted here and regenerated on first boot by
-# regenerate_ssh_host_keys.service (shipped by raspberrypi-sys-mods,
-# auto-enabled by its postinst, ConditionFirstBoot=yes).
-rm -f "${ROOTFS_DIR}/etc/ssh/"ssh_host_*_key*
 
 sed -i "s/PLACEHOLDER//" "${ROOTFS_DIR}/etc/default/keyboard"
 on_chroot << EOF

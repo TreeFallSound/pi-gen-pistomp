@@ -6,7 +6,10 @@ Before=systemd-reboot.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/lcd-splash /usr/share/pistomp/splash/splash-reboot.rgb565 "Rebooting..."
+# The first-boot reboot keeps the first-boot artwork so the icon row doesn't
+# switch to the normal-boot set for the last frame before the reboot.
+# firstboot.sh drops the marker in /run (tmpfs) just before rebooting.
+ExecStart=-/bin/sh -c 'if [ -e /run/pistomp-firstboot-reboot ]; then exec /usr/bin/lcd-splash /usr/share/pistomp/splash/splash-reboot.rgb565 "Rebooting..."; else exec /usr/bin/lcd-splash /usr/share/pistomp/splash/splash-shutdown.rgb565 "Rebooting..."; fi'
 
 [Install]
 WantedBy=reboot.target

@@ -3,11 +3,16 @@ Description=piStomp LCD boot splash
 DefaultDependencies=no
 After=dev-spidev0.0.device
 Requires=dev-spidev0.0.device
+After=boot-firmware.mount
 Before=sysinit.target
 
 [Service]
 Type=oneshot
-ExecStart=-/usr/bin/lcd-splash /usr/share/pistomp/splash/splash-start.rgb565 "Starting..."
+# First boot shows the four-step first-boot row, not the five-step normal-boot
+# row, so the very first frame already matches what firstboot.sh draws next
+# instead of flashing the wrong icon set for a few seconds. firstboot.sh renames
+# firstboot.sh -> firstboot.done once it has run, so the marker is self-clearing.
+ExecStart=-/bin/sh -c 'if [ -e /boot/firmware/firstboot.sh ]; then exec /usr/bin/lcd-splash /usr/share/pistomp/splash/splash-expandfs.rgb565 "Starting..."; else exec /usr/bin/lcd-splash /usr/share/pistomp/splash/splash-start.rgb565 "Starting..."; fi'
 RemainAfterExit=yes
 
 [Install]

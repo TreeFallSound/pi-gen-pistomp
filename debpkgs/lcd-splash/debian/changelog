@@ -1,3 +1,9 @@
+lcd-splash (1.0-20) trixie; urgency=medium
+
+  * Reorder the first-boot progress row to database -> gear -> wifi -> reboot so it matches the order firstboot.sh actually runs in.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 19 Jul 2026 17:18:06 +0000
+
 lcd-splash (1.0-19) trixie; urgency=medium
 
   * New per-stage boot artwork: PNG sources in images/, converted to RGB565 at build time; message text now light grey.

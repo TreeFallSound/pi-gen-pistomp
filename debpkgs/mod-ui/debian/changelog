@@ -1,3 +1,33 @@
+mod-ui (3.0-14) trixie; urgency=medium
+
+  * Show the correct file parameters (NAM models, cabsim IRs) on
+    pedalboard load. mod-host restores plugin state from the bundle via
+    state_load but reports nothing back, so mod-ui kept serving the LV2
+    defaults to the web UI until a snapshot round-trip refreshed them.
+    Most visible after a cold boot, where the plugins' own patch:Set
+    notifications are lost. Seed the parameter cache from the snapshot
+    being loaded instead of relying on those notifications.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 07 Aug 2026 02:51:08 +0000
+
+mod-ui (3.0-13) trixie; urgency=medium
+
+  * Add mod-ui-owned session recording: toolbar record button, 32-bit
+    float WAV capture to Audio Recordings/ (no clipping, no duration
+    cap), multi-tab WebSocket sync, and a crash watchdog. Fixes
+    jack_capture exiting instantly under systemd (missing --no-stdin).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 23 Jul 2026 03:20:40 +0000
+
+mod-ui (3.0-12) trixie; urgency=medium
+
+  * Fix broken pedalboard thumbnails on save: modtools.pedalboard used
+    the removed Image.ANTIALIAS constant, which crashed screenshot
+    generation under Pillow 10+ (device runs 12.3.0) and left the web UI
+    showing broken images. Switch to Image.LANCZOS.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Wed, 22 Jul 2026 04:26:11 +0000
+
 mod-ui (3.0-11) trixie; urgency=medium
 
   * Point mod-ui.service splash at the per-stage image.

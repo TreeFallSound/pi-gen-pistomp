@@ -5,6 +5,23 @@
 mkdir -p "${ROOTFS_DIR}/pistomp-cache"
 mount --bind /pistomp-cache "${ROOTFS_DIR}/pistomp-cache"
 
+# Verify the pre-release suite here, on the build container. Failure is fatal
+# rather than a warning, so we don't waste CI time building a testing image that
+# would ship stable packages.
+if [ "${IMG_CHANNEL:-stable}" = "testing" ]; then
+    TESTING_RELEASE_URL="${APT_REPO_URL}/dists/${APT_REPO_TESTING_SUITE}/Release"
+    echo "==> Verifying pre-release suite: ${TESTING_RELEASE_URL}"
+    if ! curl -fsS --head "${TESTING_RELEASE_URL}" >/dev/null; then
+        echo "ERROR: IMG_CHANNEL=testing but the ${APT_REPO_TESTING_SUITE} suite is not reachable at" >&2
+        echo "         ${TESTING_RELEASE_URL}" >&2
+        echo "       Refusing to build a testing image that would ship stable packages." >&2
+        echo "       Publish a pre-release package (./scripts/bump-version.sh --pre ...) so" >&2
+        echo "       publish-apt-repo.yml creates the suite, or build without --pre." >&2
+        exit 1
+    fi
+    echo "==> Pre-release suite confirmed."
+fi
+
 on_chroot << EOF
 # Purge any half-installed packages left from a previous failed build
 # (e.g. stage2/05-pistomp/02-run.sh that was interrupted).
@@ -23,12 +40,8 @@ echo "deb [arch=${APT_REPO_ARCH} trusted=yes] ${APT_REPO_URL} ${APT_REPO_SUITE} 
 # device converges back to production packages once the real release ships.
 # Leave the channel by deleting this file.
 if [ "${IMG_CHANNEL:-stable}" = "testing" ]; then
-    if wget -q --spider "${APT_REPO_URL}/dists/${APT_REPO_TESTING_SUITE}/Release" 2>/dev/null; then
-        echo "deb [arch=${APT_REPO_ARCH} trusted=yes] ${APT_REPO_URL} ${APT_REPO_TESTING_SUITE} ${APT_REPO_COMPONENT}" \
-            > /etc/apt/sources.list.d/pistomp-testing.list
-    else
-        echo "WARNING: ${APT_REPO_TESTING_SUITE} suite not found at ${APT_REPO_URL} — skipping. Pre-release packages will not be available in this image."
-    fi
+    echo "deb [arch=${APT_REPO_ARCH} trusted=yes] ${APT_REPO_URL} ${APT_REPO_TESTING_SUITE} ${APT_REPO_COMPONENT}" \
+        > /etc/apt/sources.list.d/pistomp-testing.list
 fi
 
 # Optional: local override for packages built via build-package-docker.sh.

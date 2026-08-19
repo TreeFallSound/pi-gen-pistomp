@@ -7,7 +7,6 @@ Conflicts=mod-ala-pi-stomp.service mod-ui.service
 Type=simple
 User=pistomp
 Group=pistomp
-Environment=JACK_PROMISCUOUS_SERVER=jack
 WorkingDirectory=/home/pistomp
 ExecStart=/opt/pistomp/venvs/pistomp-recovery/bin/python -m pistomp_recovery
 Restart=no

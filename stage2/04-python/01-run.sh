@@ -16,7 +16,6 @@ on_chroot << EOF
 # duplicate their deps here.
 pip3 install --break-system-packages flask unicategories   # browsepy (--system-site-packages, --no-deps)
 pip3 install --break-system-packages netifaces2            # touchosc2midi
-pip3 install --break-system-packages mido docopt python-rtmidi  # touchosc2midi
 
 EOF
 echo "Done installing PIP packages"

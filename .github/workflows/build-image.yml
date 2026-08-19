@@ -25,6 +25,7 @@ jobs:
     # binfmt cross-arch shim is needed (build-docker.sh skips it on aarch64).
     runs-on: ubuntu-24.04-arm
     outputs:
+      image_version: ${{ steps.version.outputs.version }}
       prerelease: ${{ steps.version.outputs.prerelease }}
 
     steps:
@@ -43,10 +44,18 @@ jobs:
       run: |
         if [[ "${GITHUB_REF}" == refs/tags/release/* ]]; then
           VERSION="${GITHUB_REF#refs/tags/release/}"
+          # The tag verbatim — the manifest's download URL is built from it, so
+          # it must match the release GitHub actually publishes, prefix included.
+          TAG="${GITHUB_REF#refs/tags/}"
         else
           VERSION="dev-$(git rev-parse --short HEAD)"
+          # Dispatch builds publish no release; the manifest is an artifact only
+          # and its URL points at nothing. Keep the tag honest rather than
+          # inventing a release/ path that was never cut.
+          TAG="${VERSION}"
         fi
         echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+        echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
         # A pre-release marker in the version selects the testing channel:
         # the image installs from (and ships) the trixie-testing apt suite,
         # and the GitHub Release is flagged prerelease. Mirrors the package
@@ -80,15 +89,27 @@ jobs:
     - name: Compress image
       run: ./compress-img.sh
 
+    - name: Generate Imager 2.x JSON manifest
+      run: |
+        XZ_FILE=$(ls deploy/*pistompOS*.img.xz | head -1)
+        ./scripts/generate-imager-manifest.sh "$XZ_FILE" "${{ steps.version.outputs.tag }}"
+
     - name: List output files
-      run: ls -lh deploy
+      run: ls -lh deploy pistomp-imager-manifest.json
 
     - name: Upload built image
       uses: actions/upload-artifact@v4
       with:
         name: pistompOS
         path: ./deploy/*pistompOS*.img.xz
-        compression-level: 6
+        compression-level: 0
+        if-no-files-found: error
+
+    - name: Upload Imager manifest
+      uses: actions/upload-artifact@v4
+      with:
+        name: imager-manifest
+        path: ./pistomp-imager-manifest.json
         if-no-files-found: error
 
     - name: Upload debug artifacts
@@ -113,11 +134,106 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: pistompOS
+          path: release-assets/
+      - uses: actions/download-artifact@v4
+        with:
+          name: imager-manifest
+          path: release-assets/
       - uses: softprops/action-gh-release@v2
         with:
-          files: '**/*'
+          files: release-assets/*
           # Pre-release marker in the tag version (e.g. release/3.3.0-rc1)
           # → GitHub prerelease, excluded from releases/latest.
           prerelease: ${{ needs.build.outputs.prerelease == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-manifest:
+    # Deploy the Imager manifest to gh-pages:
+    #   imager/pistomp-stable.json    — latest production image
+    #   imager/pistomp-testing.json   — latest pre-release image
+    #   imager/pistomp-<version>.json  — per-version archival snapshot
+    #   imager/pistomp.json           — legacy URL kept as a third stable copy
+    #                                    (README on main has been publishing
+    #                                    this URL; deleting it would 404 every
+    #                                    already-configured Imager install).
+    # Trails the release job: if the GitHub Release fails (422 on existing tag,
+    # asset upload timeout, softprops transient), the manifest must NOT be
+    # published — otherwise Imager shows users a version whose download URL
+    # 404s. needs: [build, release] guarantees the manifest strictly trails a
+    # real public release.
+    if: startsWith(github.ref, 'refs/tags/release/')
+    needs: [build, release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+      - uses: actions/download-artifact@v4
+        with:
+          name: imager-manifest
+          path: imager/
+      # The icon lives on the source branch (site/imager/), which the gh-pages
+      # checkout above does not contain. Check the tagged source out to a side
+      # path so the deploy step can copy it across.
+      - uses: actions/checkout@v4
+        with:
+          path: src
+          fetch-depth: 1
+      - name: Deploy channel and version-pinned manifests
+        env:
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+          IMG_VERSION: ${{ needs.build.outputs.image_version }}
+        run: |
+          if [[ "${PRERELEASE}" == "true" ]]; then
+            CHANNEL="testing"
+          else
+            CHANNEL="stable"
+          fi
+
+          # Per-version archival snapshot + channel pointer. Also keep the
+          # legacy imager/pistomp.json as a third copy of stable — the README
+          # on main has been telling users to paste that URL into Imager, and
+          # deleting it would silently 404 every already-configured install
+          # on their next launch. Costs one cp + one JSON file on gh-pages.
+          cp imager/pistomp-imager-manifest.json "imager/pistomp-${IMG_VERSION}.json"
+          cp imager/pistomp-imager-manifest.json "imager/pistomp-${CHANNEL}.json"
+          if [[ "${CHANNEL}" == "stable" ]]; then
+            cp imager/pistomp-imager-manifest.json imager/pistomp.json
+          fi
+          # Don't commit the raw downloaded artifact into gh-pages.
+          rm -f imager/pistomp-imager-manifest.json
+
+          # Publish the icon the manifest points at. Unconditional so a changed
+          # icon redeploys; `git diff --cached --quiet` below skips the commit
+          # when it is byte-identical to what is already on gh-pages.
+          cp src/site/imager/icon.png imager/icon.png
+          rm -rf src
+
+          git config user.name "pistomp-bot"
+          git config user.email "bot@treefallsound.com"
+          git add imager/
+          if git diff --cached --quiet; then
+            echo "No changes to gh-pages."
+          else
+            git commit -m "deploy imager manifest for ${IMG_VERSION} → ${CHANNEL} [skip ci]"
+            # publish-apt-repo.yml (triggered by the release job) also pushes
+            # gh-pages, so a plain push can be rejected non-fast-forward. Retry
+            # on top of whatever landed meanwhile. The commit must exist before
+            # rebasing — `git pull --rebase` aborts outright on a dirty index
+            # ("cannot pull with rebase: Your index contains uncommitted
+            # changes"), which is why the commit comes first.
+            for attempt in 1 2 3; do
+              if git push origin HEAD:gh-pages; then
+                exit 0
+              fi
+              echo "push rejected (attempt ${attempt}); rebasing onto origin/gh-pages"
+              git fetch origin gh-pages
+              git rebase origin/gh-pages || { git rebase --abort || true; exit 1; }
+            done
+            echo "::error::could not push manifest to gh-pages after 3 attempts"
+            exit 1
+          fi

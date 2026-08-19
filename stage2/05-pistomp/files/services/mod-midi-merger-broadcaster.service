@@ -6,6 +6,7 @@ BindsTo=jack.service
 [Service]
 RemainAfterExit=yes
 Environment=JACK_PROMISCUOUS_SERVER=jack
+ExecStartPre=/usr/local/bin/wait-for-jack.sh
 ExecStart=/usr/bin/jack_load mod-midi-broadcaster
 ExecStop=/usr/bin/jack_unload mod-midi-broadcaster
 Restart=always

@@ -11,8 +11,7 @@ UPSTREAM_DIR="${WORKDIR}/${PKG}-src"
 
 cache_check
 
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${PISTOMP_RECOVERY_BRANCH}" --depth 1 "${PISTOMP_RECOVERY_REPO}" "${UPSTREAM_DIR}"
+sync_upstream "${PISTOMP_RECOVERY_REPO}" "${PISTOMP_RECOVERY_BRANCH}" "${UPSTREAM_DIR}"
 record_upstream_sha
 
 # Install lg-pistomp (build-time dep for liblgpio headers/library). In the full

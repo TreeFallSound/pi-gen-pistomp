@@ -150,7 +150,7 @@ jobs:
                 "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100" \
                 | jq -r --arg p "$DEP" \
                   '.[] | select(.tag_name | startswith("debpkg/" + $p + "/")) | .assets[].browser_download_url' \
-                | grep "/${DEP}_.*_arm64\.deb$" | head -1)
+                | grep -E "/${DEP}_.*_(arm64|all)\.deb$" | head -1)
 
               if [ -z "$ASSET_URL" ]; then
                 echo "ERROR: $DEP not found in apt or GitHub Releases." >&2
@@ -158,7 +158,7 @@ jobs:
               fi
 
               wget -q -P "$GITHUB_WORKSPACE/cache" "$ASSET_URL"
-              dpkg -i "$GITHUB_WORKSPACE/cache/${DEP}_"*"_arm64.deb" || true
+              dpkg -i "$GITHUB_WORKSPACE/cache/${DEP}_"*.deb || true
               apt-get install -f -y -qq
               echo "$DEP: installed from GitHub Releases"
             done
@@ -173,13 +173,13 @@ jobs:
       - name: Verify build output
         run: |
           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-          ls -la "$GITHUB_WORKSPACE/cache/${{ inputs.pkg }}_"*"_arm64.deb"
+          ls -la "$GITHUB_WORKSPACE/cache/${{ inputs.pkg }}_"*.deb
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.pkg }}-deb
-          path: ${{ github.workspace }}/cache/${{ inputs.pkg }}_*_arm64.deb
+          path: ${{ github.workspace }}/cache/${{ inputs.pkg }}_*.deb
           if-no-files-found: error
 
       - name: Assemble release assets
@@ -192,9 +192,9 @@ jobs:
           ls -la "$CACHE"
 
           # The .deb is mandatory; fail hard if the build didn't produce one.
-          deb=$(ls "$CACHE/${PKG}_"*"_arm64.deb" 2>/dev/null | head -1)
+          deb=$(ls "$CACHE/${PKG}_"*.deb 2>/dev/null | head -1)
           if [ -z "$deb" ]; then
-            echo "ERROR: no ${PKG}_*_arm64.deb in $CACHE" >&2
+            echo "ERROR: no ${PKG}_*.deb in $CACHE" >&2
             exit 1
           fi
 

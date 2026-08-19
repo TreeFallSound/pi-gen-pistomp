@@ -11,8 +11,7 @@ UPSTREAM_DIR="${WORKDIR}/${PKG}-src"
 
 cache_check
 
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${TOUCHOSC2MIDI_REF}" --depth 1 "${TOUCHOSC2MIDI_REPO}" "${UPSTREAM_DIR}"
+sync_upstream "${TOUCHOSC2MIDI_REPO}" "${TOUCHOSC2MIDI_REF}" "${UPSTREAM_DIR}"
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"
 cd "${UPSTREAM_DIR}"

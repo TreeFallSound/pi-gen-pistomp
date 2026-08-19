@@ -1,3 +1,9 @@
+jackbridge (1.0-5) trixie; urgency=medium
+
+  * Add ExecStartPre=wait-for-jack.sh before jackbridge-pin-route. jack.service is Type=simple, so After=jack.service only waits for jackd to fork — not for its server socket to accept clients. jackbridge-pi-up calls jack_load against jackd, which races socket readiness on a busy boot.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 19 Jul 2026 04:27:56 +0000
+
 jackbridge (1.0-4) trixie; urgency=medium
 
   * jackbridge-pi-up: read /run/jackbridge.iface (set by

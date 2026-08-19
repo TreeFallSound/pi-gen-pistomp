@@ -1,0 +1,10 @@
+[Unit]
+Description=pi-Stomp USB automount for /dev/%I
+BindsTo=dev-%i.device
+After=dev-%i.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/libexec/pistomp-usb-mount add %I
+ExecStop=/usr/local/libexec/pistomp-usb-mount remove %I

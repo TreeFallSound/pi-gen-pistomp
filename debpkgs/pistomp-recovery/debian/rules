@@ -32,8 +32,10 @@ override_dh_auto_install:
 	# Build venv here (not in dh_auto_build) so dh_prep doesn't wipe it before packaging.
 	# --system-site-packages gives access to RPi GPIO libs installed by the OS.
 	uv venv --python /usr/bin/python3 --system-site-packages "$(VENV_DIR)"
+	# --locked, not --frozen: see debpkgs/pi-stomp/debian/rules — --frozen
+	# silently ships a stale dependency set when uv.lock lags pyproject.toml.
 	UV_PROJECT_ENVIRONMENT="$(VENV_DIR)" \
-		uv sync --frozen --no-dev --no-editable --extra hardware \
+		uv sync --locked --no-dev --no-editable --extra hardware \
 		--project "$(RECOVERY_SRC_DIR)"
 	# Install systemd service file
 	install -Dm 644 debian/pistomp-recovery.pistomp-recovery.service \
@@ -44,6 +46,11 @@ override_dh_dwz:
 
 override_dh_shlibdeps:
 	# Skip — all .so dependencies are private libs bundled inside PyPI wheels
+
+override_dh_makeshlibs:
+	# Skip — otherwise it scrapes the wheels' bundled private libs and declares
+	# this package *provides* SONAMEs like libjpeg-6d4ad459 and
+	# libscipy_openblas64_, plus a pointless ldconfig trigger.
 
 override_dh_installsystemd:
 	# Service enablement is handled by stage2/05-pistomp/01-run.sh ln -sf,

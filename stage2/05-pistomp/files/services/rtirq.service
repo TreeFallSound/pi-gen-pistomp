@@ -1,6 +1,7 @@
 [Unit]
 Description=Realtime IRQ thread priority tuning
 After=sysinit.target
+Before=jack.service
 
 [Service]
 Type=oneshot

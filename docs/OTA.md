@@ -148,7 +148,7 @@ If the tag already exists, nothing is pushed to GitHub Releases or `gh-pages`.
 
 ## Packages
 
-All 20 custom `.deb` packages have CI workflows and are published to the repo:
+All 21 custom `.deb` packages have CI workflows and are published to the repo:
 
 | Package | Notes |
 | :--- | :--- |
@@ -169,6 +169,7 @@ All 20 custom `.deb` packages have CI workflows and are published to the repo:
 | `mod-ui` | python3, uv, make, libjack-dev |
 | `pi-stomp` | python3, uv |
 | `pistomp-recovery` | python3, uv, swig, SDL2/freetype headers |
+| `rpi-preseed` | Pure shell; upstream `dpkg-buildpackage` |
 | `jackbridge` | Shell scripts only; git |
 | `ffmpeg-pistomp` | cmake, many codec libs |
 | `cabsim-lv2` | cmake, lv2-dev |

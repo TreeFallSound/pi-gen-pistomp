@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
 udevadm control --reload-rules 2>/dev/null || true
+systemctl daemon-reload 2>/dev/null || true
 
 #DEBHELPER#
