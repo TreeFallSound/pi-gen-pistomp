@@ -1,3 +1,19 @@
+loopjefe-lv2 (1.3.1-1) trixie; urgency=medium
+
+  * Fix transport atoms being silently dropped on a real host: readTimeInfo()
+    now matches ev->body.type against atom:Object/atom:Blank and
+    obj->body.otype against time:Position (the standard LV2 convention),
+    instead of ev->body.type against time_Position. mod-host forges a plain
+    atom:Object whose otype is time:Position, so the old check skipped every
+    transport event -- transport_valid was never true on the device, leaving
+    loop_bars at 0 (no measure border) and the tempo-follow stretch path
+    permanently disengaged.
+  * Fix advance-driven force-close (STATE_RECORD_CLOSE) leaving loop_beats
+    and anchor_beat unset, reproducing the same no-border/no-stretch outcome
+    via a double-tap. Now mirrors the auto-close path.
+
+ -- pi-gen-pistomp <noreply@github.com>  Wed, 19 Aug 2026 04:15:32 +0000
+
 loopjefe-lv2 (1.3.0-1) trixie; urgency=medium
 
   * Tempo-follow stretch is now a hand-rolled WSOLA voice (src/wsola.h),
