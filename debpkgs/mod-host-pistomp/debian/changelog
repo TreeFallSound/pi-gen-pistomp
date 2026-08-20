@@ -1,3 +1,11 @@
+mod-host-pistomp (0.10.6-7~pre1) trixie; urgency=medium
+
+  * Post beat_sync clock samples from the transport so external clients can
+    extrapolate a beat grid locally (pi-Stomp footswitch LEDs, loop progress).
+  * Built from feat/beat-sync, not master.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 18 Aug 2026 23:46:24 -0400
+
 mod-host-pistomp (0.10.6-5) trixie; urgency=medium
 
   * Close the JACK client before freeing buffers the plugin still writes (heap corruption on pedalboard load).

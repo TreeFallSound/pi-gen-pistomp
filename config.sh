@@ -28,7 +28,7 @@ HYLIA_REF="master"  # no stable tag; pin by commit when needed
 
 # --- mod-host ---
 MOD_HOST_REPO="https://github.com/TreeFallSound/mod-host.git"
-MOD_HOST_BRANCH="master"
+MOD_HOST_BRANCH="feat/beat-sync"  # until beat_sync merges to master
 
 # --- mod-ui ---
 MOD_UI_REPO="https://github.com/TreeFallSound/mod-ui.git"
