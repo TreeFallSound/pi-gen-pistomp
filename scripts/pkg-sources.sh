@@ -28,8 +28,19 @@
 # lcd-splash, libfluidsynth2-compat) build from a tarball/local source and are
 # skipped automatically.
 
+# Zero packages means the scrape broke, not that there is nothing to check —
+# fail closed so callers can't read it as success.
 pkg_sources() {
     : "${ROOT_DIR:?pkg-sources.sh requires ROOT_DIR to be set}"
+    _pkg_out=$(_pkg_sources_scrape) || return 1
+    if [ -z "$_pkg_out" ]; then
+        echo "pkg-sources.sh: no git-backed packages found under ${ROOT_DIR}/debpkgs" >&2
+        return 1
+    fi
+    printf '%s\n' "$_pkg_out"
+}
+
+_pkg_sources_scrape() {
     for _pkg_dir in "${ROOT_DIR}"/debpkgs/*/; do
         [ -d "$_pkg_dir" ] || continue
         _pkg=$(basename "$_pkg_dir")
