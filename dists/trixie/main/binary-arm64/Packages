@@ -222,21 +222,21 @@ Description: FluidSynth .so.2 compatibility shim for prebuilt LV2 plugins
  against libfluidsynth.so.2 can load on Trixie.
 
 Package: mod-host-pistomp
-Version: 0.10.6-5
+Version: 0.10.6-6
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 998
+Installed-Size: 999
 Depends: libc6 (>= 2.38), libfftw3-double3 (>= 3.3.10), libfftw3-single3 (>= 3.3.10), libgcc-s1 (>= 3.0), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125, liblilv-0-0 (>= 0.22.0~dfsg0), libreadline8t64 (>= 6.0), libstdc++6 (>= 14), libserd-0-0, liblo7, libreadline8, hylia
 Conflicts: mod-host
 Replaces: mod-host
 Provides: mod-host
 Priority: optional
 Section: sound
-Filename: pool/main/m/mod-host-pistomp/mod-host-pistomp_0.10.6-5_arm64.deb
-Size: 170572
-SHA256: beadfb7ecb106aa9e1eb2ee1ca82f32f53f833fbfa5ecbccbd8838c0c0bb667a
-SHA1: 57b18644773f72c0b0deceeb2198d349bcdab703
-MD5sum: 22991541c39a9cce7de727fb2cf77302
+Filename: pool/main/m/mod-host-pistomp/mod-host-pistomp_0.10.6-6_arm64.deb
+Size: 172336
+SHA256: d5c0974ab201e5e0406e04b0a9e8fed31c61701efecc5a98758cfd8edfb805c3
+SHA1: cdcdf88383dc6f68e6f11b935b1a44f4b536ab67
+MD5sum: 13b29f6216cdc4985d299f1db50719fa
 Description: MOD Host — LV2 plugin host for JACK (pi-Stomp fork)
  Forked from moddevices/mod-host with the fix/effect-drain-midi branch
  for proper MIDI effect drain on pedalboard changes.

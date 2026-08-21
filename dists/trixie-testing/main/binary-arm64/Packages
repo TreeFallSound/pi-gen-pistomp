@@ -18,6 +18,23 @@ Description: JACK Audio Connection Kit v2 (pi-Stomp build)
  JACK is a low-latency audio server. This build includes the
  pi-controller-reset stability fix and links against libdb 5.3.
 
+Package: mod-midi-merger
+Version: 1.0-5~pre4
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Installed-Size: 147
+Depends: libc6 (>= 2.34), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125, mod-host-pistomp (>= 0.10.6-6)
+Priority: optional
+Section: sound
+Filename: pool/main/m/mod-midi-merger/mod-midi-merger_1.0-5~pre4_arm64.deb
+Size: 7512
+SHA256: 1d0292db812b0c33d8acd55b50d62d3d0ae9a00740e370a8d75f182d4d91f3c7
+SHA1: c7be5094630bea2c6ab4958aeccf84029db7a905
+MD5sum: 05e6a3166c4d0f611455e5d634f39c3a
+Description: MOD MIDI Merger — merge multiple MIDI inputs into one JACK port
+ Part of the MOD ecosystem. Merges multiple ALSA MIDI inputs into a single
+ JACK MIDI output port.
+
 Package: pi-stomp
 Version: 3.2.1-0~pre10
 Architecture: arm64
