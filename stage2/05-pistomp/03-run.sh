@@ -57,13 +57,6 @@ install -Dm 644 files/99-multihome.conf \
 install -Dm 644 files/90-audio.conf \
     "${ROOTFS_DIR}/etc/sysctl.d/90-audio.conf"
 
-# brcmfmac roaming: shadow the distro's /usr/lib/modprobe.d/rpi-brcmfmac.conf
-# (ships roamoff=1) with a same-basename file in /etc, setting roamoff=0.
-# MUST be in the rootfs before dpkg --configure below builds the initramfs,
-# so the copy baked into initramfs8_rt governs the boot-time module load.
-install -Dm 644 files/rpi-brcmfmac.conf \
-    "${ROOTFS_DIR}/etc/modprobe.d/rpi-brcmfmac.conf"
-
 echo "Installing Kernel and boot files"
 on_chroot << EOF
 set -o pipefail
