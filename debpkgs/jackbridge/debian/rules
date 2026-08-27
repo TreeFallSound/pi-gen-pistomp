@@ -9,7 +9,7 @@ LIBEXEC_DIR=$(CURDIR)/debian/$(PKG)/usr/local/libexec/jackbridge
 	dh $@
 
 override_dh_auto_configure:
-	# Clone JackRouter source if not already present
+	# Clone the pistomp-companion source if not already present
 	if [ ! -d "$(JACKROUTER_SRC_DIR)" ]; then \
 		git clone --branch "$(JACKROUTER_REF)" --depth 1 \
 			"$(JACKROUTER_REPO)" \
@@ -22,12 +22,12 @@ override_dh_auto_build:
 override_dh_auto_install:
 	# Install the 6 helper scripts to /usr/local/libexec/jackbridge/
 	install -d "$(LIBEXEC_DIR)"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-pi-up"        "$(LIBEXEC_DIR)/"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-pi-down"      "$(LIBEXEC_DIR)/"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-xrun-watcher" "$(LIBEXEC_DIR)/"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jb-detect-net-iface"     "$(LIBEXEC_DIR)/"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-pin-route"    "$(LIBEXEC_DIR)/"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-unpin-route"  "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-pi-up"        "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-pi-down"      "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-xrun-watcher" "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jb-detect-net-iface"     "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-pin-route"    "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-unpin-route"  "$(LIBEXEC_DIR)/"
 	# Install systemd service file (on-demand only, no [Install] section)
 	install -Dm 644 debian/jackbridge.pi-stomp-jackbridge.service \
 		$(CURDIR)/debian/jackbridge/lib/systemd/system/pi-stomp-jackbridge.service

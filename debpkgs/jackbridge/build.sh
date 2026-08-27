@@ -1,6 +1,6 @@
 #!/bin/bash
 # Build jackbridge .deb for arm64 Debian Trixie.
-# Stages the 6 shell scripts + service file from JackRouter/pi/.
+# Stages the 6 shell scripts + service file from pistomp-companion jackbridge/pi/.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
