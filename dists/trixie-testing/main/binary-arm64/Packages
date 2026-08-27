@@ -57,3 +57,25 @@ Description: pi-Stomp application — guitar effects pedalboard software
  directory. Run util/expand-git.sh on the device to seed a real git repo,
  fetch full history and tags, and enable `git describe --dirty=*`.
 
+Package: pistomp-bluetooth
+Version: 1.0.0-1~pre1
+Architecture: arm64
+Depends: bluez
+Maintainer: pistomp <pistomp@example.com>
+Priority: optional
+Section: sound
+Filename: pool/main/p/pistomp-bluetooth/pistomp-bluetooth_1.0.0-1~pre1_arm64.deb
+Size: 1744
+SHA256: 0d1be43bd08581c4e8ea953e27f0f8d0fbe91407a63d5c3442bb9332e1106e03
+SHA1: 6f9241ae139086b1fdb869b39f721bf497da0442
+MD5sum: 19a8d8c913f4e00d2a3b3ac428032929
+Description: BLE-MIDI capability for pi-Stomp
+ Ships a bluetooth.service drop-in that starts bluetoothd with -E, which is
+ what registers bluez's BLE-MIDI GATT profile, and unblocks the rfkill soft
+ block the Pi 5 radio boots with. Once a BLE-MIDI device connects, bluez
+ publishes an ALSA seq port and jackd -X seq bridges it automatically.
+ .
+ Installing this package does not turn Bluetooth on; the drop-in is inert
+ while bluetooth.service is disabled. The pi-Stomp UI owns enable/disable
+ and all pairing.
+
