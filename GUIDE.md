@@ -231,14 +231,27 @@ The uv and pip caches persist across builds automatically — `build-docker.sh` 
 
 ## Kernel Updates
 
-The RT kernel `.deb` files live in `cache/kernel/`. Updating requires:
+Kernel `.deb`s live in `cache/kernel/` locally; CI downloads them from a GitHub
+Release tagged `kernel/<KERNEL_DEB_VERSION>`. To update:
 
-1. Update `KERNEL_VERSION`, `KERNEL_LOCALVERSION`, and `LINUX_RPI_COMMIT` in `config.sh`.
-2. Run `./build-rt-kernel-docker.sh` to build new `.deb` files.
-3. Update `stage2/05-pistomp/03-run.sh` — the `dpkg -i` calls and the `cp`/`mv` block that moves kernel files into `/boot/firmware/`.
+1. Update `KERNEL_VERSION`, `KERNEL_LOCALVERSION`, `LINUX_RPI_COMMIT` in `config.sh`.
+2. Bump `KERNEL_DEB_VERSION`.
+3. Push to `main` (or Actions → build-kernel → Run workflow), or build locally
+   with `./build-rt-kernel-docker.sh` and publish the release it prints.
 4. Rebuild the image.
 
-> **Note**: Kernel `.deb` files must be built against the target Debian release (Trixie). Bookworm kernel `.deb` files will fail on Trixie's initramfs.
+Gotchas:
+
+- **Nothing rebuilds unless `KERNEL_DEB_VERSION` changes.** `build-kernel.yml`
+  skips the build when that Release already exists, so editing
+  `rt-kernel/diffconfig` alone silently ships the old kernel. `validate-packages.sh`
+  check 5 catches this at PR time.
+- **Don't rename the `kernel/` tag prefix.** `publish-apt-repo.yml` only publishes
+  `debpkg/` tags; that's what keeps `linux-image` out of the OTA apt suite.
+- `stage2/05-pistomp/03-run.sh` needs no edit for a version bump (it globs), but
+  the `-rpi-v8-rt` flavour is hardcoded there, so changing `KERNEL_LOCALVERSION`
+  does require editing it.
+- Kernel `.deb`s must be built against Trixie
 
 ## Troubleshooting
 

@@ -32,11 +32,17 @@ if ls "${CACHE_DIR}"/linux-image-${KERNEL_RELEASE}_*.deb &>/dev/null; then
     echo "==> RT kernel packages already cached in ${CACHE_DIR}:"
     ls -lh "${CACHE_DIR}"/linux-*${KERNEL_RELEASE}*.deb "${CACHE_DIR}"/linux-libc-dev*.deb 2>/dev/null || true
     echo ""
-    read -rp "Rebuild? [y/N] " -n 1
-    echo
-    if [[ ! ${REPLY:-n} =~ ^[Yy]$ ]]; then
-        echo "==> Keeping existing cached packages."
-        exit 0
+    # Only prompt on a tty: non-interactively `read` hits EOF and the old code
+    # took the "keep existing" branch, shipping stale .debs. FORCE=1 also skips.
+    if [[ -t 0 && -z "${FORCE:-}" ]]; then
+        read -rp "Rebuild? [y/N] " -n 1
+        echo
+        if [[ ! ${REPLY:-n} =~ ^[Yy]$ ]]; then
+            echo "==> Keeping existing cached packages."
+            exit 0
+        fi
+    else
+        echo "==> Non-interactive (or FORCE=1): rebuilding."
     fi
     echo "==> Removing old cached packages..."
     rm -f "${CACHE_DIR}"/linux-*${KERNEL_RELEASE}*.deb "${CACHE_DIR}"/linux-libc-dev*.deb
@@ -113,15 +119,28 @@ if [ ${BUILD_EXIT} -eq 0 ]; then
     echo ""
     echo "Run ./build-docker.sh to build the full image."
     echo ""
-    echo "CI has no kernel cache and downloads them from a GitHub Release."
-    echo "If this is a new kernel version, publish it before tagging a release:"
-    echo ""
-    echo "  gh release create kernel/${KERNEL_DEB_VERSION} \\"
-    echo "    --title 'RT kernel ${KERNEL_DEB_VERSION} (${KERNEL_RELEASE})' \\"
-    echo "    --notes 'linux-rpi commit: ${LINUX_RPI_COMMIT}' \\"
-    for deb in "${CACHE_DIR}"/linux-*.deb; do
-        echo "    ${deb#"${SCRIPT_DIR}/"} \\"
-    done | sed '$ s/ \\$//'
+
+    # CI publishes; locally we only print the command, since cutting a public
+    # release shouldn't happen behind your back.
+    if [ -n "${PUBLISH_KERNEL_RELEASE:-}" ]; then
+        echo "==> Publishing GitHub Release kernel/${KERNEL_DEB_VERSION}..."
+        gh release create "kernel/${KERNEL_DEB_VERSION}" \
+            --title "RT kernel ${KERNEL_DEB_VERSION} (${KERNEL_RELEASE})" \
+            --notes "linux-rpi commit: ${LINUX_RPI_COMMIT}" \
+            "${CACHE_DIR}"/linux-*.deb
+        echo "==> Published."
+    else
+        echo "CI downloads these from a GitHub Release. Publish with:"
+        echo ""
+        echo "  gh release create kernel/${KERNEL_DEB_VERSION} \\"
+        echo "    --title 'RT kernel ${KERNEL_DEB_VERSION} (${KERNEL_RELEASE})' \\"
+        echo "    --notes 'linux-rpi commit: ${LINUX_RPI_COMMIT}' \\"
+        for deb in "${CACHE_DIR}"/linux-*.deb; do
+            echo "    ${deb#"${SCRIPT_DIR}/"} \\"
+        done | sed '$ s/ \\$//'
+        echo ""
+        echo "  (or run the build-kernel workflow, which does this for you)"
+    fi
     echo ""
     docker rm "${CONTAINER_NAME}"
 else
