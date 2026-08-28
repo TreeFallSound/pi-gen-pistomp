@@ -1,0 +1,6 @@
+pistomp-bluetooth (1.0.0-1~pre1) trixie; urgency=medium
+
+  * Initial release. Packaged rather than baked into stage2 so the capability
+    reaches already-deployed devices over OTA, not just new images.
+
+ -- pi-gen-pistomp <noreply@github.com>  Fri, 07 Aug 2026 00:00:00 +0000

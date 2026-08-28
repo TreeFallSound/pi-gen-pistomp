@@ -1,0 +1,19 @@
+
+name: build-pistomp-bluetooth
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/pistomp-bluetooth/**'
+  pull_request:
+    paths:
+      - 'debpkgs/pistomp-bluetooth/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: pistomp-bluetooth
+    secrets: inherit

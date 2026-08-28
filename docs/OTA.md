@@ -177,6 +177,7 @@ All 21 custom `.deb` packages have CI workflows and are published to the repo:
 | `veja-1960-cab-lv2` | cmake, lv2-dev |
 | `pistomp-usb-automount` | udev rule + shell script; no compilation |
 | `pistomp-wifi` | modprobe.d conf file; no compilation |
+| `pistomp-bluetooth` | systemd drop-in only; no compilation |
 
 ## Adding a new package to OTA
 

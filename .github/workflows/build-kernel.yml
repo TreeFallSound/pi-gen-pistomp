@@ -1,0 +1,117 @@
+name: build-kernel
+
+# Builds the PREEMPT_RT kernel .debs and publishes them as a GitHub Release
+# tagged `kernel/<KERNEL_DEB_VERSION>` — where scripts/fetch-assets.sh looks.
+#
+# NOTE: bumping KERNEL_DEB_VERSION is what makes a rebuild happen. Editing
+# rt-kernel/diffconfig without bumping it skips the build and ships the old
+# kernel.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'config.sh'
+      - 'rt-kernel/**'
+      - 'build-rt-kernel-docker.sh'
+
+# Two concurrent runs would both see "no release yet" and race to create the
+# tag; the loser fails after burning an hour of runner time.
+concurrency:
+  group: build-kernel
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 300
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read kernel pins from config.sh
+        id: cfg
+        run: |
+          source ./config.sh
+          {
+            echo "deb_version=${KERNEL_DEB_VERSION}"
+            echo "release=${KERNEL_VERSION}${KERNEL_LOCALVERSION}"
+            echo "commit=${LINUX_RPI_COMMIT}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Kernel ${KERNEL_VERSION}${KERNEL_LOCALVERSION}, deb version ${KERNEL_DEB_VERSION}"
+
+      - name: Check whether this kernel version is already published
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="kernel/${{ steps.cfg.outputs.deb_version }}"
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::${TAG} is already published — nothing to build. Bump KERNEL_DEB_VERSION in config.sh to force a rebuild."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "${TAG} not published yet — building."
+          fi
+
+      # ~200MB tarball. Keyed on a commit SHA, so a hit is always correct.
+      - name: Cache linux-rpi source tarball
+        if: steps.check.outputs.exists != 'true'
+        uses: actions/cache@v4
+        with:
+          path: cache/kernel-src
+          key: linux-rpi-${{ steps.cfg.outputs.commit }}
+
+      - name: Build RT kernel .debs
+        if: steps.check.outputs.exists != 'true'
+        env:
+          FORCE: 1
+        run: ./build-rt-kernel-docker.sh
+
+      - name: List built packages
+        if: steps.check.outputs.exists != 'true'
+        run: ls -lh cache/kernel/
+
+      # Fail here on a filename mismatch, not 20 minutes into build-image.yml
+      # with a 404 from fetch-assets.sh.
+      - name: Verify filenames match what fetch-assets.sh expects
+        if: steps.check.outputs.exists != 'true'
+        run: |
+          source ./config.sh
+          FLAVOUR="${KERNEL_VERSION}${KERNEL_LOCALVERSION}"
+          rc=0
+          for deb in \
+              "linux-image-${FLAVOUR}_${KERNEL_DEB_VERSION}_arm64.deb" \
+              "linux-headers-${FLAVOUR}_${KERNEL_DEB_VERSION}_arm64.deb" \
+              "linux-libc-dev_${KERNEL_DEB_VERSION}_arm64.deb" ; do
+            if [ -f "cache/kernel/${deb}" ]; then
+              echo "  OK    ${deb}"
+            else
+              echo "  FAIL  expected cache/kernel/${deb}, not found"
+              rc=1
+            fi
+          done
+          exit $rc
+
+      # the `kernel/` prefix prevents publish-apt-repo.yml from
+      # publishing kernel updates to the OTA apt repo
+      - name: Publish GitHub Release
+        if: steps.check.outputs.exists != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: kernel/${{ steps.cfg.outputs.deb_version }}
+          name: "RT kernel ${{ steps.cfg.outputs.deb_version }} (${{ steps.cfg.outputs.release }})"
+          body: |
+            PREEMPT_RT kernel for Raspberry Pi arm64.
+            linux-rpi commit: `${{ steps.cfg.outputs.commit }}`
+
+            Consumed by `scripts/fetch-assets.sh` at image build time.
+            Not an OTA package — excluded from the apt repo.
+          files: cache/kernel/linux-*.deb
+          fail_on_unmatched_files: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
