@@ -20,15 +20,16 @@ override_dh_auto_build:
 	# No compilation — all scripts are shell.
 
 override_dh_auto_install:
-	# Install the 6 helper scripts to /usr/local/libexec/jackbridge/
+	# 7 helper scripts — mirror pistomp-companion jackbridge/pi/install.sh.
 	install -d "$(LIBEXEC_DIR)"
 	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-pi-up"        "$(LIBEXEC_DIR)/"
 	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-pi-down"      "$(LIBEXEC_DIR)/"
 	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-xrun-watcher" "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-pi-status"    "$(LIBEXEC_DIR)/"
 	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jb-detect-net-iface"     "$(LIBEXEC_DIR)/"
 	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-pin-route"    "$(LIBEXEC_DIR)/"
 	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-unpin-route"  "$(LIBEXEC_DIR)/"
-	# Install systemd service file (on-demand only, no [Install] section)
+	# Install systemd service file (no [Install] section)
 	install -Dm 644 debian/jackbridge.pi-stomp-jackbridge.service \
 		$(CURDIR)/debian/jackbridge/lib/systemd/system/pi-stomp-jackbridge.service
 
@@ -37,5 +38,5 @@ override_dh_usrlocal:
 	# dh_usrlocal expects only directories under /usr/local, so skip it.
 
 override_dh_installsystemd:
-	# No auto-enable — this service is on-demand only (LCD UI starts/stops it).
-	# No [Install] section in the unit file, so deb-systemd-helper would be a no-op anyway.
+	# No auto-enable; the Mac drives start/stop. No [Install] section either,
+	# so deb-systemd-helper would be a no-op anyway.

@@ -21,7 +21,7 @@ KERNEL_ASSETS_URL="https://github.com/TreeFallSound/pi-gen-pistomp/releases/down
 # Pinned by commit; bump when the fork moves. Points at the pi-Stomp working
 # branch until it merges to the fork's main.
 JACK2_REPO="https://github.com/TreeFallSound/jack2.git"
-JACK2_TAG="cf82e56e"
+JACK2_TAG="self-healing-jackbridge"
 
 # --- lg (lgpio — GPIO library used by lcd-splash) ---
 LG_REPO="https://github.com/joan2937/lg.git"
@@ -72,8 +72,8 @@ PISTOMP_RECOVERY_REPO="https://github.com/TreeFallSound/pistomp-recovery.git"
 PISTOMP_RECOVERY_BRANCH="main"
 
 # --- JackBridge (netJACK2 DAW recording over Ethernet) ---
-JACKROUTER_REPO="https://github.com/TreeFallSound/JackRouter.git"
-JACKROUTER_REF="master"
+JACKROUTER_REPO="https://github.com/TreeFallSound/pistomp-companion.git"
+JACKROUTER_REF="main"
 
 # --- Pedalboards / user files ---
 PEDALBOARDS_REPO="https://github.com/TreeFallSound/pi-stomp-pedalboards.git"

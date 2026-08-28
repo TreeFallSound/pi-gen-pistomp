@@ -1,3 +1,16 @@
+jack2-pistomp (1.9.22-9) trixie; urgency=medium
+
+  * Pin netJACK2 unicast egress to an interface, not just the multicast join.
+    On Linux JACK_NETJACK_MULTICAST_IF only set IP_MULTICAST_IF, so the RT
+    stream back to the peer still followed the default route and could leave
+    over Wi-Fi when both wired and Wi-Fi carried a 169.254 link-local address.
+    The slave now also applies IP_UNICAST_IF; the master captures the arrival
+    interface of each SLAVE_AVAILABLE via IP_PKTINFO, latches it, and pins
+    every spawned master socket to it (IP_BOUND_IF / IP_UNICAST_IF).
+  * Bump the fork pin to self-healing-jackbridge HEAD (2a4520f9).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 28 Aug 2026 00:00:00 +0000
+
 jack2-pistomp (1.9.22-8) trixie; urgency=medium
 
   * Build from the TreeFallSound/jack2 fork instead of upstream + local quilt
