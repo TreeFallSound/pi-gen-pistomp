@@ -15,8 +15,13 @@ KERNEL_DEB_VERSION="${KERNEL_VERSION}-1"
 KERNEL_ASSETS_URL="https://github.com/TreeFallSound/pi-gen-pistomp/releases/download/kernel/${KERNEL_DEB_VERSION}"
 
 # --- JACK2 ---
-JACK2_REPO="https://github.com/jackaudio/jack2.git"
-JACK2_TAG="v1.9.22"
+# TreeFallSound fork of jack2 v1.9.22: waf backport for Python 3.12, the
+# netadapter PI-controller reset, multicast interface pinning on both sides,
+# and the netJACK2 master-reaping fixes (see the fork's NETJACK-REAPING.md).
+# Pinned by commit; bump when the fork moves. Points at the pi-Stomp working
+# branch until it merges to the fork's main.
+JACK2_REPO="https://github.com/TreeFallSound/jack2.git"
+JACK2_TAG="35b404cb"
 
 # --- lg (lgpio — GPIO library used by lcd-splash) ---
 LG_REPO="https://github.com/joan2937/lg.git"

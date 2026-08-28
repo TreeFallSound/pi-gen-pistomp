@@ -1,3 +1,15 @@
+jack2-pistomp (1.9.22-8) trixie; urgency=medium
+
+  * Build from the TreeFallSound/jack2 fork instead of upstream + local quilt
+    patches. The fork carries the Python 3.12 waf backport and the netadapter
+    PI-controller reset (both dropped from debian/patches as a result), plus
+    multicast interface pinning and the netJACK2 master-reaping fixes that
+    stop a departed slave from stalling the master (NETJACK-REAPING.md).
+  * Remaining quilt patches (db 5.3, systemd pkgconfig, systemd unit dir) are
+    Debian-packaging-only and still apply on the fork.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Wed, 27 Aug 2026 00:00:00 +0000
+
 jack2-pistomp (1.9.22-7) trixie; urgency=medium
 
   * Conflict with, replace and provide libjack-jackd2-dev, so dpkg can install jack2-pistomp on systems that already have Debian's dev package (promotes 1.9.22-7~pre1).
