@@ -149,24 +149,23 @@ Description: JACK Audio Connection Kit v2 (pi-Stomp build)
  pi-controller-reset stability fix and links against libdb 5.3.
 
 Package: jackbridge
-Version: 1.0-6
+Version: 1.0-5
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 39
+Installed-Size: 32
 Depends: jack2-pistomp, jack-example-tools, iproute2
 Priority: optional
 Section: sound
-Filename: pool/main/j/jackbridge/jackbridge_1.0-6_arm64.deb
-Size: 11336
-SHA256: e167e1cf46eb75874dece994e379fc97f8db88194b4f1b3bd5ca410b627cad91
-SHA1: 61c6ea118363ea33b85ccb6de459fbcdf23f898a
-MD5sum: 1dad3e7bf578ff7052fcaee79675969e
+Filename: pool/main/j/jackbridge/jackbridge_1.0-5_arm64.deb
+Size: 8696
+SHA256: f35b239c1ef2cf57dbca160895b7945971682190cbb6f836af2f5f9ef66a273c
+SHA1: e8f927c038bda4924827c22ecbd528bf4b7b4893
+MD5sum: 5b62507e9b7c5decf98f27979af8e6ea
 Description: netJACK2 client for DAW recording over Ethernet
- Installs the pi-side JackBridge service: 7 helper scripts under
+ Installs the pi-side JackBridge service: 6 helper scripts under
  /usr/local/libexec/jackbridge/ plus pi-stomp-jackbridge.service.
- The service is not enabled at boot; the Mac drives start/stop
- (jackbridge-ctl over ssh) and systemd restarts it on failure to
- self-heal a dropped netadapter slave.
+ The service is on-demand only (not enabled at boot); the LCD UI
+ starts/stops it via systemctl.
 
 Package: lcd-splash
 Version: 1.0-20
@@ -349,24 +348,6 @@ Description: Lightweight udev-based USB automount for pi-Stomp
  /media/<kernel-dev>) on insertion, and unmounts them on removal. Replaces
  udisks2/usbmount; used by pi-Stomp to discover USB content storage
  (backups, LV2 plugins, NAM models).
-
-Package: pistomp-wifi
-Version: 1.0.0-1
-Architecture: arm64
-Maintainer: pistomp <pistomp@example.com>
-Priority: optional
-Section: admin
-Filename: pool/main/p/pistomp-wifi/pistomp-wifi_1.0.0-1_arm64.deb
-Size: 1244
-SHA256: 8ca258b9e3ffd8eeb97914c936ccb3d72b63124e437efb69767bdfc5f14d9edc
-SHA1: 84357d80476b4505d509773b937223add21de68a
-MD5sum: 673ecf4ae66678cd1bd6db4f9c1121c9
-Description: WiFi driver configuration for pi-Stomp
- Ships /etc/modprobe.d/rpi-brcmfmac.conf, shadowing the distro's
- firmware-nonfree default (roamoff=1) with roamoff=0. On AP/band-steering
- meshes the firmware roam path keeps the link stable; the distro default
- caused wpa_supplicant to re-associate every ~12 min, restarting DHCP and
- dropping the link as seen from the network.
 
 Package: rpi-preseed
 Version: 0.1.0-pistomp3
