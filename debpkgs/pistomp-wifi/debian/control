@@ -1,0 +1,12 @@
+Package: pistomp-wifi
+Version: 1.0.0-1
+Section: admin
+Priority: optional
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Description: WiFi driver configuration for pi-Stomp
+ Ships /etc/modprobe.d/rpi-brcmfmac.conf, shadowing the distro's
+ firmware-nonfree default (roamoff=1) with roamoff=0. On AP/band-steering
+ meshes the firmware roam path keeps the link stable; the distro default
+ caused wpa_supplicant to re-associate every ~12 min, restarting DHCP and
+ dropping the link as seen from the network.
