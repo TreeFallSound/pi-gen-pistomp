@@ -75,19 +75,26 @@ get_changelog_version() {
     fi
 }
 
-# Binary-only packages (no Source: stanza in debian/control) have their
-# authoritative version in debian/control's Version: field per build-deb.yml:60-63.
-# Falls back to changelog if control has no Version (sanity).
+# debian/changelog is the version gate (see CLAUDE.md), so prefer it whenever it
+# exists — matching build-deb.yml, which reads the changelog and only falls back
+# to debian/control's Version: for packages that ship no changelog at all.
+#
+# This deliberately does NOT prefer control for binary-only packages. Every
+# dpkg-deb --build package here (lcd-splash, libfluidsynth2-compat,
+# pistomp-usb-automount, pistomp-bluetooth) takes its version from the changelog
+# in build.sh and rewrites control's Version: from it at build time, so the
+# checked-in Version: is vestigial and has drifted badly in three of the four
+# (lcd-splash: control 1.0-2 vs changelog 1.0-20). Trusting it made Check 2 fail
+# every correctly-bumped PR touching those packages.
 get_pkg_version() {
     local pkg_dir="$1"
     local control="${pkg_dir}/debian/control"
     local changelog="${pkg_dir}/debian/changelog"
 
-    if [ -f "${control}" ] && ! grep -q '^Source:' "${control}" 2>/dev/null \
-       && grep -q '^Version:' "${control}" 2>/dev/null; then
-        awk '/^Version:/ {print $2; exit}' "${control}"
-    elif [ -f "${changelog}" ]; then
+    if [ -f "${changelog}" ]; then
         get_changelog_version "${changelog}"
+    elif [ -f "${control}" ] && grep -q '^Version:' "${control}" 2>/dev/null; then
+        awk '/^Version:/ {print $2; exit}' "${control}"
     else
         return 0   # empty — caller treats as "no version found"
     fi
