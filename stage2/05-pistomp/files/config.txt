@@ -33,12 +33,8 @@ usb_max_current_enable=1
 # Run as fast as firmware / board allows
 arm_boost=1
 # DIN MIDI needs the PL011 on GPIO14/15, so move Bluetooth to the mini UART.
-# Bluetooth stays AVAILABLE (hci0 on the mini UART) and the BLE-MIDI menu uses
-# it. pi3-disable-bt below is inert -- pi3-miniuart-bt on the next line
-# overrides it -- but is kept deliberately: removing it produced one hung boot
-# (white screen, no fan) on a Pi 3A+, and it buys nothing to drop it.
+# Bluetooth stays available (hci0 on ttyS0) for the BLE-MIDI menu.
 enable_uart=1
-dtoverlay=pi3-disable-bt
 dtoverlay=pi3-miniuart-bt
 dtoverlay=midi-uart0
 dtoverlay=dwc2,dr_mode=host
@@ -49,12 +45,8 @@ dtoverlay=spi0-2cs,cs0_pin=14,cs1_pin=7
 # Run as fast as firmware / board allows
 arm_boost=1
 # DIN MIDI needs the PL011 on GPIO14/15, so move Bluetooth to the mini UART.
-# Bluetooth stays AVAILABLE (hci0 on the mini UART) and the BLE-MIDI menu uses
-# it. pi3-disable-bt below is inert -- pi3-miniuart-bt on the next line
-# overrides it -- but is kept deliberately: removing it produced one hung boot
-# (white screen, no fan) on a Pi 3A+, and it buys nothing to drop it.
+# Bluetooth stays available (hci0 on ttyS0) for the BLE-MIDI menu.
 enable_uart=1
-dtoverlay=pi3-disable-bt
 dtoverlay=pi3-miniuart-bt
 dtoverlay=midi-uart0
 dtoverlay=dwc2,dr_mode=host
