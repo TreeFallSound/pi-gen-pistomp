@@ -1,0 +1,15 @@
+[Unit]
+Description=pi-Stomp fatal boot splash - bad image
+# pistomp-fatal.target starts this service. This service shows the last LCD frame.
+# It runs after the isolate stops jack and the applications. The ExecStartPre of
+# jack can win a race and show "Loading audio engine" first. Then this service
+# shows the fatal message again over that text. Thus the fatal message is always
+# the last text on the screen. The message text comes from /run/pistomp-fatal.msg.
+DefaultDependencies=no
+Requires=dev-spidev0.0.device
+After=dev-spidev0.0.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'msg="$(cat /run/pistomp-fatal.msg 2>/dev/null || echo "Fatal boot error")"; exec /usr/bin/lcd-splash /usr/share/pistomp/splash/splash-shutdown.rgb565 "$msg"'

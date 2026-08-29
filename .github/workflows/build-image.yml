@@ -80,6 +80,22 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: ./scripts/check-upstream-staleness.sh
 
+    # fail fast on a missing kernel release
+    - name: Kernel release pre-flight
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        source ./config.sh
+        TAG="kernel/${KERNEL_DEB_VERSION}"
+        if gh release view "${TAG}" >/dev/null 2>&1; then
+          echo "OK: ${TAG} is published."
+        else
+          echo "::error::No GitHub Release ${TAG} — the image build would fail in fetch-assets.sh."
+          echo "Run the build-kernel workflow (Actions -> build-kernel -> Run workflow), or"
+          echo "build locally with ./build-rt-kernel-docker.sh and publish the release it prints."
+          exit 1
+        fi
+
     - name: Run build-docker.sh
       env:
         IMG_VERSION: ${{ steps.version.outputs.version }}

@@ -3,6 +3,10 @@
 	dh $@
 
 override_dh_auto_build:
+	pkg-config --atleast-version=1.9.0 jack || { \
+	    echo "ERROR: pkg-config cannot resolve jack >= 1.9.0." >&2; \
+	    echo "       Found: $$(pkg-config --modversion jack 2>&1)" >&2; \
+	    exit 1; }
 	$(MAKE)
 
 override_dh_auto_install:

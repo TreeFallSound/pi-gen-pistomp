@@ -1,3 +1,44 @@
+mod-midi-merger (1.0-5~pre4) trixie; urgency=medium
+
+  * Add pkg-config to Build-Depends. Upstream master now calls
+    find_package(PkgConfig REQUIRED) in CMakeLists.txt; the floating
+    MOD_MIDI_MERGER_REF="master" pin pulled in the change, breaking
+    configure with "Could NOT find PkgConfig".
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 18 Aug 2026 04:30:00 +0000
+
+mod-midi-merger (1.0-5~pre3) trixie; urgency=medium
+
+  * Depend on mod-host-pistomp (>= 0.10.6-6). The postinst masks the legacy
+    image-only systemd units because mod-host loads the merger on demand,
+    which is only true from 0.10.6-6: earlier builds resolved no jack >=
+    1.9.0 at compile time, so -DHAVE_JACK2 was undefined and
+    effects_aggregated_midi_enable was compiled out. Installing this package
+    beside an older mod-host would mask the units and leave nothing to load
+    the merger, disabling aggregated MIDI mode.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 18 Aug 2026 03:53:42 +0000
+
+mod-midi-merger (1.0-5~pre2) trixie; urgency=medium
+
+  * Rebuild so the event-armed reconcile burst actually ships: the
+    1.0-5~pre1 binary was built from the earlier perpetual 2-second poll
+    variant of the patch.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 18 Aug 2026 02:37:31 +0000
+
+mod-midi-merger (1.0-5~pre1) trixie; urgency=medium
+
+  * Harden hot-plug: NULL guard in the port-registration callback plus an
+    event-armed reconcile burst in the merger and broadcaster supervisor.
+    A registration wakes the supervisor, which runs a few 1-second reconcile
+    scans to connect ports that were not queryable when the callback fired.
+    No steady-state polling: the supervisor blocks between events.
+  * Mask the legacy image-only systemd units in postinst. mod-host
+    loads and unloads the merger on demand via jack_internal_client_load.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 17 Aug 2026 01:29:58 +0000
+
 mod-midi-merger (1.0-4) trixie; urgency=medium
 
   * Bump to track upstream branch HEAD.
