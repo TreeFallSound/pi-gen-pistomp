@@ -75,17 +75,10 @@ get_changelog_version() {
     fi
 }
 
-# debian/changelog is the version gate (see CLAUDE.md), so prefer it whenever it
-# exists — matching build-deb.yml, which reads the changelog and only falls back
-# to debian/control's Version: for packages that ship no changelog at all.
-#
-# This deliberately does NOT prefer control for binary-only packages. Every
-# dpkg-deb --build package here (lcd-splash, libfluidsynth2-compat,
-# pistomp-usb-automount, pistomp-bluetooth) takes its version from the changelog
-# in build.sh and rewrites control's Version: from it at build time, so the
-# checked-in Version: is vestigial and has drifted badly in three of the four
-# (lcd-splash: control 1.0-2 vs changelog 1.0-20). Trusting it made Check 2 fail
-# every correctly-bumped PR touching those packages.
+# Prefer debian/changelog, matching build-deb.yml. Even the dpkg-deb --build
+# packages take their version from it; control's Version: is rewritten at build
+# time and is stale in three of the four, so trusting it failed Check 2 on
+# correctly-bumped PRs.
 get_pkg_version() {
     local pkg_dir="$1"
     local control="${pkg_dir}/debian/control"
@@ -262,14 +255,10 @@ check3_fail=0
 if ! git rev-parse --verify "${BASE_REF_FOR_DIFF}" >/dev/null 2>&1; then
     echo "  SKIP  base ref ${BASE_REF_FOR_DIFF} not resolvable"
 else
-    # Enumerate from git, not the filesystem, and symmetrically with base_pkgs
-    # below. Globbing the working tree also picks up untracked and gitignored
-    # directories -- notably debpkgs/<pkg>/debian/<pkg>/DEBIAN build output left
-    # behind by build-package-docker.sh, or a package dir left over from another
-    # branch -- and every one of those reads as "new package added in this PR".
-    # CI never saw it (fresh checkout), so the check failed only for developers
-    # running this locally as CLAUDE.md instructs, which is precisely when a
-    # false alarm is most expensive.
+    # From git, symmetrically with base_pkgs below. Globbing the working tree
+    # also catches untracked and gitignored dirs (build output, a package dir
+    # left over from another branch), each of which reads as a new package —
+    # locally only, since CI checks out fresh.
     head_pkgs="$(
         git ls-tree --name-only HEAD debpkgs/ \
             | sed -n 's|^debpkgs/\([^/]*\)$|\1|p' \
