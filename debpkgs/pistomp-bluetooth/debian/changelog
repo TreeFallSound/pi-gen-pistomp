@@ -1,3 +1,9 @@
+pistomp-bluetooth (1.0.0-1~pre2) trixie; urgency=medium
+
+  * Clarify that the rfkill soft block is not Pi 5 specific: a Pi 3A+ boots soft-blocked too, so the drop-in's unblock is needed on every board.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 29 Aug 2026 17:07:55 +0000
+
 pistomp-bluetooth (1.0.0-1~pre1) trixie; urgency=medium
 
   * Initial release. Packaged rather than baked into stage2 so the capability
