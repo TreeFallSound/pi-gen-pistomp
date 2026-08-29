@@ -2,19 +2,19 @@ Origin: pistomp
 Label: pistomp
 Suite: trixie-testing
 Codename: trixie-testing
-Date: Sat, 29 Aug 2026 18:35:02 UTC
+Date: Sat, 29 Aug 2026 22:14:24 UTC
 Architectures: arm64
 Components: main
 Description: pi-Stomp custom packages (pre-release channel)
 MD5Sum:
- 1353e08af404aeb50b30035c88afae87 3707 main/binary-arm64/Packages
- 6582c030a6f3f97236bb96b0c4b3a866 1746 main/binary-arm64/Packages.gz
+ 1e087298ed27e37217eddd884a9dfb54 3808 main/binary-arm64/Packages
+ 96019d10ecf609ae763f7b458f5105c4 1803 main/binary-arm64/Packages.gz
  cbf45a07229e4bd2467e274ced2be9eb 151 main/binary-arm64/Release
 SHA1:
- 293f877a8bf51977deec02d769afa3ff41448d09 3707 main/binary-arm64/Packages
- b55a457c6ba0efaa3e910f59c9751ab15f8473e1 1746 main/binary-arm64/Packages.gz
+ 831bb1b3c8a5f05e41a014148891ef6e01869ac7 3808 main/binary-arm64/Packages
+ e30a94356ebf7d6d0a12f70651c5fd153274e79b 1803 main/binary-arm64/Packages.gz
  4bc0db4d662bc4d2694970b9aa83088784a2420d 151 main/binary-arm64/Release
 SHA256:
- 5df6d29406a192aa8bcabd6fe218513ce8760364f6c7524f3ced3f997ea09292 3707 main/binary-arm64/Packages
- ba114df33c88f0dd8874a14e80df9389e1f9d99ab212aa3eba68227525700985 1746 main/binary-arm64/Packages.gz
+ 380d4244d477e15c32bbd6c596e7033f915797c054ac014f9f9c5ac3b5ec70f5 3808 main/binary-arm64/Packages
+ 77e448f820a8e2fcef6f7a2f7511c11b8bfef38e755603e5bb4839d630c14a8a 1803 main/binary-arm64/Packages.gz
  0d16da48e2557c9606f5638c13ac1690ccfda705119f36418a4950f899a717e4 151 main/binary-arm64/Release
