@@ -1,0 +1,9 @@
+pistomp-wifi (1.0.0-1) trixie; urgency=medium
+
+  * Initial release. Extracted from stage2/05-pistomp (03-run.sh) so the
+    brcmfmac roamoff=0 fix reaches already-deployed devices via OTA, not
+    just new images. Overrides the distro's
+    /usr/lib/modprobe.d/rpi-brcmfmac.conf (firmware-nonfree, roamoff=1)
+    with a same-basename file in /etc/modprobe.d/.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Wed, 26 Aug 2026 00:00:00 +0000

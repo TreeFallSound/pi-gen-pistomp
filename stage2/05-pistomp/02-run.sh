@@ -30,6 +30,7 @@ apt-get install -y -qq \
     rpi-preseed \
     pistomp-usb-automount \
     pistomp-bluetooth \
+    pistomp-wifi \
     jackbridge \
     ffmpeg-pistomp \
     cabsim-lv2 \
