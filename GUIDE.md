@@ -225,6 +225,7 @@ The uv and pip caches persist across builds automatically — `build-docker.sh` 
 
 - **Config**: Edit `config` (hostname, password, WiFi country, release).
 - **Package pins/URLs**: Edit `config.sh`.
+- **Boot config (`config.txt`)**: Edit `stage2/05-pistomp/files/config.txt` — the only one; it is installed last and is what ships.
 - **Packages added to image**: Edit `stage*/00-packages`.
 - **Services**: Add/edit files in `stage2/05-pistomp/files/services/`.
 - **JACK tuning**: Edit `JACK_SAMPLE_RATE` / `JACK_PERIOD` in `stage2/05-pistomp/files/pistomp.conf`.
