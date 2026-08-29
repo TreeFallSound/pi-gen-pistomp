@@ -26,8 +26,9 @@ gpu_mem=16
 disable_overscan=1
 disable_splash=1
 
-# enable high usb port power for booting from thumb drive for development
-usb_max_current_enable=1
+# enable high usb port power (e.g. if you want to boot from a thumb drive)
+# this can have a negative impact on overall system stability
+usb_max_current_enable=0
 
 [pi3]
 # Run as fast as firmware / board allows
