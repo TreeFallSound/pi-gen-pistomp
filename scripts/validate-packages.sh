@@ -262,16 +262,19 @@ check3_fail=0
 if ! git rev-parse --verify "${BASE_REF_FOR_DIFF}" >/dev/null 2>&1; then
     echo "  SKIP  base ref ${BASE_REF_FOR_DIFF} not resolvable"
 else
-    # Bash globbing with trailing slash guarantees only directories; the
-    # `for d in <dir>/*/` form is portable across bash/dash/zsh, unlike
-    # `find -printf` (GNU-only) which silently fails on BSD/macOS and
-    # produces an empty set whose pipe downstream still succeeds.
-    head_pkgs=""
-    for d in "${DEBPKGS_DIR}"/*/; do
-        [ -d "$d" ] || continue
-        head_pkgs+="${head_pkgs:+$'\n'}$(basename "$d")"
-    done
-    head_pkgs="$(printf '%s\n' "${head_pkgs}" | sort -u)"
+    # Enumerate from git, not the filesystem, and symmetrically with base_pkgs
+    # below. Globbing the working tree also picks up untracked and gitignored
+    # directories -- notably debpkgs/<pkg>/debian/<pkg>/DEBIAN build output left
+    # behind by build-package-docker.sh, or a package dir left over from another
+    # branch -- and every one of those reads as "new package added in this PR".
+    # CI never saw it (fresh checkout), so the check failed only for developers
+    # running this locally as CLAUDE.md instructs, which is precisely when a
+    # false alarm is most expensive.
+    head_pkgs="$(
+        git ls-tree --name-only HEAD debpkgs/ \
+            | sed -n 's|^debpkgs/\([^/]*\)$|\1|p' \
+            | sort -u
+    )"
     base_pkgs="$(
         git ls-tree --name-only "${BASE_REF_FOR_DIFF}" debpkgs/ \
             | sed -n 's|^debpkgs/\([^/]*\)$|\1|p' \

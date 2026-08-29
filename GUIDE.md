@@ -203,7 +203,7 @@ Custom packages live under `debpkgs/<pkg>/`. Each has:
 
 `build.sh` reads the version from the changelog via `dpkg-parsechangelog` — no other files need updating.
 
-Packages using `dpkg-deb --build` (`lcd-splash`, `libfluidsynth2-compat`) derive their version from `debian/control`'s `Version:` field instead.
+Every package takes its version from `debian/changelog`, including the ones built with `dpkg-deb --build` (`lcd-splash`, `libfluidsynth2-compat`, `pistomp-usb-automount`, `pistomp-bluetooth`): their `build.sh` reads it with `head -1 debian/changelog` and rewrites `debian/control`'s `Version:` from it at build time. The `Version:` checked into `debian/control` is therefore vestigial and routinely stale — `lcd-splash` carries `1.0-2` there against a shipping `1.0-20`. Never read it, and never hand-edit it to bump a version; `build.sh` needs the line to exist only so its `sed` has something to replace.
 
 ### `overrides/` and `cache/` directory structure
 
