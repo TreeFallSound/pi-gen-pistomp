@@ -349,6 +349,24 @@ Description: Lightweight udev-based USB automount for pi-Stomp
  udisks2/usbmount; used by pi-Stomp to discover USB content storage
  (backups, LV2 plugins, NAM models).
 
+Package: pistomp-wifi
+Version: 1.0.0-1
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Priority: optional
+Section: admin
+Filename: pool/main/p/pistomp-wifi/pistomp-wifi_1.0.0-1_arm64.deb
+Size: 1244
+SHA256: ee0020362a5373ce9cd5a21dbda31f4dbf8e637d460eb9464d11ce09a5a4beeb
+SHA1: 278069f856bfdf322384eb3f485fe0eb95c88800
+MD5sum: e69fb3c86256769c901a10cbe70e9c2f
+Description: WiFi driver configuration for pi-Stomp
+ Ships /etc/modprobe.d/rpi-brcmfmac.conf, shadowing the distro's
+ firmware-nonfree default (roamoff=1) with roamoff=0. On AP/band-steering
+ meshes the firmware roam path keeps the link stable; the distro default
+ caused wpa_supplicant to re-associate every ~12 min, restarting DHCP and
+ dropping the link as seen from the network.
+
 Package: rpi-preseed
 Version: 0.1.0-pistomp3
 Architecture: all
