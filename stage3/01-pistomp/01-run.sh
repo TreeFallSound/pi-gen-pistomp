@@ -98,7 +98,7 @@ cp /pistomp-cache/T3K-sweep-v3.wav /opt/pistomp/pi-stomp/setup/nam/T3K-sweep-v3.
 
 # Factory package versions for pistomp-recovery baseline
 mkdir -p /etc/pistomp
-dpkg-query -W -f='{"${Package}": "${Version}"}\n' \
+dpkg-query -W -f='{"\${Package}": "\${Version}"}\n' \
     hylia \
     jack2-pistomp \
     mod-host-pistomp \
