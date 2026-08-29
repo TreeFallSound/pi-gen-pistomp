@@ -4,8 +4,7 @@
 # Usage: ./volt-monitor.sh [interval_seconds]    (default 1)
 #
 #   Column markers:  ! = 4.63V undervoltage trip      : = 5.10V nominal
-#   Flags:           UV = under-voltage NOW (bit 0)   THR = throttled NOW (bit 2)
-#                    uv/thr = has occurred since boot (bits 16/18)
+#                    (uv/thr suppressed when the matching NOW flag is shown)
 
 set -uo pipefail
 
@@ -100,8 +99,8 @@ while :; do
     tn=$(( t )) 2>/dev/null || tn=0
     (( tn & 0x1 ))     && { flags="${flags}${C_RED} UV${C_RST}"; UV_HITS=$((UV_HITS+1)); }
     (( tn & 0x4 ))     && flags="${flags}${C_RED} THR${C_RST}"
-    (( tn & 0x10000 )) && flags="${flags}${C_DIM} uv${C_RST}"
-    (( tn & 0x40000 )) && flags="${flags}${C_DIM} thr${C_RST}"
+    (( tn & 0x10000 )) && (( !(tn & 0x1) )) && flags="${flags}${C_DIM} uv${C_RST}"
+    (( tn & 0x40000 )) && (( !(tn & 0x4) )) && flags="${flags}${C_DIM} thr${C_RST}"
     [ "$a" = "1" ] && flags="${flags}${C_YEL} lcrit${C_RST}"
 
     SAMPLES=$((SAMPLES+1))
