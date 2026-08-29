@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
+systemctl daemon-reload 2>/dev/null || true
 udevadm control --reload-rules 2>/dev/null || true
-udevadm trigger --subsystem-match=block 2>/dev/null || true
+udevadm trigger --action=add --subsystem-match=block --property-match=ID_BUS=usb 2>/dev/null || true
 
 #DEBHELPER#

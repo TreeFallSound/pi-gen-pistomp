@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+systemctl daemon-reload 2>/dev/null || true
+# Deliberately no enable/start: the pi-Stomp UI owns whether Bluetooth runs.
+# If it is already running, restart so the -E drop-in takes effect now.
+if systemctl is-active --quiet bluetooth.service 2>/dev/null; then
+    systemctl restart bluetooth.service 2>/dev/null || true
+fi
+
+#DEBHELPER#

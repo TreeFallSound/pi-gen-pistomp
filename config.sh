@@ -10,8 +10,10 @@ set -a
 KERNEL_VERSION="6.18.36"
 KERNEL_LOCALVERSION="-rpi-v8-rt"  # suffix in uname -r; must contain -rpi- so raspi-firmware's initramfs hook recognises the flavour
 LINUX_RPI_COMMIT="954341c412dd48b7c7f8125d81212ec4c0e42ed3"
-# So CI/CD can pick up the kernel without them in cache
-KERNEL_DEB_VERSION="${KERNEL_VERSION}-1"
+# Version of the published kernel .debs, and build-kernel.yml's gate: if a
+# Release tagged kernel/<this value> exists, the workflow skips the build.
+# Bump the revision for local changes that don't change the kernel commit.
+KERNEL_DEB_VERSION="6.18.36-1"
 KERNEL_ASSETS_URL="https://github.com/TreeFallSound/pi-gen-pistomp/releases/download/kernel/${KERNEL_DEB_VERSION}"
 
 # --- JACK2 ---
@@ -60,7 +62,7 @@ RPI_PRESEED_REF="main"
 
 # --- pi-stomp (application) ---
 PISTOMP_REPO="https://github.com/TreeFallSound/pi-stomp.git"
-PISTOMP_BRANCH="feat/transport-bindings"
+PISTOMP_BRANCH="main"
 
 # --- pistomp-recovery ---
 PISTOMP_RECOVERY_REPO="https://github.com/TreeFallSound/pistomp-recovery.git"

@@ -11,8 +11,7 @@ UPSTREAM_DIR="${WORKDIR}/Marshall-1960-src"
 
 cache_check
 
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${VEJA_1960_CAB_REF}" --depth 1 "${VEJA_1960_CAB_REPO}" "${UPSTREAM_DIR}"
+sync_upstream "${VEJA_1960_CAB_REPO}" "${VEJA_1960_CAB_REF}" "${UPSTREAM_DIR}"
 record_upstream_sha
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"

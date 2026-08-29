@@ -98,7 +98,7 @@ cp /pistomp-cache/T3K-sweep-v3.wav /opt/pistomp/pi-stomp/setup/nam/T3K-sweep-v3.
 
 # Factory package versions for pistomp-recovery baseline
 mkdir -p /etc/pistomp
-dpkg-query -W -f='{"${Package}": "${Version}"}\n' \
+dpkg-query -W -f='{"\${Package}": "\${Version}"}\n' \
     hylia \
     jack2-pistomp \
     mod-host-pistomp \
@@ -123,6 +123,7 @@ dpkg-query -W -f='{"${Package}": "${Version}"}\n' \
     veja-bass-cab-lv2 \
     veja-1960-cab-lv2 \
     pistomp-usb-automount \
+    pistomp-wifi \
     | python3 -c "
 import sys, json
 pkgs = {}
@@ -186,7 +187,7 @@ for pkg in \
     hylia jack2-pistomp mod-host-pistomp amidithru mod-midi-merger \
     mod-ttymidi sfizz-pistomp fluidsynth-headless lcd-splash lg-pistomp \
     jack-capture libfluidsynth2-compat browsepy touchosc2midi mod-ui \
-    pi-stomp pistomp-recovery rpi-preseed jackbridge ffmpeg-pistomp cabsim-lv2 veja-bass-cab-lv2 veja-1960-cab-lv2 pistomp-usb-automount; do
+    pi-stomp pistomp-recovery rpi-preseed jackbridge ffmpeg-pistomp cabsim-lv2 veja-bass-cab-lv2 veja-1960-cab-lv2 pistomp-usb-automount pistomp-wifi; do
     find "${ROOTFS_DIR}/var/cache/apt/archives" -maxdepth 1 -name "${pkg}_*.deb" \
         -exec install -m 644 {} "${ROOTFS_DIR}/opt/pistomp/factory-debs/" \; 2>/dev/null || true
 done

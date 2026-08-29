@@ -1,0 +1,231 @@
+Description: Harden hot-plug port connection with a NULL guard and an
+ event-armed reconcile burst.
+ The port-registration callback connects a new physical MIDI port only at
+ the instant it fires. If the port is not queryable yet (jack_port_by_id
+ returns NULL), the one-shot connect is lost and the device never joins the
+ merged stream until a mode toggle.
+ .
+ This patch adds a reconcile_connections() function to the merger and the
+ broadcaster that scans every physical MIDI port and connects the ones that
+ are not connected yet (safe to repeat: jack_connect returns EEXIST when the
+ connection is present). The port-registration callback gains a NULL guard
+ and always wakes the supervisor. The supervisor blocks on sem_wait while
+ idle; a wake arms a short burst of reconcile scans (a few attempts, one
+ second apart) so a port that was not queryable when its callback fired is
+ picked up within a few seconds. A fresh event re-arms the burst. There is
+ no steady-state polling: between events the supervisor is fully blocked.
+Author: Cam Gorrie <sastraxi@gmail.com>
+Forwarded: not-needed
+Last-Update: 2026-08-16
+
+--- a/src/midi-broadcaster.c
++++ b/src/midi-broadcaster.c
+@@ -80,6 +80,40 @@ void handle_scheduled_connections(midi_broadcaster_t *const mm) {
+   }
+   free(source);
+ }
++/**
++ * Connect our output to every physical MIDI input.
++ * This is a safety net: the port-registration callback can miss a port if the
++ * port is not queryable at the instant the callback fires. The scan is safe
++ * to repeat (jack_connect returns EEXIST when the connection is present).
++ * It mirrors the one-time connect loop in jack_initialize.
++ */
++static void reconcile_connections(midi_broadcaster_t *const mm) {
++  const char **const ports = jack_get_ports(mm->client, "",
++      JACK_DEFAULT_MIDI_TYPE, target_port_flags);
++  if (ports == NULL)
++    return;
++
++  char  aliases[2][320];
++  char* aliasesptr[2] = { aliases[0], aliases[1] };
++  const char *const ourportname = jack_port_name(mm->ports[PORT_OUT]);
++
++  for (int i = 0; ports[i] != NULL; ++i) {
++    if (strncmp(ports[i], "system_midi:Midi Through", 24) == 0)
++      continue;
++
++    if (strncmp(ports[i], "system:midi_playback_", 21) == 0 || strncmp(ports[i], "system_midi:playback_", 21) == 0) {
++      if (jack_port_get_aliases(jack_port_by_name(mm->client, ports[i]), aliasesptr) > 0) {
++        if (strncmp(aliases[0], "alsa_pcm:Midi-Through/", 22) == 0) {
++          continue;
++        }
++      }
++    }
++
++    jack_connect(mm->client, ourportname, ports[i]);
++  }
++
++  jack_free(ports);
++}
+ 
+ 
+ static int process_callback(jack_nframes_t nframes, void *arg)
+@@ -129,20 +163,28 @@ static void port_registration_callback(jack_port_id_t port_id, int is_registered
+ 
+   // If there is a new port of type MIDI input we connect it to our
+   // output port.
+-  if (is_registered) {
+-    jack_port_t *source = jack_port_by_id(mm->client, port_id);
+-    // Check if MIDI input
+-    if ((jack_port_flags(source) & target_port_flags) == target_port_flags) {
+-      const char *const ptype = jack_port_type(source);
+-      if (ptype && strcmp(ptype, JACK_DEFAULT_MIDI_TYPE) == 0) {
+-
+-        // We can't call jack_connect here in the callback,
+-        // Schedule the connection for later.
+-        push_back(mm->ports_to_connect, jack_port_name(source));
+-        sem_post(&mm->sem);
+-      }
++  if (!is_registered)
++    return;
++
++  jack_port_t *source = jack_port_by_id(mm->client, port_id);
++  if (source == NULL) {
++    /* The port is not queryable yet. Wake the supervisor to reconcile. */
++    sem_post(&mm->sem);
++    return;
++  }
++
++  // Check if MIDI input
++  if ((jack_port_flags(source) & target_port_flags) == target_port_flags) {
++    const char *const ptype = jack_port_type(source);
++    if (ptype && strcmp(ptype, JACK_DEFAULT_MIDI_TYPE) == 0) {
++
++      // We can't call jack_connect here in the callback,
++      // Schedule the connection for later.
++      push_back(mm->ports_to_connect, jack_port_name(source));
+     }
+   }
++  /* Always wake the supervisor. It reconciles even for a skipped port. */
++  sem_post(&mm->sem);
+   return;
+ }
+ 
+@@ -155,7 +197,19 @@ void *supervise(void *arg) {
+ 
++  const int reconcile_burst = 4;
++  int reconcile_left = 0;
++
+   while (mm->do_exit == false) {
+     handle_scheduled_connections(mm);
+-    sem_wait(&mm->sem);
++    if (reconcile_left > 0) {
++      reconcile_connections(mm);
++      if (sem_timedwait_secs(&mm->sem, 1) == 0)
++        reconcile_left = reconcile_burst;   /* new event: re-arm the burst */
++      else
++        --reconcile_left;                    /* timed out: count down */
++    } else {
++      sem_wait(&mm->sem);                     /* idle: block until an event */
++      reconcile_left = reconcile_burst;
++    }
+   }
+   return NULL;
+ }
+--- a/src/midi-merger.c
++++ b/src/midi-merger.c
+@@ -81,6 +81,40 @@ void handle_scheduled_connections(midi_merger_t *const mm) {
+     free(source);
+   }
+ }
++/**
++ * Connect every physical MIDI output to our input.
++ * This is a safety net: the port-registration callback can miss a port if the
++ * port is not queryable at the instant the callback fires. The scan is safe
++ * to repeat (jack_connect returns EEXIST when the connection is present).
++ * It mirrors the one-time connect loop in jack_initialize.
++ */
++static void reconcile_connections(midi_merger_t *const mm) {
++  const char **const ports = jack_get_ports(mm->client, "",
++      JACK_DEFAULT_MIDI_TYPE, target_port_flags);
++  if (ports == NULL)
++    return;
++
++  char  aliases[2][320];
++  char* aliasesptr[2] = { aliases[0], aliases[1] };
++  const char *const ourportname = jack_port_name(mm->ports[PORT_IN]);
++
++  for (int i = 0; ports[i] != NULL; ++i) {
++    if (strncmp(ports[i], "system_midi:Midi Through", 24) == 0)
++      continue;
++
++    if (strncmp(ports[i], "system:midi_capture_", 20) == 0 || strncmp(ports[i], "system_midi:capture_", 20) == 0) {
++      if (jack_port_get_aliases(jack_port_by_name(mm->client, ports[i]), aliasesptr) > 0) {
++        if (strncmp(aliases[0], "alsa_pcm:Midi-Through/", 22) == 0) {
++          continue;
++        }
++      }
++    }
++
++    jack_connect(mm->client, ports[i], ourportname);
++  }
++
++  jack_free(ports);
++}
+ 
+ 
+ static int process_callback(jack_nframes_t nframes, void *arg)
+@@ -130,21 +164,28 @@ static void port_registration_callback(jack_port_id_t port_id, int is_registered
+ 
+   // If there is a new port of type MIDI output we connect it to our
+   // input port.
+-  if (is_registered) {
+-    jack_port_t *source = jack_port_by_id(mm->client, port_id);
+-
+-    // Check if MIDI output
+-    if ((jack_port_flags(source) & target_port_flags) == target_port_flags) {
+-      const char *const ptype = jack_port_type(source);
+-      if (ptype && strcmp(ptype, JACK_DEFAULT_MIDI_TYPE) == 0) {
+-
+-        // We can't call jack_connect here in the callback,
+-        // Schedule the connection for later.
+-        push_back(mm->ports_to_connect, jack_port_name(source));
+-        sem_post(&mm->sem);
+-      }
++  if (!is_registered)
++    return;
++
++  jack_port_t *source = jack_port_by_id(mm->client, port_id);
++  if (source == NULL) {
++    /* The port is not queryable yet. Wake the supervisor to reconcile. */
++    sem_post(&mm->sem);
++    return;
++  }
++
++  // Check if MIDI output
++  if ((jack_port_flags(source) & target_port_flags) == target_port_flags) {
++    const char *const ptype = jack_port_type(source);
++    if (ptype && strcmp(ptype, JACK_DEFAULT_MIDI_TYPE) == 0) {
++
++      // We can't call jack_connect here in the callback,
++      // Schedule the connection for later.
++      push_back(mm->ports_to_connect, jack_port_name(source));
+     }
+   }
++  /* Always wake the supervisor. It reconciles even for a skipped port. */
++  sem_post(&mm->sem);
+   return;
+ }
+ 
+@@ -157,7 +198,19 @@ void *supervise(void *arg) {
+ 
++  const int reconcile_burst = 4;
++  int reconcile_left = 0;
++
+   while (mm->do_exit == false) {
+     handle_scheduled_connections(mm);
+-    sem_wait(&mm->sem);
++    if (reconcile_left > 0) {
++      reconcile_connections(mm);
++      if (sem_timedwait_secs(&mm->sem, 1) == 0)
++        reconcile_left = reconcile_burst;   /* new event: re-arm the burst */
++      else
++        --reconcile_left;                    /* timed out: count down */
++    } else {
++      sem_wait(&mm->sem);                     /* idle: block until an event */
++      reconcile_left = reconcile_burst;
++    }
+   }
+   return NULL;
+ }

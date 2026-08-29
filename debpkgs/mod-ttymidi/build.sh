@@ -11,8 +11,7 @@ UPSTREAM_DIR="${WORKDIR}/${PKG}-src"
 
 cache_check
 
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${MOD_TTYMIDI_REF}" --depth 1 "${MOD_TTYMIDI_REPO}" "${UPSTREAM_DIR}"
+sync_upstream "${MOD_TTYMIDI_REPO}" "${MOD_TTYMIDI_REF}" "${UPSTREAM_DIR}"
 record_upstream_sha
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"

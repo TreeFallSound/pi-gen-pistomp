@@ -11,8 +11,7 @@ UPSTREAM_DIR="${WORKDIR}/${PKG}-src"
 
 cache_check
 
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${HYLIA_REF}" --depth 1 "${HYLIA_REPO}" "${UPSTREAM_DIR}"
+sync_upstream "${HYLIA_REPO}" "${HYLIA_REF}" "${UPSTREAM_DIR}"
 record_upstream_sha
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"

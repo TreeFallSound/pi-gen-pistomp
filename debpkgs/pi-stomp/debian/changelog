@@ -1,3 +1,76 @@
+pi-stomp (3.3.0-0) trixie; urgency=medium
+
+  * Backup/restore progress UI: reusable progress bar, restore offered from
+    the welcome flow, and a cleaner restart after restoring
+  * Footswitch UI: selectable footswitch widget with a longpress bindings
+    dialog (including pedalboard chord rows), more visible snapshot binding
+    colours, and better pedalboard scrolling
+  * Unmapping a MIDI binding learned over a sub-range now restores the
+    parameter's full declared range (thanks jpremill)
+  * Fix transport source name ("none", as MOD-UI defines it, instead of
+    "internal") — removes protocol log spam
+  * Relicense under AGPL and ship THIRD_PARTY_LICENSES.md covering bundled
+    plugins, including new plugins from four new contributors
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 14 Aug 2026 04:17:29 +0000
+
+pi-stomp (3.2.1-0~pre10) trixie; urgency=medium
+
+  * Fix Calf EQ-5 Q parameters + shelves
+  * Change manual QR code to point to treefallsound
+  * Transport (tempo) parameters can be bound to controls, with high-precision BPM over WebSocket
+  * Fix tap tempo when bound to a footswitch
+  * Fixed: Params could be MIDI-learned while the external MIDI port was unavailable
+  * Global EQ now accounts for the current sample rate
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 10 Aug 2026 17:57:00 -0400
+
+pi-stomp (3.2.1-0~pre9) trixie; urgency=medium
+
+  * Build the venv with 'uv sync --locked' so a dependency added to pyproject.toml without re-locking fails the build instead of being silently omitted from the package.
+  * Drop the python3-lilv dependency. Nothing imports the Python binding, and
+    it cannot be imported with only python3-lilv installed: it dlopens the
+    unversioned liblilv-0.so, which ships in liblilv-dev. lilv is used solely
+    by C code (mod-host, mod-ui's libmod_utils.so), which depends on
+    liblilv-0-0 directly.
+  * Skip dh_makeshlibs, which was scraping the venv's wheel-bundled private
+    libraries and declaring that this package provides SONAMEs such as
+    libjpeg-6d4ad459 and libscipy_openblas64_, plus an ldconfig trigger.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sun, 09 Aug 2026 02:02:40 +0000
+
+pi-stomp (3.2.1-0~pre8) trixie; urgency=medium
+
+  * Honour the MIDI-learn sub-range MOD-UI stores with a binding: a control
+    learned over part of a port's range now sweeps only that part, and the
+    dialog shows the bound minimum and maximum.
+  * Logarithmic ports now use the same geometric taper as MOD-UI, on the
+    encoder step grid, in the parameter dialog, and on the CC we emit — a
+    log control no longer lands on a different value than the web UI.
+  * Nicer value display for logarithmic parameters.
+  * Transport bindings: high-precision BPM over the WebSocket, and bound
+    transport parameters emit bypass MIDI CC.
+  * Fix parameters being learnable while the external MIDI port was
+    unavailable.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 06 Aug 2026 23:00:00 -0400
+
+pi-stomp (3.2.1-0~pre7) trixie; urgency=medium
+
+  * Honour the MIDI-learn sub-range MOD-UI stores with a binding: a control
+    learned over part of a port's range now sweeps only that part, and the
+    dialog shows the bound minimum and maximum.
+  * Logarithmic ports now use the same geometric taper as MOD-UI, on the
+    encoder step grid, in the parameter dialog, and on the CC we emit — a
+    log control no longer lands on a different value than the web UI.
+  * Nicer value display for logarithmic parameters.
+  * Transport bindings: high-precision BPM over the WebSocket, and bound
+    transport parameters emit bypass MIDI CC.
+  * Fix parameters being learnable while the external MIDI port was
+    unavailable.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Thu, 06 Aug 2026 22:43:00 -0400
+
 pi-stomp (3.2.1-0~pre6) trixie; urgency=medium
 
   * Implement Calf EQ5 panel

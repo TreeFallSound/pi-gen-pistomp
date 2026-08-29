@@ -11,8 +11,7 @@ UPSTREAM_DIR="${WORKDIR}/Cabinet-Simulator-src"
 
 cache_check
 
-[ ! -d "${UPSTREAM_DIR}" ] && \
-    git clone --branch "${CABSIM_LV2_REF}" --depth 1 "${CABSIM_LV2_REPO}" "${UPSTREAM_DIR}"
+sync_upstream "${CABSIM_LV2_REPO}" "${CABSIM_LV2_REF}" "${UPSTREAM_DIR}"
 record_upstream_sha
 
 cp -r "${SCRIPT_DIR}/debian" "${UPSTREAM_DIR}/"

@@ -7,6 +7,24 @@ LCD="/usr/bin/lcd-splash"
 SPLASH_DIR="/usr/share/pistomp/splash"
 lcd() { "$LCD" "$SPLASH_DIR/$1.rgb565" "$2" 2>/dev/null || true; }
 
+# ---------- fatal guard: the name of uid 1000 must be pistomp ----------
+# Many parts of the system use the name "pistomp" for uid 1000.
+# rpi-preseed can change this name, executing `usermod -l` to give
+# uid 1000 a new name. It also moves /home/pistomp to /home/<name>.
+# The build-time flag DISABLE_FIRST_BOOT_USER_RENAME stops only the interactive
+# rename. It has no effect on this flow. A different name is an error: the image
+# is bad. Exiting with a non-zero exit code triggers pistomp-fatal.service,
+# which shows the pistomp-fatal message as the last LCD frame.
+ACTUAL_USER="$(getent passwd 1000 | cut -d: -f1)"
+if [[ "${ACTUAL_USER}" != "pistomp" ]]; then
+    echo "firstboot: FATAL: uid 1000 is '${ACTUAL_USER:-<none>}', not 'pistomp'." \
+         "rpi-preseed/Imager likely renamed the user. Reflash and keep the" \
+         "default username 'pistomp'." >&2
+    # pistomp-fatal.service reads this message and shows it after the isolate.
+    echo "Fatal: user != pistomp" > /run/pistomp-fatal.msg
+    exit 1
+fi
+
 # ---------- expand root partition to fill SD card ----------
 
 lcd splash-expandfs "Expanding filesystem..."
@@ -63,13 +81,6 @@ fi
 if [[ -f "${CONF}" ]]; then
     source "${CONF}"
 
-    # Disable in-driver (firmware) roaming. The BCM43455 firmware can't do
-    # 802.11r/FT, so on a band/AP-steering mesh (e.g. Bell Whole Home WiFi) its
-    # driver-based roam attempts a WPA-PSK->FT-PSK cross-AKM transition that the
-    # firmware botches, dropping the link. With roamoff=1 a steer becomes a clean
-    # full reconnect instead. This is a stationary appliance, so we don't need
-    # roaming. See raspberrypi/linux#6265, Arch FS#63397, kernel BZ 206315.
-    printf 'options brcmfmac roamoff=1\n' > /etc/modprobe.d/brcmfmac.conf
 
     # OS-level settings: only apply if Imager/rpi-preseed didn't already handle them
     if [[ "${IMAGER_APPLIED}" != "true" ]]; then

@@ -2,12 +2,12 @@ Source: mod-midi-merger
 Section: sound
 Priority: optional
 Maintainer: pistomp <pistomp@example.com>
-Build-Depends: debhelper-compat (= 13), cmake, quilt, libjack-jackd2-dev | libjack-dev
+Build-Depends: debhelper-compat (= 13), cmake, pkg-config, quilt, libjack-jackd2-dev | libjack-dev
 Standards-Version: 4.6.2
 
 Package: mod-midi-merger
 Architecture: arm64
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, mod-host-pistomp (>= 0.10.6-6)
 Description: MOD MIDI Merger — merge multiple MIDI inputs into one JACK port
  Part of the MOD ecosystem. Merges multiple ALSA MIDI inputs into a single
  JACK MIDI output port.

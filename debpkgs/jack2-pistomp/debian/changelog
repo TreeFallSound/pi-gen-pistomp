@@ -1,3 +1,9 @@
+jack2-pistomp (1.9.22-7) trixie; urgency=medium
+
+  * Conflict with, replace and provide libjack-jackd2-dev, so dpkg can install jack2-pistomp on systems that already have Debian's dev package (promotes 1.9.22-7~pre1).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 14 Aug 2026 04:32:23 +0000
+
 jack2-pistomp (1.9.22-7~pre1) trixie; urgency=medium
 
   * Conflict with, replace and provide libjack-jackd2-dev. The package
