@@ -30,24 +30,19 @@ disable_splash=1
 usb_max_current_enable=1
 
 [pi3]
-# Run as fast as firmware / board allows
-arm_boost=1
-# pi-stomp additions to allow DIN Midi, disables bluetooth however
 enable_uart=1
-dtoverlay=pi3-disable-bt
-dtoverlay=pi3-miniuart-bt
+core_freq_fixed=1
+dtoverlay=miniuart-bt
 dtoverlay=midi-uart0
 dtoverlay=dwc2,dr_mode=host
 # Hack for spi0, cs0_pin should be unused
 dtoverlay=spi0-2cs,cs0_pin=14,cs1_pin=7
 
 [pi4]
-# Run as fast as firmware / board allows
 arm_boost=1
-# pi-stomp additions to allow DIN Midi, disables bluetooth however
 enable_uart=1
-dtoverlay=pi3-disable-bt
-dtoverlay=pi3-miniuart-bt
+core_freq_fixed=1
+dtoverlay=miniuart-bt
 dtoverlay=midi-uart0
 dtoverlay=dwc2,dr_mode=host
 # Hack for spi0, cs0_pin should be unused

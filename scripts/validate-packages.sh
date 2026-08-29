@@ -75,19 +75,19 @@ get_changelog_version() {
     fi
 }
 
-# Binary-only packages (no Source: stanza in debian/control) have their
-# authoritative version in debian/control's Version: field per build-deb.yml:60-63.
-# Falls back to changelog if control has no Version (sanity).
+# Prefer debian/changelog, matching build-deb.yml. Even the dpkg-deb --build
+# packages take their version from it; control's Version: is rewritten at build
+# time and is stale in three of the four, so trusting it failed Check 2 on
+# correctly-bumped PRs.
 get_pkg_version() {
     local pkg_dir="$1"
     local control="${pkg_dir}/debian/control"
     local changelog="${pkg_dir}/debian/changelog"
 
-    if [ -f "${control}" ] && ! grep -q '^Source:' "${control}" 2>/dev/null \
-       && grep -q '^Version:' "${control}" 2>/dev/null; then
-        awk '/^Version:/ {print $2; exit}' "${control}"
-    elif [ -f "${changelog}" ]; then
+    if [ -f "${changelog}" ]; then
         get_changelog_version "${changelog}"
+    elif [ -f "${control}" ] && grep -q '^Version:' "${control}" 2>/dev/null; then
+        awk '/^Version:/ {print $2; exit}' "${control}"
     else
         return 0   # empty — caller treats as "no version found"
     fi
@@ -255,16 +255,15 @@ check3_fail=0
 if ! git rev-parse --verify "${BASE_REF_FOR_DIFF}" >/dev/null 2>&1; then
     echo "  SKIP  base ref ${BASE_REF_FOR_DIFF} not resolvable"
 else
-    # Bash globbing with trailing slash guarantees only directories; the
-    # `for d in <dir>/*/` form is portable across bash/dash/zsh, unlike
-    # `find -printf` (GNU-only) which silently fails on BSD/macOS and
-    # produces an empty set whose pipe downstream still succeeds.
-    head_pkgs=""
-    for d in "${DEBPKGS_DIR}"/*/; do
-        [ -d "$d" ] || continue
-        head_pkgs+="${head_pkgs:+$'\n'}$(basename "$d")"
-    done
-    head_pkgs="$(printf '%s\n' "${head_pkgs}" | sort -u)"
+    # From git, symmetrically with base_pkgs below. Globbing the working tree
+    # also catches untracked and gitignored dirs (build output, a package dir
+    # left over from another branch), each of which reads as a new package —
+    # locally only, since CI checks out fresh.
+    head_pkgs="$(
+        git ls-tree --name-only HEAD debpkgs/ \
+            | sed -n 's|^debpkgs/\([^/]*\)$|\1|p' \
+            | sort -u
+    )"
     base_pkgs="$(
         git ls-tree --name-only "${BASE_REF_FOR_DIFF}" debpkgs/ \
             | sed -n 's|^debpkgs/\([^/]*\)$|\1|p' \

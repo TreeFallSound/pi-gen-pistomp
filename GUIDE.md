@@ -202,7 +202,7 @@ Custom packages live under `debpkgs/<pkg>/`. Each has:
 
 `build.sh` reads the version from the changelog via `dpkg-parsechangelog` — no other files need updating.
 
-Packages using `dpkg-deb --build` (`lcd-splash`, `libfluidsynth2-compat`) derive their version from `debian/control`'s `Version:` field instead.
+This includes the `dpkg-deb --build` packages (`lcd-splash`, `libfluidsynth2-compat`, `pistomp-usb-automount`, `pistomp-bluetooth`): their `build.sh` rewrites `debian/control`'s `Version:` from the changelog at build time, so the checked-in `Version:` is vestigial and routinely stale (`lcd-splash` reads `1.0-2` against a shipping `1.0-20`). Never read it or hand-edit it to bump a version.
 
 ### `overrides/` and `cache/` directory structure
 
@@ -224,6 +224,7 @@ The uv and pip caches persist across builds automatically — `build-docker.sh` 
 
 - **Config**: Edit `config` (hostname, password, WiFi country, release).
 - **Package pins/URLs**: Edit `config.sh`.
+- **Boot config (`config.txt`)**: Edit `stage2/05-pistomp/files/config.txt` — the only one; it is installed last and is what ships.
 - **Packages added to image**: Edit `stage*/00-packages`.
 - **Services**: Add/edit files in `stage2/05-pistomp/files/services/`.
 - **JACK tuning**: Edit `JACK_SAMPLE_RATE` / `JACK_PERIOD` in `stage2/05-pistomp/files/pistomp.conf`.
