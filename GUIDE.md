@@ -89,7 +89,6 @@ Build process executes ordered stages.
 - **Realtime IRQ tuning** uses the `rtirq-init` apt package (not `rtirq` — the old name doesn't exist on Trixie). Config is installed to `/etc/default/rtirq`. A custom `rtirq.service` unit wraps the init script.
 - **Networking** matches pistomp-arch exactly: wired NM profile with 15 s DHCP timeout + link-local fallback (`eth0`), wifi power-save off, MAC randomization off, multihome policy routing dispatcher.
 - **WiFi hotspot** is started on demand by `wifi-check.service` (after NM settles), not via rc.local. It only starts if neither WiFi nor ethernet is connected.
-- **WiFi roaming stability (wpa_supplicant 2.11 + `roamoff=1`)**. On a band/AP-steering mesh (e.g. Bell "Whole Home WiFi") the Debian image dropped WiFi repeatedly — disconnect/reconnect "roaming" — where pistomp-arch was rock-solid for months on the *same* hardware, firmware, mesh, and config. Root cause: **Debian Trixie ships `wpasupplicant` 2.10; arch shipped 2.11.** When the mesh steers the client to a BSSID advertising 802.11r, NetworkManager negotiates a WPA-PSK→FT-PSK *cross-AKM* roam; wpa_supplicant **2.10 fumbles that transition and tears the link down**, while **2.11 fixed it** ("improve cross-AKM roaming with driver-based SME/BSS selection"). This was confirmed empirically: the arch box runs wpa_supplicant 2.11 with FT *exposed* (`get_capability key_mgmt` lists `FT-PSK`) and firmware roaming *on* (`roamoff=0`), happily roaming a 5 GHz mesh node — so the differentiator is purely the supplicant version, not FT capability or config. The mitigation baked in: **`options brcmfmac roamoff=1`** (written by `firstboot.sh` to `/etc/modprobe.d/brcmfmac.conf`) disables in-driver roaming so a steer becomes a clean full reconnect — harmless since this is a stationary floor appliance that never needs to roam. Refs: raspberrypi/linux#6265, Arch FS#63397, kernel BZ 206315.
 - **The stage2 chroot has no network tools.** At `stage2/00-dummy-packages` the rootfs is a ~11k-file bootstrap — no `wget`, `curl`, or `ca-certificates` (wget arrives ~15s later). Reachability probes belong on the build container, *before* `on_chroot`. A `wget --spider` there silently failed "command not found", skipped the `trixie-testing` source, and shipped stable packages inside a `-rc` image. `scripts/verify-image-packages.sh` now fails the build when installed versions don't match `check-packages.sh`'s pre-flight resolution.
 - **QEMU**: not needed. The build runs in a native arm64 Docker container (Apple Silicon, arm64 Linux, arm64 CI). On x86_64 Linux, `dpkg-reconfigure qemu-user-binfmt` inside the container registers QEMU with the `F` flag — no QEMU binary needs to exist inside the rootfs.
 - **The main user name must be pistomp**: There are many places where "pistomp" is assumed to be the username or /home/pistomp is assumed. Do not add any new instances of this and see docs/username-pistomp-coupling.md for a list of places in the different repos that do this.
@@ -232,14 +231,27 @@ The uv and pip caches persist across builds automatically — `build-docker.sh` 
 
 ## Kernel Updates
 
-The RT kernel `.deb` files live in `cache/kernel/`. Updating requires:
+Kernel `.deb`s live in `cache/kernel/` locally; CI downloads them from a GitHub
+Release tagged `kernel/<KERNEL_DEB_VERSION>`. To update:
 
-1. Update `KERNEL_VERSION`, `KERNEL_LOCALVERSION`, and `LINUX_RPI_COMMIT` in `config.sh`.
-2. Run `./build-rt-kernel-docker.sh` to build new `.deb` files.
-3. Update `stage2/05-pistomp/03-run.sh` — the `dpkg -i` calls and the `cp`/`mv` block that moves kernel files into `/boot/firmware/`.
+1. Update `KERNEL_VERSION`, `KERNEL_LOCALVERSION`, `LINUX_RPI_COMMIT` in `config.sh`.
+2. Bump `KERNEL_DEB_VERSION`.
+3. Push to `main` (or Actions → build-kernel → Run workflow), or build locally
+   with `./build-rt-kernel-docker.sh` and publish the release it prints.
 4. Rebuild the image.
 
-> **Note**: Kernel `.deb` files must be built against the target Debian release (Trixie). Bookworm kernel `.deb` files will fail on Trixie's initramfs.
+Gotchas:
+
+- **Nothing rebuilds unless `KERNEL_DEB_VERSION` changes.** `build-kernel.yml`
+  skips the build when that Release already exists, so editing
+  `rt-kernel/diffconfig` alone silently ships the old kernel. `validate-packages.sh`
+  check 5 catches this at PR time.
+- **Don't rename the `kernel/` tag prefix.** `publish-apt-repo.yml` only publishes
+  `debpkg/` tags; that's what keeps `linux-image` out of the OTA apt suite.
+- `stage2/05-pistomp/03-run.sh` needs no edit for a version bump (it globs), but
+  the `-rpi-v8-rt` flavour is hardcoded there, so changing `KERNEL_LOCALVERSION`
+  does require editing it.
+- Kernel `.deb`s must be built against Trixie
 
 ## Troubleshooting
 

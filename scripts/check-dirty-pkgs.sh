@@ -12,6 +12,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../config.sh
 source "${ROOT_DIR}/config.sh"
+# config.sh leaves `set -a` on; a >128 KiB export makes every later exec E2BIG.
+set +a
 # shellcheck source=./pkg-sources.sh
 source "${ROOT_DIR}/scripts/pkg-sources.sh"
 
@@ -21,6 +23,9 @@ dirty=()
 unknown=()
 clean=()
 errors=()
+
+# Captured, not `< <(pkg_sources)`: a process substitution's failure is invisible.
+pkg_list="$(pkg_sources)"
 
 while IFS='|' read -r pkg repo ref kind; do
     # Only branch-pinned packages can move on their own; tag/commit pins change
@@ -48,7 +53,7 @@ while IFS='|' read -r pkg repo ref kind; do
     else
         dirty+=("${pkg}  built=${built_sha:0:12}  remote=${remote_sha:0:12}  ref=${ref}")
     fi
-done < <(pkg_sources)
+done <<< "${pkg_list}"
 
 echo ""
 if [ ${#dirty[@]} -gt 0 ]; then

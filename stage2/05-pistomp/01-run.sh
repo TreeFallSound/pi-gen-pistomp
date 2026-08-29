@@ -87,8 +87,6 @@ ln -sf /usr/lib/systemd/system/mod-ala-pi-stomp.service /etc/systemd/system/mult
 # mod-amidithru.service + jack.service, so it only runs once both are up.
 # Starts /usr/mod/scripts/start_touchosc2midi.sh which launches the
 # touchosc2midi venv to bridge TouchOSC app input to JACK MIDI.
-ln -sf /usr/lib/systemd/system/mod-midi-merger.service /etc/systemd/system/multi-user.target.wants
-ln -sf /usr/lib/systemd/system/mod-midi-merger-broadcaster.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/ttymidi.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/wifi-check.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/wifi-mac-check.service /etc/systemd/system/multi-user.target.wants

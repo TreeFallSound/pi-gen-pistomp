@@ -17,6 +17,11 @@
 #   4. A .github/workflows/build-<name>.yml has paths: debpkgs/<pkg>/**
 #      but no debpkgs/<pkg>/ directory exists — typo, or a stale
 #      workflow left after a package was removed.
+#   5. A PR changes what the RT kernel builds from (rt-kernel/**, or the
+#      KERNEL_VERSION / KERNEL_LOCALVERSION / LINUX_RPI_COMMIT pins in
+#      config.sh) without bumping KERNEL_DEB_VERSION — build-kernel.yml
+#      skips the build when that version is already published, so the
+#      image would keep shipping the previous kernel.
 #
 # Exits non-zero if any check failed; all failures are reported together
 # so a PR shows every problem in one pass, not just the first.
@@ -300,6 +305,8 @@ for wf in "${WORKFLOW_DIR}"/build-*.yml; do
     [ "${wf_name}" = "build-deb" ] && continue
     # build-image.yml has no debpkgs paths — skip it too.
     [ "${wf_name}" = "build-image" ] && continue
+    # build-kernel.yml builds from rt-kernel/, not debpkgs/ — see check 5.
+    [ "${wf_name}" = "build-kernel" ] && continue
 
     # First `paths:` filter block: extract package dir from the first
     # `debpkgs/<pkg>/**` token. We require exactly one package per
@@ -331,11 +338,88 @@ for wf in "${WORKFLOW_DIR}"/build-*.yml; do
 done
 
 # ---------------------------------------------------------------------------
+# Check 5 — kernel-affecting changes bump KERNEL_DEB_VERSION
+# ---------------------------------------------------------------------------
+
+echo ""
+echo "==> Check 5: rt-kernel/ or kernel pin changes bump KERNEL_DEB_VERSION (vs ${BASE_REF_FOR_DIFF})"
+
+check5_fail=0
+
+# Read a scalar assignment out of a config.sh text blob — the base revision
+# comes from `git show`, and sourcing arbitrary revisions is a foot-gun.
+config_var() {
+    local text="$1" name="$2"
+    printf '%s\n' "${text}" \
+        | sed -n "s/^[[:space:]]*${name}=\"\([^\"]*\)\".*/\1/p;s/^[[:space:]]*${name}=\([^\"[:space:]#]*\).*/\1/p" \
+        | head -1
+}
+
+if ! git rev-parse --verify "${BASE_REF_FOR_DIFF}" >/dev/null 2>&1; then
+    echo "  SKIP  base ref ${BASE_REF_FOR_DIFF} not resolvable"
+else
+    head_config="$(cat "${ROOT_DIR}/config.sh" 2>/dev/null)"
+    base_config="$(git show "${BASE_REF_FOR_DIFF}:config.sh" 2>/dev/null)" || base_config=""
+
+    if [ -z "${base_config}" ]; then
+        echo "  SKIP  config.sh not present on ${BASE_REF_FOR_DIFF}"
+    else
+        kernel_changed=0
+        reasons=""
+
+        # rt-kernel/** changes the built artifact without touching any version.
+        if [ -n "$(git diff --name-only "${BASE_REF_FOR_DIFF}...HEAD" -- 'rt-kernel/')" ]; then
+            kernel_changed=1
+            reasons="${reasons}${reasons:+, }rt-kernel/ modified"
+        fi
+
+        # By value, not "was config.sh touched" — it changes on nearly every PR,
+        # and false failures would train people to ignore this check.
+        for var in KERNEL_VERSION KERNEL_LOCALVERSION LINUX_RPI_COMMIT; do
+            h="$(config_var "${head_config}" "${var}")"
+            b="$(config_var "${base_config}" "${var}")"
+            if [ "${h}" != "${b}" ]; then
+                kernel_changed=1
+                reasons="${reasons}${reasons:+, }${var} ${b} → ${h}"
+            fi
+        done
+
+        head_kver="$(config_var "${head_config}" KERNEL_DEB_VERSION)"
+        base_kver="$(config_var "${base_config}" KERNEL_DEB_VERSION)"
+
+        if [ "${kernel_changed}" -eq 0 ]; then
+            echo "  OK    no kernel-affecting changes in PR"
+        elif [ -z "${head_kver}" ]; then
+            echo "  FAIL  could not read KERNEL_DEB_VERSION from config.sh"
+            check5_fail=1
+        elif [ "${head_kver}" = "${base_kver}" ]; then
+            # Only suggest a next revision when the version ends in -<digits>.
+            if [[ "${head_kver}" =~ ^(.*)-([0-9]+)$ ]]; then
+                suggestion="${BASH_REMATCH[1]}-$(( BASH_REMATCH[2] + 1 ))"
+            else
+                suggestion="${head_kver}-2"
+            fi
+            echo "  FAIL  kernel changed (${reasons}) but KERNEL_DEB_VERSION is still ${head_kver}"
+            echo "        build-kernel.yml skips the build when kernel/${head_kver} is already"
+            echo "        published, so the image would keep shipping the old kernel."
+            echo "        Bump the revision in config.sh (e.g. ${suggestion})."
+            check5_fail=1
+        elif command -v dpkg >/dev/null 2>&1 \
+             && ! dpkg --compare-versions "${head_kver}" gt "${base_kver}"; then
+            echo "  FAIL  KERNEL_DEB_VERSION went backwards: ${base_kver} → ${head_kver} (must sort greater)"
+            check5_fail=1
+        else
+            echo "  OK    kernel changed (${reasons}); KERNEL_DEB_VERSION bumped ${base_kver} → ${head_kver}"
+        fi
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 
 echo ""
-total_fail=$(( check1_fail + check2_fail + check3_fail + check4_fail ))
+total_fail=$(( check1_fail + check2_fail + check3_fail + check4_fail + check5_fail ))
 if [ "${total_fail}" -eq 0 ]; then
     echo "==> All checks passed."
     exit 0

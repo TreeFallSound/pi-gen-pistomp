@@ -24,6 +24,9 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # shellcheck source=../config.sh
 source "${ROOT_DIR}/config.sh"
+# config.sh leaves `set -a` on; without this the ~350 KB releases_json below is
+# exported, and Linux's 128 KiB MAX_ARG_STRLEN makes every later exec E2BIG.
+set +a
 # shellcheck source=./pkg-sources.sh
 source "${ROOT_DIR}/scripts/pkg-sources.sh"
 
@@ -92,10 +95,13 @@ echo ""
 
 # Branch- and commit-pinned packages are worth checking; tag-pinned ones move
 # only via an explicit config.sh bump, so skip them.
+# Captured, not `< <(pkg_sources)`: a process substitution's failure is invisible.
+pkg_list="$(pkg_sources)"
+
 while IFS='|' read -r pkg repo ref kind; do
     [ "$kind" = "tag" ] && continue
     check_pkg "$pkg" "$repo" "$ref"
-done < <(pkg_sources)
+done <<< "${pkg_list}"
 
 echo ""
 if [[ "${stale}" -eq 1 ]]; then

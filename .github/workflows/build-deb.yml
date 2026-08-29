@@ -122,8 +122,17 @@ jobs:
             fi
             local raw
             raw=$(dpkg-checkbuilddeps "$CONTROL" 2>&1 || true)
+            # dpkg-checkbuilddeps prints an alternative group as "a | b". Keep only
+            # the first: it is the preferred one, and installing every alternative in
+            # turn lets a later one replace an earlier one. mod-host-pistomp
+            # Build-Depends on "libjack-jackd2-dev | libjack-dev"; installing both
+            # pulled in jack1's libjack-dev (jack.pc 0.126.0), which conflicts with
+            # and therefore removed libjack-jackd2-dev. The Makefile then left
+            # -DHAVE_JACK2 undefined and compiled out aggregated MIDI mode.
             echo "$raw" | grep -i 'unmet build dependencies' | \
               sed 's/.*unmet build dependencies: //i' | \
+              sed 's/([^)]*)//g' | \
+              sed 's/ *| *[^ |]*//g' | \
               tr ' ' '\n' | \
               grep -E '^[a-z]' || true
           }

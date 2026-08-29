@@ -6,6 +6,22 @@ mod-host-pistomp (0.10.6-7~pre1) trixie; urgency=medium
 
  -- Cam Gorrie <sastraxi@gmail.com>  Tue, 18 Aug 2026 23:46:24 -0400
 
+mod-host-pistomp (0.10.6-6) trixie; urgency=medium
+
+  * Restore aggregated MIDI mode. The 0.10.6-5 build resolved no jack >=
+    1.9.0 at compile time, so upstream's Makefile left -DHAVE_JACK2
+    undefined and compiled out the body of effects_aggregated_midi_enable.
+    mod-host therefore never loaded mod-midi-merger or
+    mod-midi-broadcaster as JACK internal clients: MOD-UI drew the
+    All MIDI In port, but cables dragged from it connected to a JACK port
+    that did not exist, and silently failed. Audio and separated-mode MIDI
+    were unaffected, which is why it went unnoticed.
+  * Assert HAVE_JACK2 at build time (pkg-config check before the build,
+    jack_internal_client_load symbol check after) so a feature-stripped
+    binary can never ship again.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 18 Aug 2026 02:59:38 +0000
+
 mod-host-pistomp (0.10.6-5) trixie; urgency=medium
 
   * Close the JACK client before freeing buffers the plugin still writes (heap corruption on pedalboard load).
