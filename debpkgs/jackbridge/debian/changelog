@@ -1,3 +1,17 @@
+jackbridge (1.0-7) trixie; urgency=medium
+
+  * Take the unit file from the pistomp-companion checkout instead of a second
+    copy under debian/. The two had drifted, and since the .deb is what lands
+    on hardware, this package's copy silently won -- pistomp-companion's was
+    dead source that read as authoritative.
+  * The wait-for-jack.sh ExecStartPre moved upstream with it, so the guard is
+    no longer this package's private local edit.
+  * TimeoutStartSec 10 -> 45 (upstream). wait-for-jack.sh waits up to 30 s, so
+    systemd killed the start job before the guard could succeed or explain
+    itself on a slow boot.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 29 Aug 2026 00:00:00 +0000
+
 jackbridge (1.0-6) trixie; urgency=medium
 
   * Ship jackbridge-pi-status (7th helper): read-only key=value status of
