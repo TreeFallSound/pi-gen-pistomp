@@ -44,6 +44,13 @@ PRIO = 90
 # jack.service. The retry loop only guards against a slow probe.
 RETRY_SECONDS = 30
 
+DMA_CLASS = "/sys/class/dma"  # dmaengine class directory
+I2S_SUFFIX = ".i2s"  # sysfs slave-link target of an i2s device
+CHANNEL_SEP = "chan"  # sysfs channel names look like "dma0chan4"
+MASK_PROPERTY = "brcm,dma-channel-mask"  # present on bcm2835 controllers only
+IRQ_LABEL = "DMA IRQ"  # action name that every bcm2835 DMA channel uses
+RTIRQ_INIT = "/etc/init.d/rtirq"
+
 
 def log(*a):
     """Print a message with the audio-irq label."""
@@ -66,13 +73,18 @@ def read_u32s(path):
 def find_audio_channels():
     """Find the DMA channels that the i2s device owns."""
     audio = {}
-    for c in glob.glob("/sys/class/dma/*chan*"):
+    for c in glob.glob(DMA_CLASS + "/*chan*"):
         slave = os.path.realpath(c + "/slave")
         if not os.path.exists(slave):
             continue
-        if slave.endswith(".i2s"):
+        if slave.endswith(I2S_SUFFIX):
             audio[os.path.basename(c)] = os.path.basename(slave)
     return audio
+
+
+def chan_index(chan):
+    """Read the sysfs channel number out of a channel name."""
+    return int(chan.rsplit(CHANNEL_SEP, 1)[1])
 
 
 def wait_for_audio_channels():
@@ -90,7 +102,7 @@ def wait_for_audio_channels():
 
 def controller_node(channels):
     """Find the device-tree node of the controller that owns the channels."""
-    nodes = {os.path.realpath(f"/sys/class/dma/{c}/device/of_node") for c in channels}
+    nodes = {os.path.realpath(f"{DMA_CLASS}/{c}/device/of_node") for c in channels}
     if len(nodes) != 1:
         die(f"audio channels belong to different DMA controllers: {sorted(nodes)!r}")
     return nodes.pop()
@@ -100,7 +112,7 @@ def channels_of(node):
     """List the sysfs DMA channels of one controller."""
     return sorted(
         os.path.basename(c)
-        for c in glob.glob("/sys/class/dma/*chan*")
+        for c in glob.glob(DMA_CLASS + "/*chan*")
         if os.path.realpath(c + "/device/of_node") == node
     )
 
@@ -108,11 +120,11 @@ def channels_of(node):
 def defer_to_rtirq():
     """Start rtirq. Replace this process with it."""
     if DRY:
-        log("dry run: would exec /etc/init.d/rtirq start")
+        log("dry run: would exec %s start" % RTIRQ_INIT)
         sys.exit(0)
-    if not os.path.exists("/etc/init.d/rtirq"):
-        die("/etc/init.d/rtirq not found")
-    os.execv("/etc/init.d/rtirq", ["/etc/init.d/rtirq", "start"])
+    if not os.path.exists(RTIRQ_INIT):
+        die(RTIRQ_INIT + " not found")
+    os.execv(RTIRQ_INIT, [RTIRQ_INIT, "start"])
 
 
 def usable_channels(mask, count):
@@ -152,7 +164,10 @@ def interrupt_table(node):
     cells = read_u32s(os.path.join(node, "interrupts"))
     nints = interrupt_cells(node)
     if not cells or len(cells) % nints:
-        die("interrupts property is %d cells, not a multiple of %d" % (len(cells), nints))
+        die(
+            "interrupts property is %d cells, not a multiple of %d"
+            % (len(cells), nints)
+        )
     entries = [tuple(cells[i : i + nints]) for i in range(0, len(cells), nints)]
     names = []
     names_path = os.path.join(node, "interrupt-names")
@@ -160,13 +175,16 @@ def interrupt_table(node):
         names = open(names_path, "rb").read().rstrip(b"\0").split(b"\0")
         names = [n.decode() for n in names]
         if len(names) != len(entries):
-            die("interrupt-names has %d entries, table has %d" % (len(names), len(entries)))
+            die(
+                "interrupt-names has %d entries, table has %d"
+                % (len(names), len(entries))
+            )
     return entries, names
 
 
 def hwirq_of(chan, usable, entries, names):
     """Compute the hardware interrupt number of one DMA channel."""
-    idx = int(chan.rsplit("chan", 1)[1])
+    idx = chan_index(chan)
     if idx >= len(usable):
         die("%s: sysfs index %d beyond usable channel list %r" % (chan, idx, usable))
     hw = usable[idx]
@@ -182,7 +200,9 @@ def check_not_shared(audio, controller_chans, hwirqs, usable, entries, names):
     """Stop if another channel shares an interrupt with an audio channel."""
     audio_hwirqs = set(hwirqs.values())
     if len(audio_hwirqs) != len(hwirqs):
-        die(f"the two audio channels resolve to one interrupt: {sorted(hwirqs.values())!r}")
+        die(
+            f"the two audio channels resolve to one interrupt: {sorted(hwirqs.values())!r}"
+        )
     for chan in controller_chans:
         if chan in audio:
             continue
@@ -200,10 +220,14 @@ def dma_interrupt_rows():
         ncpu = len(f.readline().split())
         hwidx = ncpu + 2
         for line in f:
-            if "DMA IRQ" not in line:
+            if IRQ_LABEL not in line:
                 continue
             fld = line.split()
-            if len(fld) > hwidx and fld[0].rstrip(":").isdigit() and fld[hwidx].isdigit():
+            if (
+                len(fld) > hwidx
+                and fld[0].rstrip(":").isdigit()
+                and fld[hwidx].isdigit()
+            ):
                 rows.append((int(fld[hwidx]), int(fld[0].rstrip(":"))))
     return rows
 
@@ -232,7 +256,10 @@ def irq_threads(numbers):
         if m and int(m.group(1)) in numbers:
             found.append((fld[0], fld[1]))
     if len(found) != len(numbers):
-        die("expected %d irq threads for interrupts %r, found %r" % (len(numbers), numbers, found))
+        die(
+            "expected %d irq threads for interrupts %r, found %r"
+            % (len(numbers), numbers, found)
+        )
     return found
 
 
@@ -255,7 +282,7 @@ def main():
     log("DMA controller DT node:", node)
 
     # Branch on the controller's own topology, not on the model string.
-    if not os.path.exists(os.path.join(node, "brcm,dma-channel-mask")):
+    if not os.path.exists(os.path.join(node, MASK_PROPERTY)):
         log(
             "no brcm,dma-channel-mask (not a bcm2835 controller);"
             " deferring to rtirq name matching"
@@ -263,7 +290,7 @@ def main():
         defer_to_rtirq()
         return
 
-    mask = read_u32s(os.path.join(node, "brcm,dma-channel-mask"))[0]
+    mask = read_u32s(os.path.join(node, MASK_PROPERTY))[0]
     log(f"channel mask: 0x{mask:04x}")
     controller_chans = channels_of(node)
     usable = usable_channels(mask, len(controller_chans))
@@ -275,7 +302,7 @@ def main():
     hwirqs = {}
     for chan in sorted(audio):
         hwirqs[chan] = hwirq_of(chan, usable, entries, names)
-        idx = int(chan.rsplit("chan", 1)[1])
+        idx = chan_index(chan)
         log(
             "%s -> index %d -> hw channel %d -> hwirq %d"
             % (chan, idx, usable[idx], hwirqs[chan])
@@ -292,6 +319,7 @@ def main():
     for tid, comm in irq_threads(sorted(set(numbers.values()))):
         raise_thread(tid, comm)
     log("done")
+
 
 if __name__ == "__main__":
     main()
