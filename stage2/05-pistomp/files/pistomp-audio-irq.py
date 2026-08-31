@@ -46,28 +46,28 @@ RETRY_SECONDS = 30
 
 
 def log(*a):
+    """Print a message with the audio-irq label."""
     print("[audio-irq]", *a, flush=True)
 
 
 def die(msg):
+    """Print a stop message. Exit with an error code."""
     print("[audio-irq] STOP:", msg, file=sys.stderr)
     sys.exit(1)
 
 
 def read_u32s(path):
+    """Read a device-tree property as big-endian 32-bit words."""
     with open(path, "rb") as f:
         raw = f.read()
     return [struct.unpack(">I", raw[i : i + 4])[0] for i in range(0, len(raw), 4)]
 
 
-# 1. Channels owned by the i2s device (dmaengine sysfs slave links)
 def find_audio_channels():
+    """Find the DMA channels that the i2s device owns."""
     audio = {}
     for c in glob.glob("/sys/class/dma/*chan*"):
-        try:
-            slave = os.path.realpath(c + "/slave")
-        except OSError:
-            continue
+        slave = os.path.realpath(c + "/slave")
         if not os.path.exists(slave):
             continue
         if slave.endswith(".i2s"):
@@ -75,36 +75,38 @@ def find_audio_channels():
     return audio
 
 
-audio = {}
-for attempt in range(RETRY_SECONDS + 1):
-    audio = find_audio_channels()
-    if len(audio) == 2:
-        break
-    if attempt == 0:
-        log("waiting for the i2s DMA channels to appear...")
-    time.sleep(1)
-if len(audio) != 2:
+def wait_for_audio_channels():
+    """Find the i2s DMA channels. Wait for a slow sound-card probe."""
+    audio = {}
+    for attempt in range(RETRY_SECONDS + 1):
+        audio = find_audio_channels()
+        if len(audio) == 2:
+            return audio
+        if attempt == 0:
+            log("waiting for the i2s DMA channels to appear...")
+        time.sleep(1)
     die("expected two .i2s channels, found %d: %r" % (len(audio), sorted(audio)))
-log("audio channels (sysfs slave links):", audio)
-
-# 2. DMA controller DT node of those channels
-nodes = {os.path.realpath(f"/sys/class/dma/{c}/device/of_node") for c in audio}
-if len(nodes) != 1:
-    die(f"audio channels belong to different DMA controllers: {sorted(nodes)!r}")
-node = nodes.pop()
-log("DMA controller DT node:", node)
 
 
-def prop(name):
-    return os.path.join(node, name)
+def controller_node(channels):
+    """Find the device-tree node of the controller that owns the channels."""
+    nodes = {os.path.realpath(f"/sys/class/dma/{c}/device/of_node") for c in channels}
+    if len(nodes) != 1:
+        die(f"audio channels belong to different DMA controllers: {sorted(nodes)!r}")
+    return nodes.pop()
 
 
-# 3. Branch on the controller's own topology, not on the model string.
-if not os.path.exists(prop("brcm,dma-channel-mask")):
-    log(
-        "no brcm,dma-channel-mask (not a bcm2835 controller);"
-        " deferring to rtirq name matching"
+def channels_of(node):
+    """List the sysfs DMA channels of one controller."""
+    return sorted(
+        os.path.basename(c)
+        for c in glob.glob("/sys/class/dma/*chan*")
+        if os.path.realpath(c + "/device/of_node") == node
     )
+
+
+def defer_to_rtirq():
+    """Start rtirq. Replace this process with it."""
     if DRY:
         log("dry run: would exec /etc/init.d/rtirq start")
         sys.exit(0)
@@ -112,68 +114,59 @@ if not os.path.exists(prop("brcm,dma-channel-mask")):
         die("/etc/init.d/rtirq not found")
     os.execv("/etc/init.d/rtirq", ["/etc/init.d/rtirq", "start"])
 
-# 4. Channel mask, and the sysfs channels of this controller only
-mask = read_u32s(prop("brcm,dma-channel-mask"))[0]
-log(f"channel mask: 0x{mask:04x}")
 
-controller_chans = sorted(
-    os.path.basename(c)
-    for c in glob.glob("/sys/class/dma/*chan*")
-    if os.path.realpath(c + "/device/of_node") == node
-)
-
-bits = [i for i in range(16) if mask & (1 << i)]
-# The driver removes channel 0 (reserved, bcm2835-dma.c:40) and, on some
-# SoCs, channel 14 (kept for memcpy, bcm2835-dma.c:41). Which holds is
-# decided by the sysfs count, not by the model string.
-candidates = [[i for i in bits if i != 0]]
-if 14 in candidates[0]:
-    candidates.append([i for i in candidates[0] if i != 14])
-usable = None
-for cand in candidates:
-    if len(cand) == len(controller_chans):
-        usable = cand
-        break
-if usable is None:
+def usable_channels(mask, count):
+    """List the hardware channels that agree with the sysfs channel count."""
+    bits = [i for i in range(16) if mask & (1 << i)]
+    # The driver removes channel 0 (reserved, bcm2835-dma.c:40) and, on some
+    # SoCs, channel 14 (kept for memcpy, bcm2835-dma.c:41). Which holds is
+    # decided by the sysfs count, not by the model string.
+    base = [i for i in bits if i != 0]
+    candidates = [base]
+    if 14 in base:
+        candidates.append([i for i in base if i != 14])
+    for cand in candidates:
+        if len(cand) == count:
+            return cand
     die(
         "sysfs channel count %d agrees with no reading of the mask (%r)"
-        % (len(controller_chans), [len(c) for c in candidates])
+        % (count, [len(c) for c in candidates])
     )
-log("usable hardware channels, in allocation order:", usable)
-
-# 5. Interrupt table. #interrupt-cells lives on the interrupt parent,
-# which in sysfs is an ancestor directory of the controller node.
-nints = None
-d = os.path.dirname(node)
-while d.startswith("/sys/firmware/devicetree"):
-    p = os.path.join(d, "#interrupt-cells")
-    if os.path.exists(p):
-        nints = open(p, "rb").read()[0]
-        break
-    d = os.path.dirname(d)
-if nints is None:
-    nints = 2
-cells = read_u32s(prop("interrupts"))
-if not cells or len(cells) % nints:
-    die("interrupts property is %d cells, not a multiple of %d" % (len(cells), nints))
-entries = [tuple(cells[i : i + nints]) for i in range(0, len(cells), nints)]
-log("interrupt table entries:", len(entries))
-
-names = []
-if os.path.exists(prop("interrupt-names")):
-    names = open(prop("interrupt-names"), "rb").read().rstrip(b"\0").split(b"\0")
-    names = [n.decode() for n in names]
-    if len(names) != len(entries):
-        die("interrupt-names has %d entries, table has %d" % (len(names), len(entries)))
 
 
-# 6. sysfs index -> hardware channel -> table entry -> hwirq
-def chan_index(name):
-    return int(name.rsplit("chan", 1)[1])
+def interrupt_cells(node):
+    """Read the number of interrupt cells of the interrupt parent."""
+    # #interrupt-cells lives on the interrupt parent, which in sysfs is an
+    # ancestor directory of the controller node.
+    d = os.path.dirname(node)
+    while d.startswith("/sys/firmware/devicetree"):
+        p = os.path.join(d, "#interrupt-cells")
+        if os.path.exists(p):
+            return open(p, "rb").read()[0]
+        d = os.path.dirname(d)
+    return 2
 
 
-def hwirq_of(chan):
-    idx = chan_index(chan)
+def interrupt_table(node):
+    """Read the interrupt table of the controller and the entry names."""
+    cells = read_u32s(os.path.join(node, "interrupts"))
+    nints = interrupt_cells(node)
+    if not cells or len(cells) % nints:
+        die("interrupts property is %d cells, not a multiple of %d" % (len(cells), nints))
+    entries = [tuple(cells[i : i + nints]) for i in range(0, len(cells), nints)]
+    names = []
+    names_path = os.path.join(node, "interrupt-names")
+    if os.path.exists(names_path):
+        names = open(names_path, "rb").read().rstrip(b"\0").split(b"\0")
+        names = [n.decode() for n in names]
+        if len(names) != len(entries):
+            die("interrupt-names has %d entries, table has %d" % (len(names), len(entries)))
+    return entries, names
+
+
+def hwirq_of(chan, usable, entries, names):
+    """Compute the hardware interrupt number of one DMA channel."""
+    idx = int(chan.rsplit("chan", 1)[1])
     if idx >= len(usable):
         die("%s: sysfs index %d beyond usable channel list %r" % (chan, idx, usable))
     hw = usable[idx]
@@ -185,71 +178,120 @@ def hwirq_of(chan):
     return (bank << 5) | bit  # irq-bcm2835.c:52
 
 
-hwirqs = {}
-for chan in sorted(audio):
-    hwirqs[chan] = hwirq_of(chan)
-    idx = chan_index(chan)
-    log(
-        "%s -> index %d -> hw channel %d -> hwirq %d"
-        % (chan, idx, usable[idx], hwirqs[chan])
-    )
+def check_not_shared(audio, controller_chans, hwirqs, usable, entries, names):
+    """Stop if another channel shares an interrupt with an audio channel."""
+    audio_hwirqs = set(hwirqs.values())
+    if len(audio_hwirqs) != len(hwirqs):
+        die(f"the two audio channels resolve to one interrupt: {sorted(hwirqs.values())!r}")
+    for chan in controller_chans:
+        if chan in audio:
+            continue
+        hwirq = hwirq_of(chan, usable, entries, names)
+        if hwirq in audio_hwirqs:
+            die("hwirq %d is shared with non-audio channel %s" % (hwirq, chan))
 
-# Refuse a shared interrupt: the two audio channels must land on two
-# distinct hwirqs, and no other channel of this controller may land on
-# either of them (Pi 3 channels 11-14 and Pi 4 channels 9+10 share).
-if len(set(hwirqs.values())) != 2:
-    die(f"the two audio channels resolve to one interrupt: {sorted(hwirqs.values())!r}")
-audio_hwirqs = set(hwirqs.values())
-for chan in controller_chans:
-    if chan in audio:
-        continue
-    if hwirq_of(chan) in audio_hwirqs:
-        die("hwirq %d is shared with non-audio channel %s" % (hwirq_of(chan), chan))
 
-# 7. hwirq -> /proc/interrupts line. The kernel prints the hwirq in the
-# column after the chip name (kernel/irq/proc.c, show_interrupts).
-with open("/proc/interrupts") as f:
-    ncpu = len(f.readline().split())
+def dma_interrupt_rows():
+    """Map each DMA hardware interrupt number to its Linux interrupt number."""
+    # The kernel prints the hwirq in the column after the chip name
+    # (kernel/irq/proc.c, show_interrupts).
     rows = []
-    for line in f:
-        fld = line.split()
+    with open("/proc/interrupts") as f:
+        ncpu = len(f.readline().split())
         hwidx = ncpu + 2
-        if len(fld) > hwidx and fld[0].rstrip(":").isdigit() and fld[hwidx].isdigit():
-            rows.append((int(fld[hwidx]), int(fld[0].rstrip(":")), line))
+        for line in f:
+            if "DMA IRQ" not in line:
+                continue
+            fld = line.split()
+            if len(fld) > hwidx and fld[0].rstrip(":").isdigit() and fld[hwidx].isdigit():
+                rows.append((int(fld[hwidx]), int(fld[0].rstrip(":"))))
+    return rows
 
-lines = {}
-for h in sorted(audio_hwirqs):
-    hits = [r for r in rows if r[0] == h and "DMA IRQ" in r[2]]
+
+def irq_number(hwirq, rows):
+    """Find the Linux interrupt number of one hardware interrupt."""
+    hits = [n for h, n in rows if h == hwirq]
     if not hits:
-        die("hwirq %d not found in /proc/interrupts" % h)
+        die("hwirq %d not found in /proc/interrupts" % hwirq)
     if len(hits) > 1:
-        die("hwirq %d matches %d DMA lines" % (h, len(hits)))
-    lines[h] = hits[0][1]
-    log("hwirq %d -> /proc/interrupts line %d" % (h, lines[h]))
+        die("hwirq %d matches %d DMA lines" % (hwirq, len(hits)))
+    return hits[0]
 
-# 8. raise the irq/N-* threads to SCHED_FIFO 90
-targets = sorted(set(lines.values()))
-out = subprocess.run(
-    ["ps", "-eLo", "tid,comm,rtprio"], capture_output=True, text=True
-).stdout
-tids = []
-for l in out.splitlines():
-    fld = l.split()
-    if len(fld) >= 2:
+
+def irq_threads(numbers):
+    """Find the IRQ threads of the given Linux interrupt numbers."""
+    out = subprocess.run(
+        ["ps", "-eLo", "tid,comm"], capture_output=True, text=True
+    ).stdout
+    found = []
+    for l in out.splitlines():
+        fld = l.split()
+        if len(fld) < 2:
+            continue
         m = re.match(r"irq/(\d+)-", fld[1])
-        if m and int(m.group(1)) in targets:
-            tids.append((fld[0], fld[1]))
-if len(tids) != len(targets):
-    die(
-        "expected %d irq threads for lines %r, found %r" % (len(targets), targets, tids)
-    )
-for tid, comm in tids:
+        if m and int(m.group(1)) in numbers:
+            found.append((fld[0], fld[1]))
+    if len(found) != len(numbers):
+        die("expected %d irq threads for interrupts %r, found %r" % (len(numbers), numbers, found))
+    return found
+
+
+def raise_thread(tid, comm):
+    """Set the scheduling policy of one IRQ thread to SCHED_FIFO."""
     log("raising %s (pid %s) to SCHED_FIFO %d" % (comm, tid, PRIO))
     if DRY:
-        continue
+        return
     chrt = ["chrt", "-f", "-p", str(PRIO), tid]
     if os.geteuid() != 0:
         chrt = ["sudo"] + chrt
     subprocess.run(chrt, check=True)
 
-log("done")
+
+def main():
+    """Resolve the audio DMA interrupts. Raise their IRQ threads."""
+    audio = wait_for_audio_channels()
+    log("audio channels (sysfs slave links):", audio)
+    node = controller_node(audio)
+    log("DMA controller DT node:", node)
+
+    # Branch on the controller's own topology, not on the model string.
+    if not os.path.exists(os.path.join(node, "brcm,dma-channel-mask")):
+        log(
+            "no brcm,dma-channel-mask (not a bcm2835 controller);"
+            " deferring to rtirq name matching"
+        )
+        defer_to_rtirq()
+        return
+
+    mask = read_u32s(os.path.join(node, "brcm,dma-channel-mask"))[0]
+    log(f"channel mask: 0x{mask:04x}")
+    controller_chans = channels_of(node)
+    usable = usable_channels(mask, len(controller_chans))
+    log("usable hardware channels, in allocation order:", usable)
+
+    entries, names = interrupt_table(node)
+    log("interrupt table entries:", len(entries))
+
+    hwirqs = {}
+    for chan in sorted(audio):
+        hwirqs[chan] = hwirq_of(chan, usable, entries, names)
+        idx = int(chan.rsplit("chan", 1)[1])
+        log(
+            "%s -> index %d -> hw channel %d -> hwirq %d"
+            % (chan, idx, usable[idx], hwirqs[chan])
+        )
+
+    check_not_shared(audio, controller_chans, hwirqs, usable, entries, names)
+
+    rows = dma_interrupt_rows()
+    numbers = {}
+    for hwirq in sorted(set(hwirqs.values())):
+        numbers[hwirq] = irq_number(hwirq, rows)
+        log("hwirq %d -> /proc/interrupts line %d" % (hwirq, numbers[hwirq]))
+
+    for tid, comm in irq_threads(sorted(set(numbers.values()))):
+        raise_thread(tid, comm)
+    log("done")
+
+if __name__ == "__main__":
+    main()
