@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e
+
+if [ "$1" = configure ]; then
+    # rtirq-init owns /etc/default/rtirq as a conffile; shipping or
+    # diverting it here makes dpkg prompt. Write it from our template.
+    install -m 644 /usr/lib/pistomp/rtirq.conf /etc/default/rtirq
+
+    # Old images shipped an unowned rtirq.service; rtirq-init's enabled rc
+    # links would let systemd-sysv-generator synthesize a new one. Remove
+    # and mask.
+    rm -f /usr/lib/systemd/system/rtirq.service
+    rm -f /etc/systemd/system/multi-user.target.wants/rtirq.service
+    ln -sf /dev/null /etc/systemd/system/rtirq.service
+
+    # House style (jack2-pistomp): plain ln -sf, no deb-systemd-helper —
+    # an upgrade must never start or restart anything. Runs at next boot.
+    ln -sf /usr/lib/systemd/system/pistomp-audio-irq.service \
+        /etc/systemd/system/multi-user.target.wants/pistomp-audio-irq.service
+
+    if [ -d /run/systemd/system ]; then
+        systemctl daemon-reload || true
+    fi
+fi
+
+#DEBHELPER#

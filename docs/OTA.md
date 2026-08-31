@@ -98,7 +98,7 @@ drops the `~preN` suffix), then push a fresh `release/<version>` tag.
 | `.github/workflows/build-<pkg>.yml` | push/PR on `debpkgs/<pkg>/**` or `config.sh` | Thin wrapper calling `build-deb.yml`. One file per package. Template at `docs/package-template/build.yml`. |
 | `.github/workflows/publish-apt-repo.yml` | `release: published` or `workflow_dispatch` | Downloads every `*_arm64.deb` release asset, routes it by the release's prerelease flag into `reprepro includedeb trixie` or `trixie-testing` (refuses duplicate name+version), commits `pool/`+`dists/`+`conf/` to `gh-pages`. Self-bootstraps the orphan branch on first run. |
 
-All 19 packages have a `build-<pkg>.yml` workflow.
+All 20 packages have a `build-<pkg>.yml` workflow.
 
 ## Build-time vs runtime apt sources
 
@@ -178,6 +178,7 @@ All custom `.deb` packages have CI workflows and are published to the repo:
 | `pistomp-usb-automount` | udev rule + shell script; no compilation |
 | `pistomp-bluetooth` | systemd drop-in only; no compilation |
 | `pistomp-wifi` | modprobe.d conf file; no compilation |
+| `pistomp-audio` | resolver + systemd unit; no compilation |
 
 ## Adding a new package to OTA
 

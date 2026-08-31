@@ -1,0 +1,8 @@
+pistomp-audio (1.0.0-1) trixie; urgency=medium
+
+  * Initial release. Extends rtirq (which can only work with Pi 5) with
+    a custom script that discovers I2S audio device IRQs on Pi 3/4 and
+    changes them to RT priority 90 via chrt. Replaces the stage2-baked
+    rtirq.service (removed and masked).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 31 Aug 2026 00:00:00 +0000

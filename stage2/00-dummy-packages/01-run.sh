@@ -59,8 +59,8 @@ fi
 
 apt-get update -qq
 
-# Install jack2-pistomp and lg-pistomp early so their Provides satisfy dependencies
-# for later stages (e.g. libjack-jackd2-dev in stage2/04-python depends on
-# libjack-jackd2-0, which jack2-pistomp provides).
-apt-get install -y -qq jack2-pistomp lg-pistomp
+# Install early so later stages can assert their files exist
+# (stage2/05-pistomp/01-run.sh), and jack2-pistomp's Provides satisfy
+# stage2/04-python's libjack dependency.
+apt-get install -y -qq jack2-pistomp lg-pistomp pistomp-audio
 EOF
