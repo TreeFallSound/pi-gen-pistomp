@@ -126,7 +126,6 @@ rm -rf /home/${FIRST_USER_NAME}/tmp
 EOF
 
 # Boot files
-sed -i 's/console=serial0,115200//' "${ROOTFS_DIR}/boot/firmware/cmdline.txt"
 install -m 644 files/config.txt ${ROOTFS_DIR}/boot/firmware/config.txt
 
 # Sudoers drop-in: allow pistomp user passwordless package management

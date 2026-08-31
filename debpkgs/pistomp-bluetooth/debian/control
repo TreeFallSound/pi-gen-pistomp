@@ -8,8 +8,10 @@ Maintainer: pistomp <pistomp@example.com>
 Description: BLE-MIDI capability for pi-Stomp
  Ships a bluetooth.service drop-in that starts bluetoothd with -E, which is
  what registers bluez's BLE-MIDI GATT profile, and unblocks the rfkill soft
- block the Pi 5 radio boots with. Once a BLE-MIDI device connects, bluez
- publishes an ALSA seq port and jackd -X seq bridges it automatically.
+ block the radio boots with — not Pi 5 specific, a Pi 3A+ boots soft-blocked
+ too, so the unblock must not be gated on board model. Once a BLE-MIDI device
+ connects, bluez publishes an ALSA seq port and jackd -X seq bridges it
+ automatically.
  .
  Installing this package does not turn Bluetooth on; the drop-in is inert
  while bluetooth.service is disabled. The pi-Stomp UI owns enable/disable
