@@ -1,3 +1,15 @@
+jack2-pistomp (1.9.22-11) trixie; urgency=medium
+
+  * Consolidate ring failure reports to one per direction per second.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 31 Aug 2026 19:40:35 +0000
+
+jack2-pistomp (1.9.22-10) trixie; urgency=medium
+
+  * Rate-limit realtime ring-buffer failure logging in the Pi netadapter.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 31 Aug 2026 19:36:17 +0000
+
 jack2-pistomp (1.9.22-9) trixie; urgency=medium
 
   * Pin netJACK2 unicast egress to an interface, not just the multicast join.
