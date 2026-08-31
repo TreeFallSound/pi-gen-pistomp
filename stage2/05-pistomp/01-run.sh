@@ -9,6 +9,9 @@ test -f "${ROOTFS_DIR}/usr/lib/systemd/system/jack.service"
 test -x "${ROOTFS_DIR}/usr/lib/pistomp/jackdrc"
 
 install -m 644 files/jack-env.sh ${ROOTFS_DIR}/etc/profile.d/
+
+# RT tuning for audio IRQs -- both Pi 3/4 and Pi 5.
+install -m 755 files/pistomp-audio-irq.py ${ROOTFS_DIR}/usr/lib/pistomp/pistomp-audio-irq.py
 install -Dm 644 files/rtirq.conf ${ROOTFS_DIR}/etc/default/rtirq
 
 # Grant audio group access to CPU DMA latency control
@@ -92,10 +95,9 @@ ln -sf /usr/lib/systemd/system/wifi-check.service /etc/systemd/system/multi-user
 ln -sf /usr/lib/systemd/system/wifi-mac-check.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/firstboot.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/zram.service /etc/systemd/system/multi-user.target.wants
-ln -sf /usr/lib/systemd/system/rtirq.service /etc/systemd/system/multi-user.target.wants
+ln -sf /usr/lib/systemd/system/pistomp-audio-irq.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/regenerate-ssh-host-keys.service /etc/systemd/system/multi-user.target.wants
-
-# mask raspberrypi-sys-mods' own host-key regeneration. It is gated on
+# mask raspberrypi-sys-mods' own host-key regeneration. It is gated on a
 # ConditionFirstBoot=, which depends on /etc/machine-id and has misfired on this
 # image before; ours is gated on a self-clearing stamp. Two mechanisms racing to
 # rewrite /etc/ssh is strictly worse than one.
