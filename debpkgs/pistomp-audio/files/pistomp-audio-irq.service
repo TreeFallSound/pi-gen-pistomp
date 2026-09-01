@@ -1,0 +1,17 @@
+[Unit]
+Description=Raise the pi-Stomp audio DMA IRQ threads to realtime priority
+After=sysinit.target
+Before=jack.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Pi 5 (RP1 dw-axi-dmac): the resolver defers to the rtirq init script with
+# this environment, exactly as this unit did before the resolver existed.
+# Pi 2/3/4 (bcm2835): the resolver ignores it and sets priorities directly.
+EnvironmentFile=/etc/default/rtirq
+ExecStart=/usr/lib/pistomp/pistomp-audio-irq.py
+ExecStop=/etc/init.d/rtirq stop
+
+[Install]
+WantedBy=multi-user.target

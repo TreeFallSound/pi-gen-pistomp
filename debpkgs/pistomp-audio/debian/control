@@ -1,0 +1,13 @@
+Package: pistomp-audio
+Version: 1.0.0-1
+Section: admin
+Priority: optional
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Depends: rtirq-init, python3
+Description: Realtime audio IRQ tuning for pi-Stomp
+ Raises the i2s audio DMA interrupt threads to SCHED_FIFO 90 so they sit
+ above jackd. On Pi 3/4 the shipped resolver derives the audio IRQs from
+ the device topology (name matching cannot: every bcm2835 DMA channel
+ shares the label "DMA IRQ"); on Pi 5 it defers to rtirq with the packaged
+ config. OTA upgrades take effect at the next boot.
