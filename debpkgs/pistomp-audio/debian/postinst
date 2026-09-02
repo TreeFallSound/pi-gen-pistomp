@@ -17,6 +17,8 @@ if [ "$1" = configure ]; then
     # an upgrade must never start or restart anything. Runs at next boot.
     ln -sf /usr/lib/systemd/system/pistomp-audio-irq.service \
         /etc/systemd/system/multi-user.target.wants/pistomp-audio-irq.service
+    ln -sf /usr/lib/systemd/system/pistomp-pcm-check.service \
+        /etc/systemd/system/multi-user.target.wants/pistomp-pcm-check.service
 
     if [ -d /run/systemd/system ]; then
         systemctl daemon-reload || true

@@ -24,6 +24,10 @@ install -m 755 "${SCRIPT_DIR}/files/pistomp-audio-irq.py" \
     "${DEB_DIR}/usr/lib/pistomp/pistomp-audio-irq.py"
 install -m 644 "${SCRIPT_DIR}/files/pistomp-audio-irq.service" \
     "${DEB_DIR}/usr/lib/systemd/system/pistomp-audio-irq.service"
+install -m 755 "${SCRIPT_DIR}/files/pistomp-pcm-check.py" \
+    "${DEB_DIR}/usr/lib/pistomp/pistomp-pcm-check.py"
+install -m 644 "${SCRIPT_DIR}/files/pistomp-pcm-check.service" \
+    "${DEB_DIR}/usr/lib/systemd/system/pistomp-pcm-check.service"
 # postinst writes /etc/default/rtirq from this template (rtirq-init owns
 # that conffile path; see debian/postinst).
 install -m 644 "${SCRIPT_DIR}/files/rtirq.conf" "${DEB_DIR}/usr/lib/pistomp/rtirq.conf"
