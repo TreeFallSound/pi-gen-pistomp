@@ -8,7 +8,7 @@ Before=pistomp-audio-irq.service jack.service
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/lib/pistomp/pistomp-pcm-check.py
-SuccessExitStatus=0  # JACK will report the error if we fail
+# Failure here isn't fatal; the boot continues
 
 [Install]
 WantedBy=multi-user.target
