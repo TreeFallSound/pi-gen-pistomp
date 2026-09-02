@@ -1,5 +1,4 @@
 Package: libfluidsynth2-compat
-Version: 2.3.4-2
 Section: libs
 Priority: optional
 Architecture: arm64

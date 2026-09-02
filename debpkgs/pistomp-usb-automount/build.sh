@@ -17,7 +17,7 @@ mkdir -p "${DEB_DIR}/usr/local/libexec"
 mkdir -p "${DEB_DIR}/etc/udev/rules.d"
 mkdir -p "${DEB_DIR}/usr/lib/systemd/system"
 
-sed "s/^Version:.*/Version: ${VERSION}/" "${SCRIPT_DIR}/debian/control" > "${DEB_DIR}/DEBIAN/control"
+stage_control "${SCRIPT_DIR}/debian/control" "${DEB_DIR}/DEBIAN/control"
 cp "${SCRIPT_DIR}/debian/postinst" "${DEB_DIR}/DEBIAN/postinst"
 cp "${SCRIPT_DIR}/debian/postrm" "${DEB_DIR}/DEBIAN/postrm"
 chmod 755 "${DEB_DIR}/DEBIAN/postinst" "${DEB_DIR}/DEBIAN/postrm"

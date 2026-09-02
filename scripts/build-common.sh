@@ -71,3 +71,26 @@ move_to_cache() {
     find "${search_dir}" -maxdepth 1 -name "${PKG}_*.deb" -exec mv {} "${CACHE_DIR}/" \;
     echo "==> Built ${PKG} → ${CACHE_DIR}"
 }
+
+# Write DEBIAN/control for a dpkg-deb package: Version: from the changelog
+# (the only version source), Build-Depends: dropped (source-only field).
+# Usage: VERSION=<ver> stage_control <src control> <dest>
+stage_control() {
+    local src="$1" dest="$2"
+
+    if grep -q '^Version:' "${src}"; then
+        echo "ERROR: ${src} carries a Version:; the changelog is the version source." >&2
+        exit 1
+    fi
+
+    awk -v ver="${VERSION}" '
+        /^Build-Depends:/ { next }
+        { print }
+        /^Package:/ && !seen { print "Version: " ver; seen = 1 }
+    ' "${src}" > "${dest}"
+
+    grep -q '^Version:' "${dest}" || {
+        echo "ERROR: ${src} has no Package: line." >&2
+        exit 1
+    }
+}

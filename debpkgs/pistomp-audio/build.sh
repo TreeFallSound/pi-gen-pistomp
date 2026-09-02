@@ -16,7 +16,7 @@ mkdir -p "${DEB_DIR}/DEBIAN"
 mkdir -p "${DEB_DIR}/usr/lib/pistomp"
 mkdir -p "${DEB_DIR}/usr/lib/systemd/system"
 
-sed "s/^Version:.*/Version: ${VERSION}/" "${SCRIPT_DIR}/debian/control" > "${DEB_DIR}/DEBIAN/control"
+stage_control "${SCRIPT_DIR}/debian/control" "${DEB_DIR}/DEBIAN/control"
 cp "${SCRIPT_DIR}/debian/postinst" "${DEB_DIR}/DEBIAN/postinst"
 chmod 755 "${DEB_DIR}/DEBIAN/postinst"
 

@@ -1,5 +1,4 @@
 Package: pistomp-audio
-Version: 1.0.0-1
 Section: admin
 Priority: optional
 Architecture: arm64

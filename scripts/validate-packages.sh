@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PR-time validation of the debpkg/CI contract.
 #
-# Catches the four landmines that today only surface at image build time,
+# Catches the landmines that today only surface at image build time,
 # long after a PR has merged:
 #
 #   1. A package listed in stage2/05-pistomp/02-run.sh's `apt-get install`
@@ -17,6 +17,9 @@
 #   4. A .github/workflows/build-<name>.yml has paths: debpkgs/<pkg>/**
 #      but no debpkgs/<pkg>/ directory exists — typo, or a stale
 #      workflow left after a package was removed.
+#   6. A debpkgs/<pkg>/debian/control carries a Version: field. It is never
+#      read (the version comes from debian/changelog) and drifts:
+#      pistomp-bluetooth's said ~pre1 long after ~pre2 shipped.
 #   5. A PR changes what the RT kernel builds from (rt-kernel/**, or the
 #      KERNEL_VERSION / KERNEL_LOCALVERSION / LINUX_RPI_COMMIT pins in
 #      config.sh) without bumping KERNEL_DEB_VERSION — build-kernel.yml
@@ -75,19 +78,14 @@ get_changelog_version() {
     fi
 }
 
-# Prefer debian/changelog, matching build-deb.yml. Even the dpkg-deb --build
-# packages take their version from it; control's Version: is rewritten at build
-# time and is stale in three of the four, so trusting it failed Check 2 on
-# correctly-bumped PRs.
+# debian/changelog is the only version source, matching build-deb.yml — the
+# dpkg-deb packages included; their control has no Version: field (Check 6).
 get_pkg_version() {
     local pkg_dir="$1"
-    local control="${pkg_dir}/debian/control"
     local changelog="${pkg_dir}/debian/changelog"
 
     if [ -f "${changelog}" ]; then
         get_changelog_version "${changelog}"
-    elif [ -f "${control}" ] && grep -q '^Version:' "${control}" 2>/dev/null; then
-        awk '/^Version:/ {print $2; exit}' "${control}"
     else
         return 0   # empty — caller treats as "no version found"
     fi
@@ -109,12 +107,19 @@ echo "==> Check 1: every apt-installed package has a .github/workflows/build-<pk
 
 check1_fail=0
 
-# Extract package names from every `apt-get install -y...` invocation in
-# 02-run.sh. Handles flag tokens (-y, -qq), version constraints (=, >=,
-# <<), trailing backslash continuation, and the single-line standalone
-# case (`apt-get install -y jack-example-tools`). Only matches valid
-# Debian package name characters (lowercase, digits, +, -, .).
+# Package names from 02-run.sh: the PISTOMP_PACKAGES="..." block (one name
+# per line) plus every literal `apt-get install -y ...`. Handles flag tokens,
+# version constraints and backslash continuation; only matches valid Debian
+# package name characters.
 installed_pkgs="$(
+    awk '
+        /^[[:space:]]*PISTOMP_PACKAGES="/ { in_list = 1; next }
+        in_list && /^"/                   { in_list = 0; next }
+        in_list {
+            t = $1
+            if (t ~ /^[a-z][a-z0-9.+_-]+$/) print t
+        }
+    ' "${INSTALL_LIST}"
     awk '
         /^[[:space:]]*apt-get[[:space:]]+install/ {
             sub(/^[[:space:]]*apt-get[[:space:]]+install[[:space:]]*/, "")
@@ -414,11 +419,34 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Check 6 — no debian/control carries a Version: field
+# ---------------------------------------------------------------------------
+
+echo ""
+echo "==> Check 6: debian/changelog is the only version source (no Version: in debian/control)"
+
+check6_fail=0
+
+for control in "${DEBPKGS_DIR}"/*/debian/control; do
+    [ -f "${control}" ] || continue
+    if grep -q '^Version:' "${control}"; then
+        pkg="$(basename "$(dirname "$(dirname "${control}")")")"
+        echo "  FAIL  debpkgs/${pkg}/debian/control carries a Version: field"
+        echo "        Remove it — stage_control writes it from debian/changelog."
+        check6_fail=1
+    fi
+done
+
+if [ "${check6_fail}" -eq 0 ]; then
+    echo "  OK    no debian/control carries a Version: field"
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 
 echo ""
-total_fail=$(( check1_fail + check2_fail + check3_fail + check4_fail + check5_fail ))
+total_fail=$(( check1_fail + check2_fail + check3_fail + check4_fail + check5_fail + check6_fail ))
 if [ "${total_fail}" -eq 0 ]; then
     echo "==> All checks passed."
     exit 0

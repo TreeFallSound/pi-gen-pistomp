@@ -1,5 +1,4 @@
 Package: pistomp-bluetooth
-Version: 1.0.0-1~pre1
 Section: sound
 Priority: optional
 Architecture: arm64
