@@ -222,38 +222,38 @@ Description: FluidSynth .so.2 compatibility shim for prebuilt LV2 plugins
  against libfluidsynth.so.2 can load on Trixie.
 
 Package: mod-host-pistomp
-Version: 0.10.6-6
+Version: 0.10.6-7
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 999
+Installed-Size: 935
 Depends: libc6 (>= 2.38), libfftw3-double3 (>= 3.3.10), libfftw3-single3 (>= 3.3.10), libgcc-s1 (>= 3.0), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125, liblilv-0-0 (>= 0.22.0~dfsg0), libreadline8t64 (>= 6.0), libstdc++6 (>= 14), libserd-0-0, liblo7, libreadline8, hylia
 Conflicts: mod-host
 Replaces: mod-host
 Provides: mod-host
 Priority: optional
 Section: sound
-Filename: pool/main/m/mod-host-pistomp/mod-host-pistomp_0.10.6-6_arm64.deb
-Size: 172336
-SHA256: d5c0974ab201e5e0406e04b0a9e8fed31c61701efecc5a98758cfd8edfb805c3
-SHA1: cdcdf88383dc6f68e6f11b935b1a44f4b536ab67
-MD5sum: 13b29f6216cdc4985d299f1db50719fa
+Filename: pool/main/m/mod-host-pistomp/mod-host-pistomp_0.10.6-7_arm64.deb
+Size: 171888
+SHA256: 80f491e231698382a6a3f3eed64a3c2304ba6b0a14523f16673f257740b659ef
+SHA1: 884b4a719f04464b5f7d5155cc1ca2bc8bd06b17
+MD5sum: 271f1a4bd52f38e631650e05df1c7782
 Description: MOD Host — LV2 plugin host for JACK (pi-Stomp fork)
  Forked from moddevices/mod-host with the fix/effect-drain-midi branch
  for proper MIDI effect drain on pedalboard changes.
 
 Package: mod-midi-merger
-Version: 1.0-4
+Version: 1.0-5
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 144
-Depends: libc6 (>= 2.34), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125
+Installed-Size: 147
+Depends: libc6 (>= 2.34), libjack-jackd2-0 (>= 1.9.10+20150825) | libjack-0.125, mod-host-pistomp (>= 0.10.6-7)
 Priority: optional
 Section: sound
-Filename: pool/main/m/mod-midi-merger/mod-midi-merger_1.0-4_arm64.deb
-Size: 6056
-SHA256: b03e6500ffd63d8e02fa4f9e4dfef9a209f5c18217e291e0720682c03a17500b
-SHA1: da9b29e6200f3b75cf081dc4570e242452c7e978
-MD5sum: 17327bda262a6e609efd4123f83f3de6
+Filename: pool/main/m/mod-midi-merger/mod-midi-merger_1.0-5_arm64.deb
+Size: 7740
+SHA256: 8c6777313775c1b4c1f4e10f1d0c90ba913c008f8081d0c405d1b60149b3350e
+SHA1: 1875f01bb96d2a303ae52ce0c80a5a7561531aa6
+MD5sum: c39036fc6153aa77443c6f1ac030be70
 Description: MOD MIDI Merger — merge multiple MIDI inputs into one JACK port
  Part of the MOD ecosystem. Merges multiple ALSA MIDI inputs into a single
  JACK MIDI output port.
