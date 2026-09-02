@@ -1,3 +1,18 @@
+mod-midi-merger (1.0-5) trixie; urgency=medium
+
+  * Promote 1.0-5 to the production channel: hot-plug hardening (NULL guard
+    in the port-registration callback plus the event-armed reconcile burst),
+    the mod-host-pistomp (>= 0.10.6-6) dependency, the legacy unit masking,
+    and the pkg-config Build-Depends fix, all validated on the testing channel.
+
+  * Raise the mod-host-pistomp floor to 0.10.6-7. This package's postinst
+    masks the standalone mod-midi-merger units, so from here mod-host is the
+    only thing that starts the merger — and, as of 0.10.6-7, the only thing
+    that stops it: earlier mod-host never unloaded the internal clients, so
+    JACK waited on them at shutdown.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 01 Sep 2026 21:38:23 +0000
+
 mod-midi-merger (1.0-5~pre4) trixie; urgency=medium
 
   * Add pkg-config to Build-Depends. Upstream master now calls

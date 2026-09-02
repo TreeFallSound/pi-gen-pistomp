@@ -1,3 +1,33 @@
+mod-ui (3.0-15) trixie; urgency=medium
+
+  * Broadcast midi_map -1:-1 when a MIDI addressing is removed, on both
+    removal paths: kMidiUnlearnURI (which also now pops the addressing and
+    resets bypassCC/midiCCs instead of returning early) and the
+    actuator_uri="null" path taken when a control is set back to None.
+    Previously only the browser that made the change knew the mapping was
+    gone — pi-stomp's LCD and any second browser kept showing it, and the
+    stale pluginData was replayed to the next client to connect.
+  * Never save pprops:trigger port values.
+  * Prune stale connections when the MIDI mode changes.
+    set_midi_devices_change_mode passed the combined "in;out" device symbol
+    to remove_port_from_connections, which matches single JACK port names, so
+    nothing was ever removed. mod-host tears those edges down itself in
+    effects_aggregated_midi_enable, leaving self.connections holding edges
+    that no longer existed; connect() then short-circuited on its
+    "already exists" guard and the user's cable silently never connected,
+    unrecoverably for the rest of the session. Split the symbol first.
+  * jack_port_appeared: retry the alias lookup (6 x 0.5s) in separated mode
+    when the alias is not ready yet. Aggregated mode keeps the upstream
+    behaviour of ignoring new ports — mod-midi-merger owns the merged-stream
+    wiring via its own port-registration callback and reconcile burst.
+  * Depend on mod-midi-merger (>= 1.0-5) and mod-host-pistomp (>= 0.10.6-7).
+    Dropping the aggregated-mode connect above is only safe once the merger
+    owns that wiring, which it does from 1.0-5 (port-registration NULL guard
+    plus the reconcile burst); against an older merger a hot-plugged device
+    would join no merged stream at all.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 01 Sep 2026 21:39:02 +0000
+
 mod-ui (3.0-14) trixie; urgency=medium
 
   * Show the correct file parameters (NAM models, cabsim IRs) on

@@ -1,3 +1,13 @@
+mod-host-pistomp (0.10.6-7) trixie; urgency=medium
+
+  * Unload the mod-midi-merger and mod-midi-broadcaster internal clients in
+    effects_finish before closing the global JACK client. mod-host loads
+    them on demand in aggregated MIDI mode but never unloaded them, so on
+    shutdown JACK was left waiting on internal clients belonging to a client
+    that had gone away.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 01 Sep 2026 21:39:02 +0000
+
 mod-host-pistomp (0.10.6-6) trixie; urgency=medium
 
   * Restore aggregated MIDI mode. The 0.10.6-5 build resolved no jack >=
