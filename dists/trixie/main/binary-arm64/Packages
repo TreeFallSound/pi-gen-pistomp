@@ -275,18 +275,18 @@ Description: MOD ttymidi — serial MIDI bridge
  A simple serial port to ALSA/JACK MIDI bridge, part of the MOD ecosystem.
 
 Package: mod-ui
-Version: 3.0-14
+Version: 3.0-15
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 177761
-Depends: python3, jack2-pistomp, mod-host-pistomp
+Installed-Size: 177701
+Depends: python3, jack2-pistomp, mod-host-pistomp (>= 0.10.6-7), mod-midi-merger (>= 1.0-5)
 Priority: optional
 Section: web
-Filename: pool/main/m/mod-ui/mod-ui_3.0-14_arm64.deb
-Size: 48599952
-SHA256: fd55c608ecc6723d7fc26237a52651ac50c70a2bf620b897bd383f842c351f54
-SHA1: 7880366694508b5ce989e416da021200e88c7986
-MD5sum: 659eded09868a8cebcd1743560e64645
+Filename: pool/main/m/mod-ui/mod-ui_3.0-15_arm64.deb
+Size: 48597864
+SHA256: ff2c85d835b2f6cc2576e0ec04f7c6e88d742031de512378e7297ea4734273b1
+SHA1: 4c0e94135824223258ef29b087223aa2ed120843
+MD5sum: 3b449f9b949f776da9365ffdb3779508
 Description: MOD Web UI — web-based pedalboard interface for pi-Stomp
  MOD UI is a web-based interface for managing pedalboards on MOD
  devices. This build runs in a Python 3.11 venv (required by
