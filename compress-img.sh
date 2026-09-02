@@ -12,10 +12,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DEPLOY_DIR="${SCRIPT_DIR}/deploy"
 
-# Find the uncompressed image in deploy/. Local builds name it
-# <IMG_DATE>-pistompOS.img; CI release builds (IMG_VERSION set) name it
-# pistompOS-<version>.img. Match both.
-SRC_FILE=$(ls "${DEPLOY_DIR}"/*pistompOS*.img 2>/dev/null | head -n 1 || true)
+# Find the most-recently modified uncompressed image in deploy/
+SRC_FILE=$(ls -t "${DEPLOY_DIR}"/*pistompOS*.img 2>/dev/null | head -n 1 || true)
 if [[ -z "$SRC_FILE" ]]; then
     echo "ERROR: No uncompressed image found in ${DEPLOY_DIR} (expected *pistompOS*.img)"
     echo "Run ./build-docker.sh -f first."
@@ -36,12 +34,15 @@ if [[ -f "$DEST" ]]; then
             mv "$DEST" "$BACKUP"
             break
         fi
-        ((i++))
+        i=$((i + 1))
     done
 fi
 
-# Run compression
+# intermediate file for atomicity
 echo "Compressing $SRC_FILE -> $DEST ..."
-xz -7e -T0 --memlimit-compress=4GiB --lzma2=dict=48MiB,nice=192,depth=64 -v -c "$SRC_FILE" > "$DEST"
+trap 'rm -f "${DEST}.part"' EXIT
+xz -7e -T0 --memlimit-compress=4GiB --lzma2=dict=48MiB,nice=192,depth=64 -v -c "$SRC_FILE" > "${DEST}.part"
+mv "${DEST}.part" "$DEST"
+trap - EXIT
 
 echo "Done: $DEST"
