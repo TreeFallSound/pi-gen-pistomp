@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     outputs:
       image_version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
       prerelease: ${{ steps.version.outputs.prerelease }}
 
     steps:
@@ -147,6 +148,27 @@ jobs:
     permissions:
       contents: write
     steps:
+      # The Release body is the annotated tag's message, so the notes are
+      # written and reviewed at the moment the release is cut and travel with
+      # the tag itself. Cut the tag with:
+      #
+      #   git tag -a --cleanup=verbatim release/<ver> -F <notes.md>
+      #   git push origin release/<ver>
+      - uses: actions/checkout@v4
+        with:
+          # The tag object's message is not in a shallow ref-only checkout.
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Release notes from the tag annotation
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          git tag -l --format='%(contents)' "${TAG}" > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::error::${TAG} carries no annotation message — re-cut it with 'git tag -a ${TAG} -F <notes.md> -f' and force-push the tag."
+            exit 1
+          fi
+          cat release-notes.md
       - uses: actions/download-artifact@v4
         with:
           name: pistompOS
@@ -158,6 +180,7 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: release-assets/*
+          body_path: release-notes.md
           # Pre-release marker in the tag version (e.g. release/3.3.0-rc1)
           # → GitHub prerelease, excluded from releases/latest.
           prerelease: ${{ needs.build.outputs.prerelease == 'true' }}
