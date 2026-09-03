@@ -254,6 +254,34 @@ Gotchas:
   does require editing it.
 - Kernel `.deb`s must be built against Trixie
 
+## Cutting an image release
+
+A push of a `release/<version>` tag starts `build-image.yml`. The workflow
+builds the image and publishes the GitHub Release. Do not create the Release
+by hand.
+
+**The Release body is the tag's annotation message.** Write the notes in a
+file, then:
+
+```bash
+git tag -a --cleanup=verbatim release/3.3.1 -F CHANGELOG.md
+git push origin release/3.3.1
+```
+
+- `--cleanup=verbatim` is necessary. The default cleanup removes each line
+  that starts with `#`. This deletes all Markdown headings and keeps only the
+  prose.
+- A lightweight tag (`git tag <name>`) has no message. The release job stops
+  with an error. It does not publish an empty page.
+- The notes file is not committed. The notes are in the tag.
+- To correct the notes before the build completes, re-cut the tag
+  (`git tag -a --cleanup=verbatim -f ...`) and force-push it. After the build
+  completes, use `gh release edit <tag> --notes-file <file>`.
+- A version with a pre-release marker (`release/3.3.1-rc1`) builds a
+  testing-channel image and publishes a GitHub prerelease. Never promote a
+  pre-release image with a new tag on the same commit — its rootfs contains
+  `~` packages. Promote the packages, then cut a new `release/<version>` tag.
+
 ## Troubleshooting
 
 ### apt-cacher-ng crashes with "Could not reach APT_PROXY server"
