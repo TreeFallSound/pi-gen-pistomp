@@ -1,6 +1,8 @@
 jack2-pistomp (1.9.22-11) trixie; urgency=medium
 
   * Consolidate ring failure reports to one per direction per second.
+  * Invoke the bundled waf via python3; the fork's waf shebang is
+    /usr/bin/env python, which does not exist in a Trixie build chroot.
 
  -- Cam Gorrie <sastraxi@gmail.com>  Mon, 31 Aug 2026 19:40:35 +0000
 
