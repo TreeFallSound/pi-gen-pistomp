@@ -1,4 +1,4 @@
-jackbridge (1.0-7) trixie; urgency=medium
+jackbridge (1.0-6~pre2) trixie; urgency=medium
 
   * Take the unit file from the pistomp-companion checkout instead of a second
     copy under debian/. The two had drifted, and since the .deb is what lands
@@ -12,7 +12,7 @@ jackbridge (1.0-7) trixie; urgency=medium
 
  -- Cam Gorrie <sastraxi@gmail.com>  Sat, 29 Aug 2026 00:00:00 +0000
 
-jackbridge (1.0-6) trixie; urgency=medium
+jackbridge (1.0-6~pre1) trixie; urgency=medium
 
   * Ship jackbridge-pi-status (7th helper): read-only key=value status of
     the netadapter slave, consumed by the pi LCD UI and jackbridge-ctl.
