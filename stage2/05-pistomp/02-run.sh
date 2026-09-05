@@ -6,36 +6,54 @@ echo "Installing MOD software"
 mkdir -p "${ROOTFS_DIR}/pistomp-cache"
 mount --bind /pistomp-cache "${ROOTFS_DIR}/pistomp-cache"
 
+# Custom .deb baseline (jack2-pistomp and lg come from 00-dummy-packages).
+# One name per line — validate-packages.sh parses this block.
+PISTOMP_PACKAGES="
+    hylia
+    mod-host-pistomp
+    amidithru
+    mod-midi-merger
+    mod-ttymidi
+    sfizz-pistomp
+    fluidsynth-headless
+    lcd-splash
+    jack-capture
+    libfluidsynth2-compat
+    browsepy
+    touchosc2midi
+    mod-ui
+    pi-stomp
+    pistomp-recovery
+    rpi-preseed
+    pistomp-usb-automount
+    pistomp-bluetooth
+    pistomp-wifi
+    jackbridge
+    ffmpeg-pistomp
+    cabsim-lv2
+    veja-bass-cab-lv2
+    veja-1960-cab-lv2
+"
+
+# SKIP_PACKAGES (from check-packages.sh via build-docker.sh): published only
+# to the pre-release suite. One unavailable name fails the whole apt-get
+# transaction, so they leave the list entirely.
+INSTALL_PACKAGES=""
+for pkg in ${PISTOMP_PACKAGES}; do
+    skip=""
+    for sk in ${SKIP_PACKAGES:-}; do
+        [ "${pkg}" = "${sk}" ] && skip=1
+    done
+    if [ -n "${skip}" ]; then
+        echo "Skipping ${pkg}: no version on the ${IMG_CHANNEL:-stable} channel"
+    else
+        INSTALL_PACKAGES="${INSTALL_PACKAGES} ${pkg}"
+    fi
+done
+
 on_chroot << EOF
 
-# Install custom .deb packages from the local apt repo (added in
-# stage2/00-dummy-packages). jack2-pistomp and lg are already installed.
-# apt-get resolves dependencies automatically (unlike dpkg -i).
-apt-get install -y -qq \
-    hylia \
-    mod-host-pistomp \
-    amidithru \
-    mod-midi-merger \
-    mod-ttymidi \
-    sfizz-pistomp \
-    fluidsynth-headless \
-    lcd-splash \
-    jack-capture \
-    libfluidsynth2-compat \
-    browsepy \
-    touchosc2midi \
-    mod-ui \
-    pi-stomp \
-    pistomp-recovery \
-    rpi-preseed \
-    pistomp-usb-automount \
-    pistomp-wifi \
-    pistomp-bluetooth \
-    jackbridge \
-    ffmpeg-pistomp \
-    cabsim-lv2 \
-    veja-bass-cab-lv2 \
-    veja-1960-cab-lv2
+apt-get install -y -qq ${INSTALL_PACKAGES}
 
 # ps-record-lcd: convenience symlink so record_lcd.py is on PATH.
 # pi-stomp.deb postinst creates /home/pistomp/pi-stomp → /opt/pistomp/pi-stomp.

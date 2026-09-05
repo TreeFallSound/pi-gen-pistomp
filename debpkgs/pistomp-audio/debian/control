@@ -1,0 +1,19 @@
+Package: pistomp-audio
+Section: admin
+Priority: optional
+Architecture: arm64
+Maintainer: pistomp <pistomp@example.com>
+Depends: rtirq-init, python3, alsa-utils
+Description: Realtime audio IRQ tuning and PCM bind repair for pi-Stomp
+ Raises the i2s audio DMA interrupt threads to SCHED_FIFO 90 so they sit
+ above jackd. On Pi 3/4 the shipped resolver derives the audio IRQs from
+ the device topology (name matching cannot: every bcm2835 DMA channel
+ shares the label "DMA IRQ"); on Pi 5 it defers to rtirq with the packaged
+ config.
+ .
+ Also repairs a sound card that bound without its dmaengine platform
+ component, which makes every open() of the PCM return EINVAL with nothing
+ in the kernel log. ASoC binds the platform half of a DAI link with no
+ deferred probe, and bcm2835-i2s registers its CPU DAI before that
+ platform, so a machine driver matching by of_node can bind to the wrong
+ component. OTA upgrades take effect at the next boot.

@@ -15,8 +15,7 @@ cache_check
 DEB_DIR="${SCRIPT_DIR}/debian/${PKG}"
 rm -rf "${DEB_DIR}"
 mkdir -p "${DEB_DIR}/DEBIAN" "${DEB_DIR}/usr/bin" "${DEB_DIR}/usr/share/pistomp"
-sed "s/^Version:.*/Version: ${VERSION}/" "${SCRIPT_DIR}/debian/control" \
-    | grep -v '^Build-Depends:' > "${DEB_DIR}/DEBIAN/control"
+stage_control "${SCRIPT_DIR}/debian/control" "${DEB_DIR}/DEBIAN/control"
 
 # Generate font.h from Terminus Bold 22px console font.
 # Use apt-cache (metadata only, no lock/postinst issues) to get the download

@@ -86,7 +86,7 @@ Build process executes ordered stages.
 - **SSH lockout guard.** `firstboot.sh` asserts, against `sshd -T` (the only source that resolves `Include`, `sshd_config.d` and defaults the way the daemon does), that sshd will accept *something*: if `PasswordAuthentication no` and UID 1000 has no non-empty authorized-keys file, it drops `/etc/ssh/sshd_config.d/00-pistomp-lockout-guard.conf` re-enabling passwords and says so on the LCD. Deliberately phrased as an invariant over the effective config rather than a check for any particular writer — rpi-preseed, `pistomp.conf` and the image's own `sshd_config` edits can each produce that state, and the interesting failures are the unanticipated ones. The `00-` prefix matters: sshd takes the **first** value it sees for a keyword and Debian `Include`s `sshd_config.d/*.conf` at the top of `sshd_config`, so sorting ahead of every other drop-in is what makes it win.
 - **lilv is installed via apt** (`python3-lilv liblilv-dev`) — no source build needed on Trixie.
 - **lcd-splash** is a C binary compiled from source in `debpkgs/lcd-splash/src/`. It uses `lgpio` (linked against the extracted `lg.deb` at build time) to drive the ILI9341 SPI LCD directly. It takes `lcd-splash <image.rgb565> [message]` and each boot stage passes its own artwork. The source artwork lives as PNGs in `debpkgs/lcd-splash/images/`; `build.sh` converts each to a raw 320x240 big-endian RGB565 blob with `src/png2rgb565.py` (stdlib only, no Pillow) and ships them at `/usr/share/pistomp/splash/<name>.rgb565`. The message is drawn in light grey in the band below `MSG_REGION_TOP` (y=160), which the artwork leaves empty.
-- **Realtime IRQ tuning** uses the `rtirq-init` apt package (not `rtirq` — the old name doesn't exist on Trixie). Config is installed to `/etc/default/rtirq`. A custom `rtirq.service` unit wraps the init script.
+- **Realtime IRQ tuning** ships in the `pistomp-audio` package (so it reaches deployed devices over OTA), alongside the `rtirq-init` apt package it depends on. `pistomp-audio-irq.service` runs `/usr/lib/pistomp/pistomp-audio-irq.py` (see `docs/audio-dma-irq-inversion.md`): on a Pi 5 the script defers to the init script with the packaged config (postinst writes `/etc/default/rtirq` from `/usr/lib/pistomp/rtirq.conf` — the path is rtirq-init's conffile, so the package cannot own or divert it without a dpkg prompt), exactly as the old `rtirq.service` always did; on a Pi 2/3/4 every bcm2835 DMA channel requests its interrupt with the same label `DMA IRQ`, so name matching cannot tell the audio lines from the SD card and LCD lines — the script instead derives the audio lines from the sysfs `slave` links and the DMA controller's device tree, and raises them itself. The postinst also removes and masks the old stage2-baked `rtirq.service`: rtirq-init's enabled rc links would otherwise let systemd-sysv-generator resurrect it outside the unit's `Before=jack.service` ordering.
 - **Networking** matches pistomp-arch exactly: wired NM profile with 15 s DHCP timeout + link-local fallback (`eth0`), wifi power-save off, MAC randomization off, multihome policy routing dispatcher.
 - **WiFi hotspot** is started on demand by `wifi-check.service` (after NM settles), not via rc.local. It only starts if neither WiFi nor ethernet is connected.
 - **The stage2 chroot has no network tools.** At `stage2/00-dummy-packages` the rootfs is a ~11k-file bootstrap — no `wget`, `curl`, or `ca-certificates` (wget arrives ~15s later). Reachability probes belong on the build container, *before* `on_chroot`. A `wget --spider` there silently failed "command not found", skipped the `trixie-testing` source, and shipped stable packages inside a `-rc` image. `scripts/verify-image-packages.sh` now fails the build when installed versions don't match `check-packages.sh`'s pre-flight resolution.
@@ -202,7 +202,7 @@ Custom packages live under `debpkgs/<pkg>/`. Each has:
 
 `build.sh` reads the version from the changelog via `dpkg-parsechangelog` — no other files need updating.
 
-This includes the `dpkg-deb --build` packages (`lcd-splash`, `libfluidsynth2-compat`, `pistomp-usb-automount`, `pistomp-bluetooth`): their `build.sh` rewrites `debian/control`'s `Version:` from the changelog at build time, so the checked-in `Version:` is vestigial and routinely stale (`lcd-splash` reads `1.0-2` against a shipping `1.0-20`). Never read it or hand-edit it to bump a version.
+**No `debian/control` has a `Version:` field.** For the `dpkg-deb --build` packages (`lcd-splash`, `libfluidsynth2-compat`, `pistomp-audio`, `pistomp-usb-automount`, `pistomp-wifi`, `pistomp-bluetooth`), `stage_control()` in `scripts/build-common.sh` writes the binary control. It puts `Version:` from the changelog after `Package:`, and removes `Build-Depends:`. It stops the build if the source control has a `Version:`. Check 6 of `validate-packages.sh` finds one at PR time. A checked-in `Version:` goes stale: `pistomp-bluetooth` showed `1.0.0-1~pre1` while `~pre2` shipped.
 
 ### `overrides/` and `cache/` directory structure
 
@@ -254,6 +254,34 @@ Gotchas:
   does require editing it.
 - Kernel `.deb`s must be built against Trixie
 
+## Cutting an image release
+
+A push of a `release/<version>` tag starts `build-image.yml`. The workflow
+builds the image and publishes the GitHub Release. Do not create the Release
+by hand.
+
+**The Release body is the tag's annotation message.** Write the notes in a
+file, then:
+
+```bash
+git tag -a --cleanup=verbatim release/3.3.1 -F CHANGELOG.md
+git push origin release/3.3.1
+```
+
+- `--cleanup=verbatim` is necessary. The default cleanup removes each line
+  that starts with `#`. This deletes all Markdown headings and keeps only the
+  prose.
+- A lightweight tag (`git tag <name>`) has no message. The release job stops
+  with an error. It does not publish an empty page.
+- The notes file is not committed. The notes are in the tag.
+- To correct the notes before the build completes, re-cut the tag
+  (`git tag -a --cleanup=verbatim -f ...`) and force-push it. After the build
+  completes, use `gh release edit <tag> --notes-file <file>`.
+- A version with a pre-release marker (`release/3.3.1-rc1`) builds a
+  testing-channel image and publishes a GitHub prerelease. Never promote a
+  pre-release image with a new tag on the same commit — its rootfs contains
+  `~` packages. Promote the packages, then cut a new `release/<version>` tag.
+
 ## Troubleshooting
 
 ### apt-cacher-ng crashes with "Could not reach APT_PROXY server"
@@ -294,12 +322,16 @@ To test a different branch, set `PISTOMP_BRANCH` in `config.sh`.
 
 ## PR-time package validation (`.github/workflows/validate-packages.yml`)
 
-`scripts/validate-packages.sh` runs on every PR as the `validate` job, and is meant to be a **required status check** on `main`. It catches four landmines that today otherwise only surface 20 minutes into an image build:
+`scripts/validate-packages.sh` runs on every PR as the `validate` job, and is meant to be a **required status check** on `main`. It catches these landmines, which otherwise only occur 20 minutes into an image build:
 
 1. A package in `stage2/05-pistomp/02-run.sh`'s `apt-get install` block has no `.github/workflows/build-<pkg>.yml` — the rpi-preseed landmine (image's `apt-get install` hard-fails).
 2. A PR touches `debpkgs/<pkg>/**` without bumping `debian/changelog` (the post-merge duplicate-version gate would silently skip publishing — failing at PR is faster).
 3. A PR adds a new `debpkgs/<pkg>/` directory but doesn't ship the matching `build-<pkg>.yml` in the same diff.
 4. A `.github/workflows/build-<name>.yml` has `paths: debpkgs/<pkg>/**` but no `debpkgs/<pkg>/` exists (typo or stale workflow after a package's directory was deleted).
+5. A PR changes the kernel source (`rt-kernel/**` or the pins in `config.sh`) but does not bump `KERNEL_DEB_VERSION`.
+6. A `debpkgs/<pkg>/debian/control` has a `Version:` field.
+
+Check 1 reads the `PISTOMP_PACKAGES="..."` block in `02-run.sh`, plus each literal `apt-get install` line. Keep one package name per line.
 
 Run locally before pushing a PR: `./scripts/validate-packages.sh` (defaults base ref to `origin/main`; set `GITHUB_BASE_REF` to compare against another branch).
 
@@ -324,6 +356,8 @@ device /etc/apt/sources.list.d/pistomp.list  →  apt update  →  apt install -
 ### Release channels
 
 Two apt suites on the same gh-pages site: `trixie` (production, every device) and `trixie-testing` (pre-releases, opt-in test devices). The channel is decided by the changelog version alone: a `~` in the version (e.g. `1.2-4~pre1`, created with `./scripts/bump-version.sh --pre <pkg> "msg"`) publishes the GitHub Release as a prerelease and routes the `.deb` into `trixie-testing`. Experimental work can therefore merge to `main` freely — production devices never see `~` versions. A plain bump to the final version promotes it (`~` sorts below the release it precedes, so test devices converge back automatically). Release **tags** encode `~` as `_` (git forbids `~` in refnames); everything else keeps the real Debian version. Test devices opt in by adding a second sources line for `trixie-testing`. Details in `docs/OTA.md` "Release channels".
+
+**A stable image skips a package that only the testing suite has.** `scripts/check-packages.sh` reads both suites. If a package is not in `overrides/` and not in the stable suite, but is in the testing suite, the script writes its name to `deploy/testing-only-packages.txt`. `build-docker.sh` sends that list to the container as `SKIP_PACKAGES`. `stage2/05-pistomp/02-run.sh` then removes those names from `PISTOMP_PACKAGES` before `apt-get install`, because one unavailable package fails the full transaction. The script also keeps them out of `deploy/expected-packages.txt`, so the post-build check does not report them. Thus a package can stay in the baseline install list while you develop it on the pre-release channel. A package in **neither** suite is still an error — that is the rpi-preseed landmine. Do not change that error into a skip.
 
 **Images** have channels too: `./build-docker.sh --pre` (or `IMG_CHANNEL=testing`, or a `release/<ver>-rc1`-style tag in CI) builds from both suites and ships `pistomp-testing.list`, so devices flashed from it follow the pre-release channel; the image name carries a `-pre`/`-rc` marker and the CI release is flagged prerelease (excluded from `releases/latest`). Never promote a pre-release image by re-tagging — its rootfs contains `~` packages and the testing sources line; promote the packages, then cut a fresh `release/<version>` tag.
 

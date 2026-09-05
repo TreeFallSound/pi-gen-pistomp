@@ -1,0 +1,19 @@
+# Per-package workflow — see docs/package-template/build.yml.
+name: build-pistomp-audio
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/pistomp-audio/**'
+  pull_request:
+    paths:
+      - 'debpkgs/pistomp-audio/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: pistomp-audio
+    secrets: inherit

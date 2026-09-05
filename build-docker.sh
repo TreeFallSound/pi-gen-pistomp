@@ -215,6 +215,13 @@ fi
 OVERRIDES_DIR="${DIR}/overrides" IMG_CHANNEL="${IMG_CHANNEL}" \
   bash "${DIR}/scripts/check-packages.sh"
 
+# Pre-release-only packages, already reported by check-packages.sh;
+# 02-run.sh drops them from its apt-get install line.
+SKIP_PACKAGES=""
+if [ -s "${DIR}/deploy/testing-only-packages.txt" ]; then
+  SKIP_PACKAGES="$(tr '\n' ' ' < "${DIR}/deploy/testing-only-packages.txt")"
+fi
+
 ${DOCKER} build --build-arg BASE_IMAGE=debian:trixie -t pi-gen "${DIR}"
 
 if [ "${CONTAINER_EXISTS}" != "" ]; then
@@ -282,6 +289,7 @@ time ${DOCKER} run \
   --volume "${DIR}/overrides":/pistomp-overrides:ro \
   ${IMG_FILENAME_ENV} \
   -e "IMG_CHANNEL=${IMG_CHANNEL}" \
+  -e "SKIP_PACKAGES=${SKIP_PACKAGES}" \
   -e "GIT_HASH=${GIT_HASH}" \
   -e "GIT_DESCRIBE=${GIT_DESCRIBE}" \
   -e "APT_PROXY=${APT_PROXY}" \

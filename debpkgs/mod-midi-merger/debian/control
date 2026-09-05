@@ -7,7 +7,7 @@ Standards-Version: 4.6.2
 
 Package: mod-midi-merger
 Architecture: arm64
-Depends: ${shlibs:Depends}, ${misc:Depends}, mod-host-pistomp (>= 0.10.6-6)
+Depends: ${shlibs:Depends}, ${misc:Depends}, mod-host-pistomp (>= 0.10.6-7)
 Description: MOD MIDI Merger — merge multiple MIDI inputs into one JACK port
  Part of the MOD ecosystem. Merges multiple ALSA MIDI inputs into a single
  JACK MIDI output port.

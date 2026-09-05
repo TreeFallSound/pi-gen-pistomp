@@ -1,0 +1,37 @@
+pistomp-audio (1.0.0-2) trixie; urgency=medium
+
+  * Add pistomp-pcm-check: verify at boot that the sound card PCM opens,
+    and rebind the machine driver if it does not.
+  * ASoC binds the CPU DAI and codec DAI of a DAI link with a deferred
+    probe, but binds the platform half with none (soc-core.c,
+    snd_soc_add_pcm_runtime). bcm2835-i2s registers its CPU DAI component
+    seven lines before the generic dmaengine PCM component, so a machine
+    driver that matches its platform by of_node alone - iqaudio-codec.c
+    does - can bind to the CPU DAI component instead. That component has
+    no pcm_construct and no open, so runtime->hw stays empty and every
+    open() of the PCM returns EINVAL. Nothing reaches the kernel log: the
+    card enumerates, aplay -l lists it, and the DMA slave links are
+    present, so the only symptom is jack.service failing, followed by
+    mod-host and mod-ui.
+  * One unbind/rebind of the machine driver repairs it, because both
+    components are registered by then. Verified on a Pi 3A+ with an
+    IQaudio CODEC, against a deterministically reproduced failure.
+  * Ordered before pistomp-audio-irq.service, because a rebind releases
+    and re-requests the i2s DMA channels, which discards the irq/N-*
+    threads that the resolver raised to SCHED_FIFO 90.
+  * Upstream fixed this bug class in fsl_sai, fsl_micfil, fsl_esai,
+    fsl_spdif, fsl_xcvr and fsl_aud2htx (merge 7bd5d979dfdb) and in
+    davinci-mcasp (d18ca8635db2). bcm2835-i2s has never carried the fix
+    and is still in its original 2013 order in mainline, so this is the
+    userspace counterpart and reaches deployed devices over OTA.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Wed, 02 Sep 2026 02:33:27 +0000
+
+pistomp-audio (1.0.0-1) trixie; urgency=medium
+
+  * Initial release. Extends rtirq (which can only work with Pi 5) with
+    a custom script that discovers I2S audio device IRQs on Pi 3/4 and
+    changes them to RT priority 90 via chrt. Replaces the stage2-baked
+    rtirq.service (removed and masked).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 31 Aug 2026 00:00:00 +0000

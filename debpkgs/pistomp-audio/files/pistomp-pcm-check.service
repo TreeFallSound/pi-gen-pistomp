@@ -1,0 +1,14 @@
+[Unit]
+Description=Verify the pi-Stomp sound card PCM binds, and repair it if not
+After=sysinit.target local-fs.target
+# The IRQ resolver needs us to ensure the sound card driver binds correctly
+Before=pistomp-audio-irq.service jack.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/pistomp/pistomp-pcm-check.py
+# Failure here isn't fatal; the boot continues
+
+[Install]
+WantedBy=multi-user.target

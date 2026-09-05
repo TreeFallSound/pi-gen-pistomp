@@ -1,3 +1,32 @@
+pi-stomp (3.3.1-0) trixie; urgency=medium
+
+  * Restore the per-card ALSA fallback state files (IQaudIO, HiFiBerry,
+    AudioInjector). They were missing from 3.3.0-0, so a fresh install came
+    up with no mixer settings to restore on its first boot.
+  * Config parsing rewritten on msgspec. A malformed default_config.yml now
+    fails startup instead of being logged and used anyway; a malformed
+    pedalboard config.yml is ignored and that pedalboard runs on the global
+    defaults. jsonschema drops to a dev-only dependency and is no longer
+    installed into the venv.
+  * The NAV encoder can no longer be bound to a parameter or a MIDI CC.
+  * Fix external MIDI messages leaking from one pedalboard into the next.
+  * Fix a MIDI-unlearned footswitch being left with no press action and a
+    lit keycap.
+  * Fix a crash on longpress of an Audio & MIDI knob, and a crash on Backup
+    or Restore to a read-only USB drive.
+  * Shutdown, reboot and sound-engine restart black the screen at once and
+    show a "Please wait" dialog. The in-app fallback splash panel is gone;
+    the boot splash still comes from lcd-splash.
+  * Pedalboard and snapshot titles scroll only while NAV-selected, keeping
+    LCD SPI traffic (audible on the DAC at high gain) off the play path.
+  * postinst now prunes venv package directories that hold nothing but
+    runtime bytecode. dpkg cannot rmdir them because it does not own the
+    __pycache__ files, and an empty directory on sys.path still imports as a
+    PEP 420 namespace package — upgrading off jsonschema left six such
+    directories behind.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Tue, 01 Sep 2026 15:56:47 -0400
+
 pi-stomp (3.3.0-0) trixie; urgency=medium
 
   * Backup/restore progress UI: reusable progress bar, restore offered from

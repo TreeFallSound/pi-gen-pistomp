@@ -10,6 +10,17 @@ SYMLINK_TARGET=/home/pistomp/pi-stomp
 find "$VENV/bin" -type f -executable \
     -exec sed -i "1s|^#!.*python.*|#!$VENV/bin/python|" {} \; 2>/dev/null || true
 
+# Drop empty site-packages directories that pip leaves behind when uninstalling packages.
+for site in "$VENV"/lib/python*/site-packages; do
+    [ -d "$site" ] || continue
+    find "$site" -mindepth 1 -maxdepth 1 -type d ! -name '__pycache__' -print0 |
+        while IFS= read -r -d '' pkg; do
+            if [ -z "$(find "$pkg" -type f ! -path '*/__pycache__/*' -print -quit)" ]; then
+                rm -rf "$pkg"
+            fi
+        done
+done
+
 # Create compatibility symlink for deploy.sh
 if [ ! -L "$SYMLINK_TARGET" ]; then
     ln -sf "$PISTOMP_SRC" "$SYMLINK_TARGET"

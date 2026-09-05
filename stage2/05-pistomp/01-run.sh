@@ -3,13 +3,17 @@
 install -m 644 files/services/*.service ${ROOTFS_DIR}/usr/lib/systemd/system/
 install -m 644 files/services/*.target ${ROOTFS_DIR}/usr/lib/systemd/system/
 
-# jackdrc and jack.service ship in the jack2-pistomp package (so they reach devices
-# over OTA), not here. The ln -sf below still enables the unit.
+# jackdrc, jack.service (jack2-pistomp) and the audio IRQ resolver, unit,
+# and /etc/default/rtirq (pistomp-audio) ship in packages so they reach
+# devices over OTA. Installed in stage2/00-dummy-packages; assert they
+# landed. Enablement is still the ln -sf below.
 test -f "${ROOTFS_DIR}/usr/lib/systemd/system/jack.service"
 test -x "${ROOTFS_DIR}/usr/lib/pistomp/jackdrc"
+test -f "${ROOTFS_DIR}/usr/lib/systemd/system/pistomp-audio-irq.service"
+test -x "${ROOTFS_DIR}/usr/lib/pistomp/pistomp-audio-irq.py"
+test -f "${ROOTFS_DIR}/etc/default/rtirq"
 
 install -m 644 files/jack-env.sh ${ROOTFS_DIR}/etc/profile.d/
-install -Dm 644 files/rtirq.conf ${ROOTFS_DIR}/etc/default/rtirq
 
 # Grant audio group access to CPU DMA latency control
 install -Dm 644 files/99-cpu-dma-latency.rules ${ROOTFS_DIR}/etc/udev/rules.d/99-cpu-dma-latency.rules
@@ -92,10 +96,12 @@ ln -sf /usr/lib/systemd/system/wifi-check.service /etc/systemd/system/multi-user
 ln -sf /usr/lib/systemd/system/wifi-mac-check.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/firstboot.service /etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/zram.service /etc/systemd/system/multi-user.target.wants
-ln -sf /usr/lib/systemd/system/rtirq.service /etc/systemd/system/multi-user.target.wants
-ln -sf /usr/lib/systemd/system/regenerate-ssh-host-keys.service /etc/systemd/system/multi-user.target.wants
-
-# mask raspberrypi-sys-mods' own host-key regeneration. It is gated on
+ln -sf /usr/lib/systemd/system/pistomp-audio-irq.service /etc/systemd/system/multi-user.target.wants
+# mask rtirq.service: rtirq-init's enabled rc links would otherwise let
+# systemd-sysv-generator synthesize one outside our Before=jack.service
+# ordering. pistomp-audio's postinst does the same on deployed devices.
+ln -sf /dev/null /etc/systemd/system/rtirq.service
+# mask raspberrypi-sys-mods' own host-key regeneration. It is gated on a
 # ConditionFirstBoot=, which depends on /etc/machine-id and has misfired on this
 # image before; ours is gated on a self-clearing stamp. Two mechanisms racing to
 # rewrite /etc/ssh is strictly worse than one.

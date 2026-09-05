@@ -1,3 +1,9 @@
+pistomp-recovery (0.1.0-32) trixie; urgency=medium
+
+  * Ensure new packages can always be installed.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 31 Aug 2026 22:11:27 +0000
+
 pistomp-recovery (0.1.0-31) trixie; urgency=medium
 
   * Build the venv with 'uv sync --locked' so a stale uv.lock fails the build instead of shipping a stale dependency set.

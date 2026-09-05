@@ -1,5 +1,4 @@
 Package: pistomp-usb-automount
-Version: 1.0.0-1
 Section: admin
 Priority: optional
 Architecture: arm64
