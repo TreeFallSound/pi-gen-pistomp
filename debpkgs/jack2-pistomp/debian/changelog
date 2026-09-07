@@ -1,3 +1,10 @@
+jack2-pistomp (1.9.22-8) trixie; urgency=medium
+
+  * Ship wait-for-jack.sh; bound each jack_lsp probe with timeout(1)
+    to prevent mod-host et al hanging on a JACK startup race.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Mon, 07 Sep 2026 18:20:08 +0000
+
 jack2-pistomp (1.9.22-7) trixie; urgency=medium
 
   * Conflict with, replace and provide libjack-jackd2-dev, so dpkg can install jack2-pistomp on systems that already have Debian's dev package (promotes 1.9.22-7~pre1).
