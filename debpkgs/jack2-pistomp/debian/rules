@@ -30,6 +30,12 @@ override_dh_auto_install:
 		$(CURDIR)/debian/jack2-pistomp/usr/lib/pistomp/jackdrc
 	install -Dm 644 debian/extra/jack.service \
 		$(CURDIR)/debian/jack2-pistomp/usr/lib/systemd/system/jack.service
+	# Stays in /usr/local: three of its five consumers are image-baked units
+	# that can never be updated to follow a move.
+	install -Dm 755 debian/extra/wait-for-jack.sh \
+		$(CURDIR)/debian/jack2-pistomp/usr/local/bin/wait-for-jack.sh
+
+override_dh_usrlocal:
 
 override_dh_installsystemd:
 	# Enablement is handled by stage2/05-pistomp/01-run.sh ln -sf, matching the

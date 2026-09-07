@@ -9,6 +9,7 @@ install -m 644 files/services/*.target ${ROOTFS_DIR}/usr/lib/systemd/system/
 # landed. Enablement is still the ln -sf below.
 test -f "${ROOTFS_DIR}/usr/lib/systemd/system/jack.service"
 test -x "${ROOTFS_DIR}/usr/lib/pistomp/jackdrc"
+test -x "${ROOTFS_DIR}/usr/local/bin/wait-for-jack.sh"
 test -f "${ROOTFS_DIR}/usr/lib/systemd/system/pistomp-audio-irq.service"
 test -x "${ROOTFS_DIR}/usr/lib/pistomp/pistomp-audio-irq.py"
 test -f "${ROOTFS_DIR}/etc/default/rtirq"
@@ -27,7 +28,6 @@ install -Dm 644 files/60-ondemand-governor.rules ${ROOTFS_DIR}/etc/udev/rules.d/
 
 # Realtime priority + memlock limits for audio group (non-service processes)
 install -Dm 644 files/99-audio.conf ${ROOTFS_DIR}/etc/security/limits.d/99-audio.conf
-install -m 755 files/wait-for-jack.sh ${ROOTFS_DIR}/usr/local/bin/wait-for-jack.sh
 install -m 755 files/wifi-mac-check.sh ${ROOTFS_DIR}/usr/local/bin/wifi-mac-check.sh
 
 # Helper scripts for common service operations (ps-restart, ps-stop, ps-run,
