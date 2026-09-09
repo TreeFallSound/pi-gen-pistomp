@@ -1,15 +1,15 @@
 {
   "os_list": [
     {
-      "name": "pi-Stomp OS 3.3.1",
+      "name": "pi-Stomp OS 3.3.2",
       "description": "Low-latency audio OS for pi-Stomp guitar pedal hardware (Pi 3/4/5, Zero 2 W). Includes RT kernel, JACK audio, MOD-Host, MOD-UI.",
       "icon": "https://treefallsound.github.io/pi-gen-pistomp/imager/icon.png",
-      "url": "https://github.com/TreeFallSound/pi-gen-pistomp/releases/download/release/3.3.1/pistompOS-3.3.1.img.xz",
+      "url": "https://github.com/TreeFallSound/pi-gen-pistomp/releases/download/release/3.3.2/pistompOS-3.3.2.img.xz",
       "extract_size": 4794089472,
-      "extract_sha256": "a6e034dde10f327586441108da1a060cdca85d9370bce219be80c94b10df62f8",
-      "image_download_size": 1373951156,
-      "image_download_sha256": "112af3ed47c9aee8a121555a13fb2627ad4b331948221fd916b2a3efd32397a4",
-      "release_date": "2026-09-02",
+      "extract_sha256": "03e3bc96237a240af56578ce5fcd9a9365fe303b1136d3d2ce48a2d9192e4d51",
+      "image_download_size": 1366125396,
+      "image_download_sha256": "f2aa6e6449d9c8f8afc22028b8f03ab716b9108885f61e51833598943b5717d9",
+      "release_date": "2026-09-08",
       "init_format": "rpi-preseed",
       "devices": [
         "pi5-64bit",
