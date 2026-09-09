@@ -419,10 +419,10 @@ Description: first-boot OS customisation for Raspberry Pi OS
  in place of the classic firstrun.sh / userconfig.service flow.
 
 Package: sfizz-pistomp
-Version: 1.2.3-8
+Version: 1.2.3-9
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 6381
+Installed-Size: 6324
 Depends: libc6 (>= 2.40), libgcc-s1 (>= 3.3.1), libstdc++6 (>= 14)
 Conflicts: sfizz, sfizz-lv2
 Replaces: sfizz, sfizz-lv2
@@ -430,11 +430,11 @@ Provides: sfizz, sfizz-lv2
 Homepage: https://github.com/sfztools/sfizz-ui
 Priority: optional
 Section: sound
-Filename: pool/main/s/sfizz-pistomp/sfizz-pistomp_1.2.3-8_arm64.deb
-Size: 1051516
-SHA256: 5b389431beac41e159133c6096bceb150167805491911ec8c801dcdea6c813b2
-SHA1: 9edc5920f37e74f669626f2b1ee22694a78df1fd
-MD5sum: 86c61775ad66e490312545361c4d968d
+Filename: pool/main/s/sfizz-pistomp/sfizz-pistomp_1.2.3-9_arm64.deb
+Size: 1052996
+SHA256: 39a22f0c72628c8ebd85fe2e12a5311472991538b42ff852618f5efd76ea0f86
+SHA1: 524c3d288dac46a5054aa4e291ca5f99527248ce
+MD5sum: 03715f91632624a21eae5f4bde970b3b
 Description: SFZ library and LV2 plugin (minimal, headless)
  sfizz is an SFZ parser and synth C++ library and set of plugins.
  This build is a minimal headless LV2-only variant for pi-Stomp, with
