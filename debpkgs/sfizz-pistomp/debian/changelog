@@ -1,3 +1,10 @@
+sfizz-pistomp (1.2.3-9) trixie; urgency=medium
+
+  * Cap generated controllers.ttl at MIDI_CC_COUNT=142 (14 extended-CC
+    parameters instead of 384).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 05 Sep 2026 15:58:11 +0000
+
 sfizz-pistomp (1.2.3-8) trixie; urgency=medium
 
   * Add quilt to Build-Depends.

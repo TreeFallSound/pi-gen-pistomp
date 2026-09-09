@@ -6,6 +6,8 @@ PARALLEL_JOBS := $(shell nproc | awk '{j=int($$1/2); print (j>4)?4:(j<1)?1:j}')
 %:
 	dh $@ --buildsystem=cmake --with quilt
 
+# MIDI_CC_COUNT caps the generated controllers.ttl
+# 142 keeps every defined extended CC and drops placeholders.
 override_dh_auto_configure:
 	dh_auto_configure -- \
 		-DCMAKE_BUILD_TYPE=Release \
@@ -17,7 +19,8 @@ override_dh_auto_configure:
 		-DSFIZZ_RENDER=ON \
 		-DSFIZZ_USE_SYSTEM_LV2=ON \
 		-DSFIZZ_USE_SYSTEM_ABSEIL=OFF \
-		-DSFIZZ_USE_SYSTEM_PUGIXML=OFF
+		-DSFIZZ_USE_SYSTEM_PUGIXML=OFF \
+		-DMIDI_CC_COUNT=142
 
 override_dh_auto_build:
 	dh_auto_build -- -j$(PARALLEL_JOBS)
