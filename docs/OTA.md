@@ -67,7 +67,7 @@ on its own).
 
 ### Pre-release images
 
-Images follow the same two channels, selected by `IMG_CHANNEL`
+Images follow the same two apt channels, selected by `IMG_CHANNEL`
 (`stable`/`testing`):
 
 | How you build | Channel |
@@ -75,20 +75,28 @@ Images follow the same two channels, selected by `IMG_CHANNEL`
 | `./build-docker.sh -f` | stable |
 | `./build-docker.sh -f --pre` (or `IMG_CHANNEL=testing`) | testing |
 | CI tag `release/3.4.0` | stable |
-| CI tag `release/3.4.0-rc1` (`-rc`/`-pre`/`-beta`/`-alpha` suffix) | testing |
+| CI tag `release/3.4.0-rc1` | stable |
+| CI tag `release/3.4.0-pre1` (`-testing`/`-pre`/`-beta`/`-alpha` suffix) | testing |
 
 A testing-channel image build (a) enables `trixie-testing` during the build so
 pre-release packages land in the rootfs, (b) ships `pistomp-testing.list` so
 the flashed device stays on the pre-release channel, and (c) marks the output
-name (`<date>-pistompOS-pre.img` locally, the tag version in CI). CI publishes
-it as a GitHub **prerelease**, which `releases/latest` ignores — so anything
-generated from the latest release (download links, imager manifest) stays
-production-only automatically.
+name (`<date>-pistompOS-pre.img` locally, the tag version in CI).
 
-**Promotion is a rebuild, not a re-tag**: a pre-release image's rootfs
-contains `~` packages and the testing sources line, so it is not the
-production artifact. Promote the packages first (plain `bump-version.sh`
-drops the `~preN` suffix), then push a fresh `release/<version>` tag.
+CI has a third *image* track that is not an apt channel: `-rc<N>` builds from
+the stable suite, so a release candidate installs exactly what the release it
+precedes will install. It is published as a GitHub **prerelease** all the same,
+under its own `imager/pistomp-rc.json` manifest. A prerelease is ignored by
+`releases/latest`, so download links and the stable imager manifest stay
+production-only automatically. Full table in `docs/RELEASE.md`.
+
+**Promotion is a rebuild, not a re-upload**: CI builds from source on every
+tag, so a `release/<version>` tag on the same commit as a `-pre1` tag produces
+a genuine stable image — that build reads `trixie` alone. Only the built
+testing `.img.xz` holds `~` packages and the testing sources line; never rename
+or re-upload that file. The rebuild does install different package versions
+from the image you tested, so promote the packages first (plain
+`bump-version.sh` drops the `~preN` suffix) if a package is what you tested.
 
 ## Workflows
 

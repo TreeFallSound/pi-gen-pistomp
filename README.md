@@ -27,7 +27,15 @@ Uses Raspberry Pi Imager's built-in wizard to set WiFi, hostname, and password a
 
 #### Pre-release images
 
-Use the following URL for pre-release images to help us test new changes. These builds are likely to have (literal) show-stopper issues, so please don't take them on stage with you.
+Two pre-release URLs are available if you want to help us test new changes. Both are likely to have (literal) show-stopper issues, so please don't take them on stage with you.
+
+Release candidates — the next stable image, built from the same packages it will ship with:
+
+```
+https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-rc.json
+```
+
+Testing images — also carry pre-release packages, and keep receiving them over the air, and are unlikely to be stable:
 
 ```
 https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-testing.json

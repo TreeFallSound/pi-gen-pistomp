@@ -17,6 +17,9 @@ IMG_VERSION=3.0.0 ./build-docker.sh -f        # produces deploy/pistompOS-3.0.0.
 ./compress-img.sh                             # produces deploy/pistompOS-3.0.0.img.xz
 ```
 
+An rc image is a stable build with an rc name — put the marker in `IMG_VERSION`
+(`IMG_VERSION=3.0.0-rc1`). Add `--pre` for a testing image.
+
 ## Publish a release
 
 ### Current flow (automatic via `build-image.yml`)
@@ -30,18 +33,33 @@ to `gh-pages` so Raspberry Pi Imager 2.x picks it up automatically.
 # Production image:
 git tag release/3.3.0 && git push origin release/3.3.0
 
-# Pre-release image (testing channel — installs from + ships trixie-testing apt suite,
-# flagged as GitHub prerelease, excluded from releases/latest):
+# Release candidate — production packages, published as a GitHub prerelease:
 git tag release/3.3.0-rc1 && git push origin release/3.3.0-rc1
+
+# Testing image — also installs from and ships the trixie-testing apt suite:
+git tag release/3.3.0-pre1 && git push origin release/3.3.0-pre1
 ```
 
 The `_version_` becomes the image filename, release name and manifest URL
 verbatim — **don't prefix it with `v`** (e.g. `release/v3.3.0` produces
 `pistompOS-v3.3.0.img.xz`, which is non-conventional).
 
-The prerelease flag is decided by a regex match on the version suffix:
-`-(rc|pre|beta|alpha)[0-9]*$` → testing channel + GitHub prerelease. Plain
-version → production channel + standard release.
+#### Tracks
+
+The version suffix picks one track, and the track decides all three of the apt
+suites, the GitHub prerelease flag, and the manifest URL.
+
+| Suffix | Track | apt suites | GitHub Release | Manifest |
+| --- | --- | --- | --- | --- |
+| *(none)* | `stable` | `trixie` | normal | `pistomp-stable.json` |
+| `-rc<N>` | `rc` | `trixie` | prerelease | `pistomp-rc.json` |
+| `-testing<N>`, `-pre<N>`, `-beta<N>`, `-alpha<N>` | `testing` | `trixie` + `trixie-testing` | prerelease | `pistomp-testing.json` |
+
+An **rc** image installs exactly the packages the stable release will install.
+Use it to test the image build, the stage scripts and the kernel without
+changing what is in the rootfs. A **testing** image is the one that pulls in
+`~` pre-release packages, and a device flashed from it keeps following
+`trixie-testing` over OTA.
 
 Before tagging, **wait for all `build-<pkg>.yml` and `publish-apt-repo.yml`
 runs from your last merge to `main` to finish** — the image build installs
@@ -66,16 +84,17 @@ produce a workflow artifact only, no GitHub Release and no manifest deploy.
 
 ### Imager manifest URLs
 
-Two channel manifests plus per-version archival snapshots are kept on gh-pages:
+One manifest per track plus per-version archival snapshots are kept on gh-pages:
 
 | URL | Contents |
 | --- | --- |
 | `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-stable.json` | Latest production image |
-| `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-testing.json` | Latest pre-release image |
+| `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-rc.json` | Latest release candidate |
+| `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-testing.json` | Latest testing image (`trixie-testing` packages) |
 | `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp-<version>.json` | Pinned to one version |
 | `https://treefallsound.github.io/pi-gen-pistomp/imager/pistomp.json` | **Legacy** — mirrors stable. Never delete. |
 
-Enter the stable or testing URL in Imager → App Options → Content Repository → Custom URL.
+Enter one of these in Imager → App Options → Content Repository → Custom URL.
 
 `pistomp.json` was the only URL the README published before channels existed, so
 an unknown number of users already have it pasted into their Imager config.

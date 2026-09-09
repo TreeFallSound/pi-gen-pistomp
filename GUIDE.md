@@ -277,10 +277,28 @@ git push origin release/3.3.1
 - To correct the notes before the build completes, re-cut the tag
   (`git tag -a --cleanup=verbatim -f ...`) and force-push it. After the build
   completes, use `gh release edit <tag> --notes-file <file>`.
-- A version with a pre-release marker (`release/3.3.1-rc1`) builds a
-  testing-channel image and publishes a GitHub prerelease. Never promote a
-  pre-release image with a new tag on the same commit — its rootfs contains
-  `~` packages. Promote the packages, then cut a new `release/<version>` tag.
+- The tag suffix picks one track, and the track decides the apt suites, the
+  GitHub prerelease flag and the manifest URL together:
+
+  | Suffix | Track | apt suites | Release | Manifest |
+  | :--- | :--- | :--- | :--- | :--- |
+  | *(none)* | `stable` | `trixie` | normal | `pistomp-stable.json` |
+  | `-rc<N>` | `rc` | `trixie` | prerelease | `pistomp-rc.json` |
+  | `-testing<N>` / `-pre<N>` / `-beta<N>` / `-alpha<N>` | `testing` | `trixie` + `trixie-testing` | prerelease | `pistomp-testing.json` |
+
+  An **rc** image installs exactly what the stable release will install, so it
+  tests the image build itself rather than a different rootfs. Only a
+  **testing** image carries `~` packages and keeps following `trixie-testing`
+  over OTA. `-rc` used to select the testing track; it no longer does.
+- **Promote by cutting a new tag on the same commit.** CI builds from source on
+  every tag, and a stable or rc build resolves against `trixie` alone, so no `~`
+  package can reach it. The commit is not contaminated; only the built testing
+  `.img.xz` is. Never rename or re-upload that file under a stable tag.
+- What a new tag does *not* carry over is the testing. The stable rebuild
+  installs different package versions from the testing image you tried. If you
+  were testing a **package**, promote that package and test again. If you were
+  testing the **build** — stage scripts, kernel, services — the same commit is
+  what you validated, and the rebuild is the artifact to ship.
 
 ## Troubleshooting
 
@@ -359,7 +377,7 @@ Two apt suites on the same gh-pages site: `trixie` (production, every device) an
 
 **A stable image skips a package that only the testing suite has.** `scripts/check-packages.sh` reads both suites. If a package is not in `overrides/` and not in the stable suite, but is in the testing suite, the script writes its name to `deploy/testing-only-packages.txt`. `build-docker.sh` sends that list to the container as `SKIP_PACKAGES`. `stage2/05-pistomp/02-run.sh` then removes those names from `PISTOMP_PACKAGES` before `apt-get install`, because one unavailable package fails the full transaction. The script also keeps them out of `deploy/expected-packages.txt`, so the post-build check does not report them. Thus a package can stay in the baseline install list while you develop it on the pre-release channel. A package in **neither** suite is still an error — that is the rpi-preseed landmine. Do not change that error into a skip.
 
-**Images** have channels too: `./build-docker.sh --pre` (or `IMG_CHANNEL=testing`, or a `release/<ver>-rc1`-style tag in CI) builds from both suites and ships `pistomp-testing.list`, so devices flashed from it follow the pre-release channel; the image name carries a `-pre`/`-rc` marker and the CI release is flagged prerelease (excluded from `releases/latest`). Never promote a pre-release image by re-tagging — its rootfs contains `~` packages and the testing sources line; promote the packages, then cut a fresh `release/<version>` tag.
+**Images** have channels too: `./build-docker.sh --pre` (or `IMG_CHANNEL=testing`, or a `release/<ver>-pre1`-style tag in CI) builds from both suites and ships `pistomp-testing.list`, so devices flashed from it follow the pre-release channel, and the CI release is flagged prerelease (excluded from `releases/latest`). A `-rc<N>` tag is *not* this: it builds from the stable suite only and ships no testing sources line — see "Cutting an image release". A `release/<version>` tag on the same commit as a `-pre<N>` tag is a valid promotion, because CI rebuilds from the stable suite; only the built testing `.img.xz` carries `~` packages, so never re-upload that file. Promote the packages first if a package is what you were testing.
 
 ### Source of truth: `config.sh`
 

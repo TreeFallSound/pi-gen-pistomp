@@ -3,16 +3,20 @@ name: build-image
 # Builds the full pistompOS SD-card image.
 #
 # Triggers ONLY on:
-#   - a pushed tag matching `release/<version>` (e.g. release/3.0.0) — produces
-#     a GitHub Release with the image attached, named pistompOS-<version>.img.xz.
-#     A version ending in a pre-release marker (e.g. release/3.3.0-rc1,
-#     -pre2, -beta1, -alpha1) builds a testing-channel image (IMG_CHANNEL=
-#     testing: installs from and ships the trixie-testing apt suite) and
-#     publishes it as a GitHub *prerelease*, keeping it out of releases/latest.
+#   - a pushed tag matching `release/<version>`, which publishes a GitHub
+#     Release with the image attached. The tag suffix picks the track:
+#
+#       tag                  track    apt suites             GitHub Release
+#       release/3.4.0        stable   trixie                 normal
+#       release/3.4.0-rc1    rc       trixie                 prerelease
+#       release/3.4.0-pre1   testing  trixie+trixie-testing  prerelease
+#
+#     -testing, -beta and -alpha are testing markers too. An rc image installs
+#     the same packages as the stable release it precedes; that is the point of
+#     having it. A prerelease stays out of releases/latest.
 #   - manual dispatch — produces a workflow artifact only (no release)
 #
-# Per-package OTA releases (tagged debpkg/<pkg>/<ver>) do NOT trigger this
-# workflow, so shipping a .deb no longer rebuilds the whole image.
+# Per-package OTA releases (tagged debpkg/<pkg>/<ver>) do NOT trigger this.
 on:
   workflow_dispatch:
   push:
@@ -27,6 +31,7 @@ jobs:
     outputs:
       image_version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
+      track: ${{ steps.version.outputs.track }}
       prerelease: ${{ steps.version.outputs.prerelease }}
 
     steps:
@@ -45,32 +50,33 @@ jobs:
       run: |
         if [[ "${GITHUB_REF}" == refs/tags/release/* ]]; then
           VERSION="${GITHUB_REF#refs/tags/release/}"
-          # The tag verbatim — the manifest's download URL is built from it, so
-          # it must match the release GitHub actually publishes, prefix included.
+          # Verbatim, prefix included: the manifest download URL is built from it.
           TAG="${GITHUB_REF#refs/tags/}"
         else
           VERSION="dev-$(git rev-parse --short HEAD)"
-          # Dispatch builds publish no release; the manifest is an artifact only
-          # and its URL points at nothing. Keep the tag honest rather than
-          # inventing a release/ path that was never cut.
+          # Dispatch publishes no release, so don't invent a release/ path.
           TAG="${VERSION}"
         fi
+
+        # One track drives all three decisions below. rc is a prerelease built
+        # from stable packages; only testing pulls in the trixie-testing suite.
+        if [[ "${VERSION}" =~ -rc[0-9]*$ ]]; then
+          TRACK=rc
+        elif [[ "${VERSION}" =~ -(testing|pre|beta|alpha)[0-9]*$ ]]; then
+          TRACK=testing
+        else
+          TRACK=stable
+        fi
+
+        if [ "${TRACK}" = stable ]; then PRERELEASE=false; else PRERELEASE=true; fi
+        if [ "${TRACK}" = testing ]; then CHANNEL=testing; else CHANNEL=stable; fi
+
         echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
         echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-        # A pre-release marker in the version selects the testing channel:
-        # the image installs from (and ships) the trixie-testing apt suite,
-        # and the GitHub Release is flagged prerelease. Mirrors the package
-        # rule ('~' in the Debian version), which git tags can't express.
-        if [[ "${VERSION}" =~ -(rc|pre|beta|alpha)[0-9]*$ ]]; then
-          PRERELEASE=true
-          CHANNEL=testing
-        else
-          PRERELEASE=false
-          CHANNEL=stable
-        fi
+        echo "track=${TRACK}" >> "$GITHUB_OUTPUT"
         echo "prerelease=${PRERELEASE}" >> "$GITHUB_OUTPUT"
         echo "channel=${CHANNEL}" >> "$GITHUB_OUTPUT"
-        echo "Image version: ${VERSION} (channel: ${CHANNEL})"
+        echo "Image version: ${VERSION} (track: ${TRACK}, apt channel: ${CHANNEL})"
 
     # Gate: the image installs custom packages from the published apt repo, so a
     # package whose upstream has moved past its last release would silently ship
@@ -181,26 +187,20 @@ jobs:
         with:
           files: release-assets/*
           body_path: release-notes.md
-          # Pre-release marker in the tag version (e.g. release/3.3.0-rc1)
-          # → GitHub prerelease, excluded from releases/latest.
+          # rc and testing tracks are prereleases, kept out of releases/latest.
           prerelease: ${{ needs.build.outputs.prerelease == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy-manifest:
     # Deploy the Imager manifest to gh-pages:
-    #   imager/pistomp-stable.json    — latest production image
-    #   imager/pistomp-testing.json   — latest pre-release image
+    #   imager/pistomp-<track>.json    — one pointer per track (stable/rc/testing)
     #   imager/pistomp-<version>.json  — per-version archival snapshot
-    #   imager/pistomp.json           — legacy URL kept as a third stable copy
-    #                                    (README on main has been publishing
-    #                                    this URL; deleting it would 404 every
-    #                                    already-configured Imager install).
-    # Trails the release job: if the GitHub Release fails (422 on existing tag,
-    # asset upload timeout, softprops transient), the manifest must NOT be
-    # published — otherwise Imager shows users a version whose download URL
-    # 404s. needs: [build, release] guarantees the manifest strictly trails a
-    # real public release.
+    #   imager/pistomp.json            — legacy URL, a third copy of stable. The
+    #                                    README has published it for a long time;
+    #                                    deleting it 404s every configured Imager.
+    # needs: [build, release] so the manifest strictly trails a real public
+    # release. A manifest published without one points Imager at a 404.
     if: startsWith(github.ref, 'refs/tags/release/')
     needs: [build, release]
     runs-on: ubuntu-latest
@@ -222,25 +222,14 @@ jobs:
         with:
           path: src
           fetch-depth: 1
-      - name: Deploy channel and version-pinned manifests
+      - name: Deploy track and version-pinned manifests
         env:
-          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+          TRACK: ${{ needs.build.outputs.track }}
           IMG_VERSION: ${{ needs.build.outputs.image_version }}
         run: |
-          if [[ "${PRERELEASE}" == "true" ]]; then
-            CHANNEL="testing"
-          else
-            CHANNEL="stable"
-          fi
-
-          # Per-version archival snapshot + channel pointer. Also keep the
-          # legacy imager/pistomp.json as a third copy of stable — the README
-          # on main has been telling users to paste that URL into Imager, and
-          # deleting it would silently 404 every already-configured install
-          # on their next launch. Costs one cp + one JSON file on gh-pages.
           cp imager/pistomp-imager-manifest.json "imager/pistomp-${IMG_VERSION}.json"
-          cp imager/pistomp-imager-manifest.json "imager/pistomp-${CHANNEL}.json"
-          if [[ "${CHANNEL}" == "stable" ]]; then
+          cp imager/pistomp-imager-manifest.json "imager/pistomp-${TRACK}.json"
+          if [[ "${TRACK}" == "stable" ]]; then
             cp imager/pistomp-imager-manifest.json imager/pistomp.json
           fi
           # Don't commit the raw downloaded artifact into gh-pages.
@@ -258,7 +247,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to gh-pages."
           else
-            git commit -m "deploy imager manifest for ${IMG_VERSION} → ${CHANNEL} [skip ci]"
+            git commit -m "deploy imager manifest for ${IMG_VERSION} → ${TRACK} [skip ci]"
             # publish-apt-repo.yml (triggered by the release job) also pushes
             # gh-pages, so a plain push can be rejected non-fast-forward. Retry
             # on top of whatever landed meanwhile. The commit must exist before
