@@ -5,11 +5,10 @@ export DH_VERBOSE=1
 	dh $@ --with quilt
 
 override_dh_auto_configure:
-	# Use bundled waf with patched waflib (imp → types for Python 3.12+)
 	# Builds with 64 clients / 512 ports per application, systemd unit, and dbus support.
 	CXXFLAGS="$(CXXFLAGS) -I/usr/include/db5.3" \
 	LDFLAGS="$(LDFLAGS) -ldb-5.3" \
-	./waf configure \
+	python3 ./waf configure \
 		--prefix=/usr \
 		--libdir=/usr/lib/aarch64-linux-gnu \
 		--autostart=none \
@@ -20,10 +19,10 @@ override_dh_auto_configure:
 		--dbus
 
 override_dh_auto_build:
-	./waf build
+	python3 ./waf build
 
 override_dh_auto_install:
-	./waf --destdir=$(CURDIR)/debian/jack2-pistomp install
+	python3 ./waf --destdir=$(CURDIR)/debian/jack2-pistomp install
 	# jackdrc's --port-max is coupled to the compile-time constants configured above,
 	# so the startup script ships with the engine it was sized for. /usr/lib, not /etc:
 	# it is a program, and a conffile prompt would hang an unattended OTA.

@@ -9,7 +9,7 @@ LIBEXEC_DIR=$(CURDIR)/debian/$(PKG)/usr/local/libexec/jackbridge
 	dh $@
 
 override_dh_auto_configure:
-	# Clone JackRouter source if not already present
+	# Clone the pistomp-companion source if not already present
 	if [ ! -d "$(JACKROUTER_SRC_DIR)" ]; then \
 		git clone --branch "$(JACKROUTER_REF)" --depth 1 \
 			"$(JACKROUTER_REPO)" \
@@ -20,16 +20,22 @@ override_dh_auto_build:
 	# No compilation — all scripts are shell.
 
 override_dh_auto_install:
-	# Install the 6 helper scripts to /usr/local/libexec/jackbridge/
+	# The helpers this image wants. Listed explicitly, not globbed: pistomp-companion
+	# is upstream and may carry scripts pi-Stomp has no use for, and choosing what
+	# lands on the image is this package's job. Adding one upstream does not
+	# install it here until it is named below.
 	install -d "$(LIBEXEC_DIR)"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-pi-up"        "$(LIBEXEC_DIR)/"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-pi-down"      "$(LIBEXEC_DIR)/"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-xrun-watcher" "$(LIBEXEC_DIR)/"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jb-detect-net-iface"     "$(LIBEXEC_DIR)/"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-pin-route"    "$(LIBEXEC_DIR)/"
-	install -Dm 755 "$(JACKROUTER_SRC_DIR)/pi/bin/jackbridge-unpin-route"  "$(LIBEXEC_DIR)/"
-	# Install systemd service file (on-demand only, no [Install] section)
-	install -Dm 644 debian/jackbridge.pi-stomp-jackbridge.service \
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-pi-up"        "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-pi-down"      "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-xrun-watcher" "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-pi-status"    "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jb-detect-net-iface"     "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-pin-route"    "$(LIBEXEC_DIR)/"
+	install -Dm 755 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/bin/jackbridge-unpin-route"  "$(LIBEXEC_DIR)/"
+	# Unit file, from the same upstream checkout as the scripts above. It used
+	# to be a second copy under debian/, which drifted from pistomp-companion's
+	# and won because the .deb is what lands on hardware. One source only.
+	install -Dm 644 "$(JACKROUTER_SRC_DIR)/jackbridge/pi/pi-stomp-jackbridge.service" \
 		$(CURDIR)/debian/jackbridge/lib/systemd/system/pi-stomp-jackbridge.service
 
 override_dh_usrlocal:
@@ -37,5 +43,5 @@ override_dh_usrlocal:
 	# dh_usrlocal expects only directories under /usr/local, so skip it.
 
 override_dh_installsystemd:
-	# No auto-enable — this service is on-demand only (LCD UI starts/stops it).
-	# No [Install] section in the unit file, so deb-systemd-helper would be a no-op anyway.
+	# No auto-enable; the Mac drives start/stop. No [Install] section either,
+	# so deb-systemd-helper would be a no-op anyway.

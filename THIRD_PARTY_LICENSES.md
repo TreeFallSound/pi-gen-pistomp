@@ -31,7 +31,7 @@ These are the core audio/MIDI services and supporting tools built from source an
 | jack-capture | git a539d44 | GPL-2.0+ | kmatheussen | [github.com/kmatheussen/jack_capture](https://github.com/kmatheussen/jack_capture.git) |
 | jack-example-tools | Debian release 4-4 | GPL 2 | Debian Multimedia Team | [salsa.debian.org/multimedia-team/jack-example-tools](https://salsa.debian.org/multimedia-team/jack-example-tools.git) |
 | jack2 | 1.9.22 | GPL 2 | jackaudio | [github.com/jackaudio/jack2](https://github.com/jackaudio/jack2.git) |
-| jackbridge | (JackRouter fork) | MIT | TreeFallSound, orig. madhatter68 | [github.com/TreeFallSound/JackRouter](https://github.com/TreeFallSound/JackRouter.git) |
+| jackbridge | (JackRouter fork) | MIT | TreeFallSound, orig. madhatter68 | [github.com/treefallsound/pistomp-companion](https://github.com/treefallsound/pistomp-companion.git) |
 | lg-pistomp | v0.2.2 | Unlicense | joan2937 | [github.com/joan2937/lg](https://github.com/joan2937/lg.git) |
 | mod-host | 0.10.6 | GPL v3+ | mod-audio | [github.com/mod-audio/mod-host](https://github.com/mod-audio/mod-host) |
 | mod-midi-merger | None | ISC | mod-audio | [github.com/mod-audio/mod-midi-merger](https://github.com/mod-audio/mod-midi-merger) |
@@ -43,7 +43,7 @@ These are the core audio/MIDI services and supporting tools built from source an
 | veja-1960-cab-lv2 | (Marshall 1960) | ISC (assumed) ³ | VeJa-Plugins (Jan Janssen) | [github.com/VeJa-Plugins/Marshall-1960](https://github.com/VeJa-Plugins/Marshall-1960.git) |
 | veja-bass-cab-lv2 | (Bass Cabinets) | ISC (assumed) ³ | VeJa-Plugins (Jan Janssen) | [github.com/VeJa-Plugins/Bass-Cabinets](https://github.com/VeJa-Plugins/Bass-Cabinets.git) |
 
-> **Note:** `mod-ui` is distributed from this project's own fork (TreeFallSound/mod-ui), tracking upstream mod-audio/mod-ui, AGPL-3.0. `jackbridge` packages this project's own fork of `madhatter68/JackRouter` (MIT), which provides the netJACK2 bridge helper scripts.
+> **Note:** `mod-ui` is distributed from this project's own fork (TreeFallSound/mod-ui), tracking upstream mod-audio/mod-ui, AGPL-3.0. `jackbridge` packages this project's own fork of `madhatter68/JackRouter` (MIT) — now maintained inside TreeFallSound/pistomp-companion under `jackbridge/pi/` — which provides the netJACK2 bridge helper scripts.
 >
 > ³ **`cabsim-lv2`, `veja-1960-cab-lv2`, and `veja-bass-cab-lv2`'s upstream repos have no LICENSE file, which appears to be an oversight** — every other plugin in the VeJa-Plugins org (e.g. [Noise-Gate](https://github.com/VeJa-Plugins/Noise-Gate/blob/master/LICENSE)) ships the same ISC-style notice ("VEJA \<Plugin\>, Copyright (C) Jan Janssen \<jan@moddevices.com\>"). Assumed to carry the same license pending confirmation from the author; `debian/copyright` in each package records this assumption.
 >

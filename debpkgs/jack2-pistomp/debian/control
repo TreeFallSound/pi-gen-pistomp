@@ -17,5 +17,6 @@ Provides: jackd2, libjack-dev, libjack-jackd2-0 (= 1.9.22~dfsg-4),
 Conflicts: jackd2, jack2, libjack-jackd2-0, libjack-jackd2-dev
 Replaces: jackd2, jack2, libjack-jackd2-0, libjack-jackd2-dev
 Description: JACK Audio Connection Kit v2 (pi-Stomp build)
- JACK is a low-latency audio server. This build includes the
- pi-controller-reset stability fix and links against libdb 5.3.
+ JACK is a low-latency audio server. Built from the TreeFallSound/jack2
+ fork (PI-controller reset, multicast interface pinning, netJACK2 master
+ reaping) and links against libdb 5.3.
