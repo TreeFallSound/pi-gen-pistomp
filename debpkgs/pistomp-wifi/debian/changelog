@@ -1,3 +1,11 @@
+pistomp-wifi (1.0.0-2) trixie; urgency=medium
+
+  * Add postinst: retire the stale /etc/modprobe.d/brcmfmac.conf written
+    by firstboot.sh on pre-2026-08-26 images, so exactly one file sets
+    brcmfmac options.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Sat, 12 Sep 2026 02:05:19 +0000
+
 pistomp-wifi (1.0.0-1) trixie; urgency=medium
 
   * Initial release. Extracted from stage2/05-pistomp (03-run.sh) so the

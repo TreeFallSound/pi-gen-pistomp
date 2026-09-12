@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+
+if [ "$1" = configure ]; then
+    # Get rid of our image brcmfmac.conf, which is now a package file.
+    STALE=/etc/modprobe.d/brcmfmac.conf
+    if [ "$(cat "${STALE}" 2>/dev/null)" = "options brcmfmac roamoff=1" ]; then
+        rm -f "${STALE}"
+        echo "pistomp-wifi: removed ${STALE} (superseded by rpi-brcmfmac.conf, roamoff=0)." >&2
+    elif [ -f "${STALE}" ]; then
+        echo "pistomp-wifi: ${STALE} is not ours, left in place (read before rpi-brcmfmac.conf)." >&2
+    fi
+fi
+
+#DEBHELPER#
