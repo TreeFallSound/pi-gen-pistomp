@@ -1,3 +1,22 @@
+pistomp-recovery (0.1.0-33) trixie; urgency=medium
+
+  * Add the Audio Card menu. Select one of the supported cards (IQaudIO
+    CODEC, HiFiBerry, AudioInjector) and recovery configures the next boot
+    for it: it rewrites the dtoverlay line in config.txt and seeds
+    /var/lib/alsa/asound.state with the packaged known-good state for that
+    card. The device reboots into a working mixer configuration.
+  * Show the active audio card on the main menu.
+  * Factory Reset seeds the known-good state for the fitted card (the card
+    enabled in config.txt), so a reset device boots with working audio.
+    When the fitted card cannot be identified, the state file is left
+    untouched rather than seeding a state that matches no card. Without a
+    seeded state the codec sits at its hardware defaults, the playback DAPM
+    path stays inactive, and JACK cannot open the ALSA stream.
+  * Depends: pistomp-audio (>= 1.1.0-1), which ships seed.sh and the state
+    files.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Wed, 16 Sep 2026 03:41:48 +0000
+
 pistomp-recovery (0.1.0-32) trixie; urgency=medium
 
   * Ensure new packages can always be installed.
