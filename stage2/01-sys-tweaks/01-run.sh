@@ -32,6 +32,10 @@ if [ "${ENABLE_SSH}" == "1" ]; then
 else
 	systemctl disable ssh
 fi
+
+# Cockpit web admin UI (https://<host>:9090). Socket-activated; enable only
+# (not --now) — deb-systemd-helper is unreliable in the pi-gen chroot.
+systemctl enable cockpit.socket
 EOF
 
 if [ "${USE_QEMU}" = "1" ]; then
