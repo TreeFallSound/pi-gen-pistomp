@@ -17,6 +17,8 @@ mkdir -p "${DEB_DIR}/etc/modprobe.d"
 
 stage_control "${SCRIPT_DIR}/debian/control" "${DEB_DIR}/DEBIAN/control"
 cp "${SCRIPT_DIR}/debian/conffiles" "${DEB_DIR}/DEBIAN/conffiles"
+cp "${SCRIPT_DIR}/debian/postinst" "${DEB_DIR}/DEBIAN/postinst"
+chmod 755 "${DEB_DIR}/DEBIAN/postinst"
 
 install -m 644 "${SCRIPT_DIR}/files/rpi-brcmfmac.conf" "${DEB_DIR}/etc/modprobe.d/rpi-brcmfmac.conf"
 

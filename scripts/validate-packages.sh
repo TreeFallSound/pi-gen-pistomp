@@ -174,8 +174,10 @@ check2_fail=0
 if ! git rev-parse --verify "${BASE_REF_FOR_DIFF}" >/dev/null 2>&1; then
     echo "  SKIP  base ref ${BASE_REF_FOR_DIFF} not resolvable (shallow clone; run with fetch-depth: 0 in CI)"
 else
+    # debpkgs/<pkg>/debian/<pkg>/ is regenerated staging, not source — no bump.
     changed_pkg_dirs="$(
         git diff --name-only "${BASE_REF_FOR_DIFF}...HEAD" -- 'debpkgs/' \
+            | awk -F/ '!(NF>4 && $3=="debian" && $4==$2)' \
             | sed -n 's|^debpkgs/\([^/]*\)/.*|\1|p' \
             | sort -u
     )"
