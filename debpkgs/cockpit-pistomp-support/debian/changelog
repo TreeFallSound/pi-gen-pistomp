@@ -1,3 +1,10 @@
+cockpit-pistomp-support (1.0.0-5) trixie; urgency=medium
+
+  * Include /tmp/audio-dump-* in the support bundle when present (file or
+    directory), matching the on-device audio diagnostic dump path.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 18 Sep 2026 05:20:00 +0000
+
 cockpit-pistomp-support (1.0.0-4) trixie; urgency=medium
 
   * Collect mod-ala-pi-stomp.service status/journal instead of the non-existent

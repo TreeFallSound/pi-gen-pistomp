@@ -13,6 +13,7 @@ import base64
 import datetime as dt
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -264,6 +265,36 @@ def collect_into(workdir: Path, note: str) -> None:
             data = data[-512_000:]
         write_text(workdir / "boot" / "boot.log.tail.txt", data)
 
+    # Optional on-device audio diagnostics: scripts default to
+    #   /tmp/audio-dump-$(hostname)-$(date -u +%Y%m%d-%H%M%SZ)
+    # Include whatever matches if present (file or directory).
+    audio_dumps = sorted(Path("/tmp").glob("audio-dump-*"))
+    if audio_dumps:
+        dest_root = workdir / "audio-dump"
+        dest_root.mkdir(parents=True, exist_ok=True)
+        included = []
+        for src in audio_dumps:
+            dest = dest_root / src.name
+            try:
+                if src.is_dir():
+                    shutil.copytree(src, dest, dirs_exist_ok=True)
+                elif src.is_file():
+                    shutil.copy2(src, dest)
+                else:
+                    continue
+                included.append(src.name)
+            except OSError as exc:
+                write_text(
+                    dest_root / f"{src.name}.error.txt",
+                    f"[could not copy {src}: {exc}]\n",
+                    do_redact=False,
+                )
+        write_text(
+            dest_root / "INCLUDED.txt",
+            "Copied from /tmp:\n" + "\n".join(f"  {n}" for n in included) + "\n",
+            do_redact=False,
+        )
+
     write_text(
         workdir / "REDACTION.txt",
         (
@@ -276,6 +307,9 @@ def collect_into(workdir: Path, note: str) -> None:
             "  - USB/serial tokens → [REDACTED_SERIAL]\n"
             "  - password/psk/secret/token fields → [REDACTED]\n"
             "  - SSH public key material → [REDACTED_SSH_KEY]\n"
+            "\n"
+            "Included as-is when present (not text-redacted):\n"
+            "  - /tmp/audio-dump-* (on-device audio diagnostic dumps)\n"
             "\n"
             "Never included:\n"
             "  - /boot/pistomp.conf and WiFi credentials\n"
