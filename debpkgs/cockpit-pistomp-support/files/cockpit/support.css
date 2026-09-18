@@ -1,0 +1,142 @@
+:root {
+    color-scheme: light dark;
+    --bg: #f4f4f4;
+    --panel: #fff;
+    --text: #1b1b1b;
+    --muted: #5c5c5c;
+    --border: #d2d2d2;
+    --accent: #0066cc;
+    --accent-text: #fff;
+    --warn-bg: #fff4e5;
+    --warn-border: #f0a000;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #151515;
+        --panel: #212427;
+        --text: #f0f0f0;
+        --muted: #c7c7c7;
+        --border: #444548;
+        --accent: #4da3ff;
+        --accent-text: #0a0a0a;
+        --warn-bg: #3d2e12;
+        --warn-border: #c69026;
+    }
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font: 15px/1.45 "Red Hat Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.page {
+    max-width: 42rem;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 3rem;
+}
+
+h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+}
+
+h2 {
+    font-size: 1.1rem;
+    margin: 0 0 0.75rem;
+}
+
+.lede {
+    color: var(--muted);
+    margin: 0 0 1.25rem;
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem 1.1rem 1.15rem;
+    margin-bottom: 1rem;
+}
+
+.panel.warn {
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
+}
+
+.panel ul {
+    margin: 0.5rem 0 0.75rem 1.2rem;
+    padding: 0;
+}
+
+.field {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+textarea {
+    width: 100%;
+    resize: vertical;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--panel);
+    color: var(--text);
+    font: inherit;
+    margin-bottom: 1rem;
+}
+
+.consent {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    cursor: pointer;
+}
+
+.consent input {
+    margin-top: 0.25rem;
+    flex: none;
+}
+
+.actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+button.primary {
+    appearance: none;
+    border: none;
+    border-radius: 3px;
+    background: var(--accent);
+    color: var(--accent-text);
+    font: inherit;
+    font-weight: 600;
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+}
+
+button.primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.status {
+    min-height: 1.4em;
+    margin: 0.9rem 0 0;
+    color: var(--muted);
+}
+
+.status.error {
+    color: #c9190b;
+}
+
+@media (prefers-color-scheme: dark) {
+    .status.error { color: #fe5142; }
+}

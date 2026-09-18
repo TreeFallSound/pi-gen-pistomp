@@ -1,0 +1,11 @@
+{
+    "name": "pistomp-support",
+    "requires": {
+        "cockpit": "266"
+    },
+    "tools": {
+        "index": {
+            "label": "Support logs"
+        }
+    }
+}
