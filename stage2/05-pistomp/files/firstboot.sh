@@ -194,6 +194,26 @@ JACK_EXTRA_ARGS="${JACK_EXTRA_ARGS:-}"
 JACK_DRIVER_ARGS="${JACK_DRIVER_ARGS:-}"
 EOF
 
+# ---------- ALSA card state ----------
+# Per-card settings; keep this overlay list in step with
+# pistomp-recovery's AUDIO_CARD_OVERLAYS and pistomp-audio's seed.sh.
+
+SEED="/usr/lib/pistomp/alsa/seed.sh"
+ALSA_OVERLAY=""
+for card in iqaudio-codec hifiberry-dacplusadc audioinjector-wm8731-audio; do
+    if grep -Eq "^[[:space:]]*dtoverlay=${card}([,[:space:]]|$)" /boot/firmware/config.txt; then
+        ALSA_OVERLAY="${card}"
+        break
+    fi
+done
+
+if [[ -n "${ALSA_OVERLAY}" && -x "${SEED}" ]]; then
+    "${SEED}" "${ALSA_OVERLAY}"
+    alsactl --no-ucm restore -f /var/lib/alsa/asound.state || true
+else
+    echo "firstboot: no known audio dtoverlay enabled; leaving ALSA state as is" >&2
+fi
+
 # ---------- hardware setup ----------
 
 lcd splash-reboot "Finishing setup..."

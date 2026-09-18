@@ -23,6 +23,7 @@ PISTOMP_PACKAGES="
     touchosc2midi
     mod-ui
     pi-stomp
+    pistomp-audio
     pistomp-recovery
     rpi-preseed
     pistomp-usb-automount
