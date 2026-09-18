@@ -1,3 +1,15 @@
+pi-stomp (3.3.3-0) trixie; urgency=medium
+
+  * Stop seeding ALSA card state at startup: firstboot, the recovery
+    Audio Card menu, and Factory Reset now seed the known-good state via
+    pistomp-audio's seed.sh before JACK starts. The app keeps runtime
+    mixer control and debounced state persistence only.
+  * util/change-audio-card.sh forwards to seed.sh after flipping the
+    dtoverlay; the documented manual card-switch path keeps working.
+  * Depends: pistomp-audio (>= 1.1.0-1), which ships seed.sh.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Wed, 16 Sep 2026 03:54:22 +0000
+
 pi-stomp (3.3.2-0) trixie; urgency=medium
 
   * Removed the tap tempo REST fallback; the WebSocket bridge is now
