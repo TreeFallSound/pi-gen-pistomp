@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Support logs</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../base1/cockpit.js"></script>
+    <link href="support.css" rel="stylesheet">
+</head>
+<body>
+    <div class="page">
+        <h1>Support logs</h1>
+        <p class="lede">
+            Generate a diagnostic archive you can download and send to
+            pi-Stomp support. Nothing is uploaded from this page — you
+            choose where to send the file.
+        </p>
+
+        <section class="panel warn" aria-labelledby="privacy-heading">
+            <h2 id="privacy-heading">Privacy notice</h2>
+            <p>
+                The archive includes system journals, service status, package
+                versions, and basic hardware/audio/network state. Before the
+                archive is written, the collector redacts:
+            </p>
+            <ul>
+                <li>IP and MAC addresses</li>
+                <li>Email addresses and <code>/home/…</code> usernames</li>
+                <li>WiFi SSIDs, passwords, tokens, and SSH key material</li>
+                <li>USB serial numbers</li>
+            </ul>
+            <p>
+                WiFi credentials, NetworkManager connection profiles,
+                <code>pistomp.conf</code>, SSH host keys, and password hashes
+                are never collected.
+            </p>
+            <p>
+                A short note you type below is included <strong>as you write
+                it</strong> (not redacted). Do not put passwords or personal
+                contact details in that note unless you intend support to see
+                them.
+            </p>
+        </section>
+
+        <section class="panel">
+            <label class="field" for="note">Optional note for support</label>
+            <textarea id="note" rows="4"
+                placeholder="What went wrong? When did it start? Any recent changes?"></textarea>
+
+            <label class="consent">
+                <input type="checkbox" id="consent">
+                <span>
+                    I have read the privacy notice and accept that a redacted
+                    diagnostic archive will be created on this device for me
+                    to download and send manually.
+                </span>
+            </label>
+
+            <div class="actions">
+                <button id="generate" class="primary" disabled>
+                    Generate and download
+                </button>
+            </div>
+
+            <p id="status" class="status" role="status" aria-live="polite"></p>
+        </section>
+    </div>
+    <script src="support.js"></script>
+</body>
+</html>

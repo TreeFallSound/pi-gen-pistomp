@@ -1,0 +1,19 @@
+# Per-package workflow — see docs/package-template/build.yml.
+name: build-cockpit-pistomp-support
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'debpkgs/cockpit-pistomp-support/**'
+  pull_request:
+    paths:
+      - 'debpkgs/cockpit-pistomp-support/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      pkg: cockpit-pistomp-support
+    secrets: inherit

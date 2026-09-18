@@ -28,6 +28,7 @@ rpi-eeprom
 raspi-utils
 unzip zip p7zip-full
 file git
+cockpit
 kms++-utils
 python3-venv
 python3-zeroconf
