@@ -11,7 +11,7 @@ Standards-Version: 4.6.2
 Package: pistomp-recovery
 Architecture: arm64
 Depends: ${shlibs:Depends}, ${misc:Depends}, python3, jack2-pistomp,
- lg-pistomp, libasound2, libfreetype6
+ lg-pistomp, libasound2, libfreetype6, pistomp-audio (>= 1.1.0-1)
 Description: Package update and recovery service for pi-Stomp
  Recovery service that provides LCD-based factory reset, package rollback,
  and OTA update management. Runs as a systemd service triggered on
