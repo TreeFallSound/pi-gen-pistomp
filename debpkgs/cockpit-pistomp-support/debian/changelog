@@ -3,32 +3,32 @@ cockpit-pistomp-support (1.0.0-5) trixie; urgency=medium
   * Include /tmp/audio-dump-* in the support bundle when present (file or
     directory), matching the on-device audio diagnostic dump path.
 
- -- Cam Gorrie <sastraxi@gmail.com>  Fri, 18 Sep 2026 05:20:00 +0000
+ -- Randall Reichenbach <rrandaji@gmail.com>  Fri, 18 Sep 2026 05:20:00 +0000
 
 cockpit-pistomp-support (1.0.0-4) trixie; urgency=medium
 
   * Collect mod-ala-pi-stomp.service status/journal instead of the non-existent
     pi-stomp.service.
 
- -- Cam Gorrie <sastraxi@gmail.com>  Fri, 18 Sep 2026 00:20:00 +0000
+ -- Randall Reichenbach <rrandaji@gmail.com>  Fri, 18 Sep 2026 00:20:00 +0000
 
 cockpit-pistomp-support (1.0.0-3) trixie; urgency=medium
 
   * Download the support tarball via base64. Cockpit's spawn channel was
     UTF-8-decoding the gzip bytes (0x8b) and failing the download.
 
- -- Cam Gorrie <sastraxi@gmail.com>  Fri, 18 Sep 2026 00:10:00 +0000
+ -- Randall Reichenbach <rrandaji@gmail.com>  Fri, 18 Sep 2026 00:10:00 +0000
 
 cockpit-pistomp-support (1.0.0-2) trixie; urgency=medium
 
   * Pass the optional support note as --note-b64 instead of stdin. Cockpit's
     privileged spawn leaves stdin open, so --note-stdin hung forever.
 
- -- Cam Gorrie <sastraxi@gmail.com>  Fri, 18 Sep 2026 00:00:00 +0000
+ -- Randall Reichenbach <rrandaji@gmail.com>  Fri, 18 Sep 2026 00:00:00 +0000
 
 cockpit-pistomp-support (1.0.0-1) trixie; urgency=medium
 
   * Initial release. Cockpit "Support logs" page with privacy consent,
     GDPR-oriented redaction, and manual .tar.gz download (no upload).
 
- -- Cam Gorrie <sastraxi@gmail.com>  Thu, 17 Sep 2026 21:00:00 +0000
+ -- Randall Reichenbach <rrandaji@gmail.com>  Thu, 17 Sep 2026 21:00:00 +0000
