@@ -200,13 +200,15 @@ lcd splash-reboot "Finishing setup..."
 
 chown -R pistomp:pistomp /home/pistomp/
 
-# Hardware version: Pi 5 = v3 (pi-Stomp Tre), Pi 3/4 = v2 (pi-Stomp Core).
+# Hardware version: v2 (pi-Stomp Core) = Pi 3/4/CM4 and other older/smaller Pis.
+# v3 (pi-Stomp Tre) = anything newer (Pi 5, CM5, Pi 500, future models).
 # v1 is no longer supported.
-if grep -q 'Pi 5' /proc/device-tree/model 2>/dev/null; then
-    runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh 3.0 || true
+if grep -qE 'Raspberry Pi ([234]|Zero|Compute Module [34])' /proc/device-tree/model 2>/dev/null; then
+    version=2.0
 else
-    runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh 2.0 || true
+    version=3.0
 fi
+runuser -u pistomp -- /home/pistomp/pi-stomp/util/modify_version.sh "$version" || true
 
 if grep -q 'Pi 5' /proc/cpuinfo 2>/dev/null; then
     runuser -u pistomp -- /home/pistomp/pi-stomp/util/pi5_eeprom_update.sh || true
