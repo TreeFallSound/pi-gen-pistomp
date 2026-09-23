@@ -1,3 +1,9 @@
+lcd-splash (1.0-21) trixie; urgency=medium
+
+  * Fix splash screen RPi model detection which is used to set LCD orientation
+
+ -- randall reichenbach <randaji@gmail.com>  Wed, 23 Sep 2026 05:50:27 +0000
+
 lcd-splash (1.0-20) trixie; urgency=medium
 
   * Reorder the first-boot progress row to database -> gear -> wifi -> reboot so it matches the order firstboot.sh actually runs in.
