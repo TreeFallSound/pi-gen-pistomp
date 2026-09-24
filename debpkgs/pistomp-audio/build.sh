@@ -28,9 +28,19 @@ install -m 755 "${SCRIPT_DIR}/files/pistomp-pcm-check.py" \
     "${DEB_DIR}/usr/lib/pistomp/pistomp-pcm-check.py"
 install -m 644 "${SCRIPT_DIR}/files/pistomp-pcm-check.service" \
     "${DEB_DIR}/usr/lib/systemd/system/pistomp-pcm-check.service"
+
 # postinst writes /etc/default/rtirq from this template (rtirq-init owns
 # that conffile path; see debian/postinst).
 install -m 644 "${SCRIPT_DIR}/files/rtirq.conf" "${DEB_DIR}/usr/lib/pistomp/rtirq.conf"
+
+# Known-good per-card ALSA mixer state
+mkdir -p "${DEB_DIR}/usr/lib/pistomp/alsa"
+install -m 755 "${SCRIPT_DIR}/files/seed.sh" \
+    "${DEB_DIR}/usr/lib/pistomp/alsa/seed.sh"
+for state in iqaudiocodec hifiberry audioinjector; do
+    install -m 644 "${SCRIPT_DIR}/files/${state}.state" \
+        "${DEB_DIR}/usr/lib/pistomp/alsa/${state}.state"
+done
 
 dpkg-deb --build --root-owner-group "${DEB_DIR}" "${CACHE_DIR}/${PKG}_${VERSION}_arm64.deb"
 

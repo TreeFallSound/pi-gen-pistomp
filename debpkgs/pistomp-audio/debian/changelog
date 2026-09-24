@@ -1,3 +1,11 @@
+pistomp-audio (1.1.0-1) trixie; urgency=medium
+
+  * Ship the known-good per-card ALSA mixer states (IQaudIO CODEC,
+    HiFiBerry, AudioInjector) and seed.sh, which copies the state for a
+    given dtoverlay over /var/lib/alsa/asound.state.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Wed, 16 Sep 2026 03:30:43 +0000
+
 pistomp-audio (1.0.0-2) trixie; urgency=medium
 
   * Add pistomp-pcm-check: verify at boot that the sound card PCM opens,
