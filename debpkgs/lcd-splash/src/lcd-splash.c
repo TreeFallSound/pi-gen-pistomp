@@ -59,8 +59,8 @@
 #define CMD_NGAMCTRL    0xE1
 
 /* MADCTL for landscape, BGR panel.
- * v3 (Pi 4/5, flip=False): MY=1, MX=1, MV=1, BGR=1 → 0xE8
- * v2 (Pi 3, pistompcore, flip=True): MV=1, BGR=1 → 0x28 */
+ * v2 (pi-Stomp Core: Pi 2/3/4, Zero, CM3/CM4, flip): MV=1, BGR=1 → 0x28
+ * v3 (pi-Stomp Tre: Pi 5/CM5/500 and newer, no flip): MY=1, MX=1, MV=1, BGR=1 → 0xE8 */
 #define MADCTL_V3 0xE8
 #define MADCTL_V2 0x28
 
@@ -123,18 +123,28 @@ static void send_data8(uint8_t val)
 
 /* ── hardware detection ───────────────────────────────────── */
 
-/* Returns MADCTL for the detected hardware */
+/* Same classification as firstboot.sh:
+ *   grep -qE 'Raspberry Pi ([234]|Zero|Compute Module [34])' /proc/device-tree/model
+ * Match → v2 (Core); anything else, including a missing model file → v3 (Tre). */
 static uint8_t detect_madctl(void)
 {
     FILE *f = fopen("/proc/device-tree/model", "r");
-    if (f) {
-        char model[128] = {0};
-        (void)fgets(model, sizeof(model) - 1, f);
-        fclose(f);
-        if (strstr(model, "Pi 5"))
-            return MADCTL_V3;
-    }
-    return MADCTL_V2;
+    if (!f)
+        return MADCTL_V3;
+
+    char model[128] = {0};
+    (void)fgets(model, sizeof(model), f);
+    fclose(f);
+
+    if (strstr(model, "Raspberry Pi 2") ||
+        strstr(model, "Raspberry Pi 3") ||
+        strstr(model, "Raspberry Pi 4") ||
+        strstr(model, "Raspberry Pi Zero") ||
+        strstr(model, "Raspberry Pi Compute Module 3") ||
+        strstr(model, "Raspberry Pi Compute Module 4"))
+        return MADCTL_V2;
+
+    return MADCTL_V3;
 }
 
 /* ── ILI9341 init ─────────────────────────────────────────── */
