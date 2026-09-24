@@ -293,18 +293,18 @@ Description: MOD Web UI — web-based pedalboard interface for pi-Stomp
  tornado==4.3) and is configured for pi-Stomp.
 
 Package: pi-stomp
-Version: 3.3.2-0
+Version: 3.3.3-0
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 166572
-Depends: python3, lg-pistomp, mod-host-pistomp, mod-ui, mod-midi-merger, mod-ttymidi, amidithru, jack2-pistomp, hylia, sfizz-pistomp, lcd-splash, jack-capture
+Installed-Size: 166538
+Depends: python3, lg-pistomp, mod-host-pistomp, mod-ui, mod-midi-merger, mod-ttymidi, amidithru, jack2-pistomp, hylia, sfizz-pistomp, lcd-splash, jack-capture, pistomp-audio (>= 1.1.0-1)
 Priority: optional
 Section: sound
-Filename: pool/main/p/pi-stomp/pi-stomp_3.3.2-0_arm64.deb
-Size: 33415648
-SHA256: b3155d81481c8f4bb6540ff03e760288053689f3fd6d27069a41d673bda02f01
-SHA1: 55a9ed2ede9a04fa8a9d998c5fb39226cefe677b
-MD5sum: f3b70a9a6b51ab933ece277ad7b4adc4
+Filename: pool/main/p/pi-stomp/pi-stomp_3.3.3-0_arm64.deb
+Size: 33414416
+SHA256: cc96c4f284f7e94e7d307e5c06dd5bfb69304dd738c7445c8b8876884183335d
+SHA1: 80e8548adf320750032e8172297ce72b3c5eb891
+MD5sum: bfca0e828b5355031b16e1f51540b270
 Description: pi-Stomp application — guitar effects pedalboard software
  The pi-Stomp application code, uv-managed venv, and systemd service.
  Installs to /opt/pistomp/pi-stomp/ with a symlink at
