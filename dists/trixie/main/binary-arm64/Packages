@@ -315,17 +315,17 @@ Description: pi-Stomp application — guitar effects pedalboard software
  fetch full history and tags, and enable `git describe --dirty=*`.
 
 Package: pistomp-audio
-Version: 1.1.0-2
+Version: 1.1.0-3
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
 Depends: rtirq-init, python3, alsa-utils
 Priority: optional
 Section: admin
-Filename: pool/main/p/pistomp-audio/pistomp-audio_1.1.0-2_arm64.deb
-Size: 12864
-SHA256: 4397670f90ee9f5f45757ff72922eb44a6b3220ec0b3985ee48bda4996e3f757
-SHA1: 92288d59839d949e28e42d967a53b13a313c8ca3
-MD5sum: 30a406c83bd48b6b90adac5fcb2f7ee9
+Filename: pool/main/p/pistomp-audio/pistomp-audio_1.1.0-3_arm64.deb
+Size: 12848
+SHA256: 70aab41cbc16898b41e526c1bdf5d2969cca6011524f95cfe806f7a284bedcf4
+SHA1: 4fa053439727e6b67778c4fbbce37f721dd5a9fa
+MD5sum: 59b6f8e27ba1c7c813bddd8fdea8d4d3
 Description: Realtime audio IRQ tuning and PCM bind repair for pi-Stomp
  Raises the i2s audio DMA interrupt threads to SCHED_FIFO 90 so they sit
  above jackd. On Pi 3/4 the shipped resolver derives the audio IRQs from
