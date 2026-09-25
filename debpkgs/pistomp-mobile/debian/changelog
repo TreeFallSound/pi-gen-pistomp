@@ -1,0 +1,6 @@
+pistomp-mobile (1.2.1-1~pre1) unstable; urgency=medium
+
+  * Initial pre-release: package rosenauproductions/Pistomp-Mobile 1.2.1 —
+    mobile web UI served by nginx on :8080, proxying the MOD-UI API on :80.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 14 Aug 2026 00:00:00 +0000
