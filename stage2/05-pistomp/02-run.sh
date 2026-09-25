@@ -29,6 +29,7 @@ PISTOMP_PACKAGES="
     pistomp-usb-automount
     pistomp-bluetooth
     pistomp-wifi
+    cockpit-pistomp-support
     jackbridge
     ffmpeg-pistomp
     cabsim-lv2

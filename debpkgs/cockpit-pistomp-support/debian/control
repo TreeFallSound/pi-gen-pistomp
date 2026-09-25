@@ -1,0 +1,12 @@
+Package: cockpit-pistomp-support
+Section: admin
+Priority: optional
+Architecture: all
+Maintainer: pistomp <pistomp@example.com>
+Depends: cockpit-bridge, python3, python3-minimal
+Description: Cockpit module to download a redacted pi-Stomp support bundle
+ Adds a "Support logs" tool to Cockpit. After an explicit privacy consent,
+ it collects journals and service diagnostics, redacts personal identifiers
+ (IPs, MACs, emails, home paths, SSIDs, USB serials, secrets), and offers
+ a .tar.gz download. Nothing is uploaded automatically — the user sends
+ the archive manually.
