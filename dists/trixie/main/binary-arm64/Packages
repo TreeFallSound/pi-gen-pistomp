@@ -341,18 +341,18 @@ Description: Realtime audio IRQ tuning and PCM bind repair for pi-Stomp
  component. OTA upgrades take effect at the next boot.
 
 Package: pistomp-recovery
-Version: 0.1.0-33
+Version: 0.1.0-34
 Architecture: arm64
 Maintainer: pistomp <pistomp@example.com>
-Installed-Size: 119697
+Installed-Size: 119700
 Depends: python3, jack2-pistomp, lg-pistomp, libasound2, libfreetype6, pistomp-audio (>= 1.1.0-1)
 Priority: optional
 Section: utils
-Filename: pool/main/p/pistomp-recovery/pistomp-recovery_0.1.0-33_arm64.deb
-Size: 22925104
-SHA256: af8bfcd971f40fc9c807bc12915134052e5e91f1b6c3feb282633c8a071f41c4
-SHA1: ac26662dd594d079d74098005b638234fa7f32b0
-MD5sum: d064705ee958ee891b1bf04e16c2f3a7
+Filename: pool/main/p/pistomp-recovery/pistomp-recovery_0.1.0-34_arm64.deb
+Size: 22925496
+SHA256: ded7645ad8029fa13dce11ae646c80409cde15f3d4e6e7ed088f0ee16b415464
+SHA1: 51e4b33a69e3862e819ac8b7f836c25944afd75e
+MD5sum: afa76ba6763a39f4707b4012c1465d84
 Description: Package update and recovery service for pi-Stomp
  Recovery service that provides LCD-based factory reset, package rollback,
  and OTA update management. Runs as a systemd service triggered on
