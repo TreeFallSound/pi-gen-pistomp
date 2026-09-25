@@ -42,6 +42,9 @@ for state in iqaudiocodec hifiberry audioinjector; do
         "${DEB_DIR}/usr/lib/pistomp/alsa/${state}.state"
 done
 
+install -D -m 644 "${SCRIPT_DIR}/files/alsa-restore-no-store.conf" \
+    "${DEB_DIR}/usr/lib/systemd/system/alsa-restore.service.d/pistomp-no-store.conf"
+
 dpkg-deb --build --root-owner-group "${DEB_DIR}" "${CACHE_DIR}/${PKG}_${VERSION}_arm64.deb"
 
 echo "==> Built ${PKG} → ${CACHE_DIR}/${PKG}_${VERSION}_arm64.deb"

@@ -1,3 +1,11 @@
+pistomp-audio (1.1.0-2) trixie; urgency=medium
+
+  * Clear alsa-restore.service's ExecStop. Its shutdown `alsactl store`
+    overwrote the state seeded by the recovery Audio Card menu and
+    Factory Reset. pi-stomp stores after every mixer change.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 25 Sep 2026 04:26:38 +0000
+
 pistomp-audio (1.1.0-1) trixie; urgency=medium
 
   * Ship the known-good per-card ALSA mixer states (IQaudIO CODEC,
