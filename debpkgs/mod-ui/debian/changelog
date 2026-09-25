@@ -1,3 +1,12 @@
+mod-ui (3.0-16) trixie; urgency=medium
+
+  * Add an on-device SFZ builder: create sfizz samplers from your own
+    samples (TreeFallSound/mod-ui#13).
+  * Sort file selectors to the top of LV2 plugin settings
+    (TreeFallSound/mod-ui#14).
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 25 Sep 2026 04:05:58 +0000
+
 mod-ui (3.0-15) trixie; urgency=medium
 
   * Broadcast midi_map -1:-1 when a MIDI addressing is removed, on both
