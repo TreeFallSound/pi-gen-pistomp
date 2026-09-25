@@ -34,7 +34,7 @@ MOD_HOST_BRANCH="master"
 
 # --- mod-ui ---
 MOD_UI_REPO="https://github.com/TreeFallSound/mod-ui.git"
-MOD_UI_BRANCH="main"
+MOD_UI_BRANCH="d28bde9137b9c10ba24fd00495e254ddc1dd3d2e"
 
 # --- browsepy ---
 BROWSEPY_REPO="https://github.com/micahvdm/browsepy.git"
