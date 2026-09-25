@@ -6,7 +6,8 @@
 #            (iqaudio-codec | hifiberry-dacplusadc | audioinjector-wm8731-audio)
 #
 # Copies the matching state file over the global one. The whole file is
-# written: sections for other cards are clobbered.
+# written: sections for other cards are clobbered. Then applies it live if
+# the card is fitted; -I keeps alsactl from resetting a card that isn't.
 
 set -euo pipefail
 
@@ -38,3 +39,5 @@ fi
 
 install -m 644 "${STATE_DIR}/${STATE}" "${STATE_FILE}"
 echo "seed.sh: seeded ${STATE_FILE} from ${STATE_DIR}/${STATE}"
+
+/usr/sbin/alsactl --no-ucm -I -f "${STATE_FILE}" restore

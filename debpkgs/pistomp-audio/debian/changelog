@@ -1,3 +1,14 @@
+pistomp-audio (1.1.0-3) trixie; urgency=medium
+
+  * seed.sh applies the seeded state to the card if it is fitted
+    (alsactl restore -I), so the shutdown `alsactl store` saves the seed
+    back instead of overwriting it. A card that is not fitted is left
+    alone and the seed applies at next boot.
+  * Drop the 1.1.0-2 alsa-restore ExecStop override; the shutdown store
+    is safe again and saves mixer changes made outside pi-stomp.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 25 Sep 2026 04:48:30 +0000
+
 pistomp-audio (1.1.0-2) trixie; urgency=medium
 
   * Clear alsa-restore.service's ExecStop. Its shutdown `alsactl store`
