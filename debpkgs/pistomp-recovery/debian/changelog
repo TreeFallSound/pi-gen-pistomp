@@ -1,3 +1,13 @@
+pistomp-recovery (0.1.0-34) trixie; urgency=medium
+
+  * Write root-owned boot files through sudo. Recovery runs as pistomp,
+    so the Audio Card menu, Factory Reset's card seeding and boot-file
+    restores failed with Permission denied on /boot/firmware/config.txt
+    and /var/lib/alsa/asound.state. A failed card switch now shows an
+    error screen instead of silently staying on the menu.
+
+ -- Cam Gorrie <sastraxi@gmail.com>  Fri, 25 Sep 2026 03:57:08 +0000
+
 pistomp-recovery (0.1.0-33) trixie; urgency=medium
 
   * Add the Audio Card menu. Select one of the supported cards (IQaudIO
