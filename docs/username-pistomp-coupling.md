@@ -78,7 +78,7 @@ hostname/SSID (`pistomp.local`, `pistomp-hotspot`), Python module name, and the 
 **User/Group (A):**
 
 - `browsepy/debian/browsepy.browsepy.service:11-12` — `User=pistomp`, `Group=pistomp`
-- `jackbridge/debian/jackbridge.pi-stomp-jackbridge.service:11` — `User=pistomp` (Group is `audio`)
+- pistomp-companion `jackbridge/pi/pi-stomp-jackbridge.service` — `User=pistomp` (Group is `audio`); the .deb installs it from there, not from a copy in this repo
 - `mod-host-pistomp/debian/mod-host-pistomp.mod-host.service:10-11` — `User=pistomp`, `Group=pistomp`
 - `mod-ui/debian/mod-ui.mod-ui.service:45-46` — `User=pistomp`, `Group=pistomp`
 - `pi-stomp/debian/pi-stomp.mod-ala-pi-stomp.service:11` — `User=pistomp`
